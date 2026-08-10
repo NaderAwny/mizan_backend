@@ -1,0 +1,62 @@
+using Microsoft.EntityFrameworkCore.Storage;
+using Mizan.Core.Interfaces;
+using Mizan.Infrastructure.Persistence.Repositories;
+
+namespace Mizan.Infrastructure.Persistence;
+
+public class UnitOfWork : IUnitOfWork
+{
+    private readonly MizanDbContext _context;
+    private IDbContextTransaction? _transaction;
+
+    private IUserRepository? _users;
+    private IShopRepository? _shops;
+    private IRefreshTokenRepository? _refreshTokens;
+    private IOtpCodeRepository? _otpCodes;
+
+    public UnitOfWork(MizanDbContext context)
+    {
+        _context = context;
+    }
+
+    public IUserRepository Users => _users ??= new UserRepository(_context);
+    public IShopRepository Shops => _shops ??= new ShopRepository(_context);
+    public IRefreshTokenRepository RefreshTokens => _refreshTokens ??= new RefreshTokenRepository(_context);
+    public IOtpCodeRepository OtpCodes => _otpCodes ??= new OtpCodeRepository(_context);
+
+    public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        return await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task BeginTransactionAsync(CancellationToken cancellationToken = default)
+    {
+        _transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+    }
+
+    public async Task CommitTransactionAsync(CancellationToken cancellationToken = default)
+    {
+        if (_transaction != null)
+        {
+            await _transaction.CommitAsync(cancellationToken);
+            await _transaction.DisposeAsync();
+            _transaction = null;
+        }
+    }
+
+    public async Task RollbackTransactionAsync(CancellationToken cancellationToken = default)
+    {
+        if (_transaction != null)
+        {
+            await _transaction.RollbackAsync(cancellationToken);
+            await _transaction.DisposeAsync();
+            _transaction = null;
+        }
+    }
+
+    public void Dispose()
+    {
+        _transaction?.Dispose();
+        _context.Dispose();
+    }
+}

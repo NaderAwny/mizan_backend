@@ -1,0 +1,6 @@
+@Mizan.API_HostAddress = http://localhost:5210
+
+GET {{Mizan.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

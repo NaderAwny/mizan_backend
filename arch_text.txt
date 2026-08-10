@@ -1,0 +1,137 @@
+=== PAGE 1 ===
+Skill:  ﻣﻌﻤﺎﺭﻳﺔ ﺍﻟـBackend
+(El-Haty Restaurant Backend)  ﺣﻘﻴﻘﻲASP.NET Core ﻣﺒﻨﻴﺔ ﻋﻠﻰ ﺗﺤﻠﻴﻞ ﺭﻳﺒﻮ
+ ﻗﺒﻞ ﻣﺎ ﺗﺒﺪﺃ ﺃﻱ ﻓﻴﺘﺸﺮ ﻓﻲ ﻣﺸﺮﻭﻉ ﻣﻴﺰﺍﻥAntigravity ( — ﺿﻴﻔﻪ ﻟـSkill) ﻣﻠﻒ ﻣﺮﺟﻌﻲ
+
+=== PAGE 2 ===
+ﻟﻴﻪ ﺍﻟﻤﻠﻒ ﺩﻩ ﻣﻬﻢ؟
+.( ﺍﺷﺘﻐﻞ ﺑﻨﻔﺲ ﺍﻷﻧﻤﺎﻁ ﺩﻱ ﻣﻦ ﺍﻷﻭﻝ، ﺍﻟﻨﺘﻴﺠﺔ ﻫﺘﻜﻮﻥ ﻣﻨﻈﻤﺔ ﻭﺍﺣﺘﺮﺍﻓﻴﺔ، ﻭﺃﺳﻬﻞ ﺑﻜﺘﻴﺮ ﺇﻥ ﺃﻱ ﺣﺪ )ﺣﺘﻰ ﺻﺎﺣﺒﻚ( ﻳﻜﻤﻞ ﻋﻠﻴﻬﺎ ﻟﻮ ﺍﺣﺘﺠﺖAI
+(Antigravity ( ﺍﻟﻤﺴﺘﺨﺪﻣﺔ ﻓﻴﻪ. ﺩﻱ ﻣﺶ ﻧﻈﺮﻳﺔ — ﺩﻱ ﻛﻮﺩ ﺷﻐﺎﻝ ﻓﻌﻠﻴﺎ. ﻟﻮPatterns) )ﻟﺼﺎﺣﺒﻚ ﻳﻮﺳﻒ(، ﻭﺍﺳﺘﺨﺮﺟﺖ ﻣﻨﻪ ﺍﻷﻧﻤﺎﻁ
+ASP.NET Core  ﺣﻘﻴﻘﻲ ﺷﻐﺎﻝ ﺑـBackend ﺣﻠﻠﺖ ﺭﻳﺒﻮ
+
+=== PAGE 3 ===
+(Clean Architecture) . ﺍﻟﺒﻨﻴﺔ ﺍﻟﻤﻌﻤﺎﺭﻳﺔ1
+:ﺍﻟﻤﺸﺮﻭﻉ ﻣﻘﺴﻢ ﻷﺭﺑﻊ ﻃﺒﻘﺎﺕ ﻣﻨﻔﺼﻠﺔ، ﻛﻞ ﻭﺍﺣﺪﺓ ﻟﻴﻬﺎ ﻣﺴﺆﻭﻟﻴﺔ ﻭﺍﺣﺪﺓ ﺑﺲ
+ﺍﻟﻮﺻﻒ
+ﺍﻟﻄﺒﻘﺔ
+.. ﻣﺎﻟﻬﺎﺵ ﺃﻱ ﺍﻋﺘﻤﺎﺩ ﻋﻠﻰ ﺃﻱ ﻃﺒﻘﺔ ﺗﺎﻧﻴﺔInterfaces ، ﺍﻟـExceptions )ﻧﻤﺎﺫﺝ ﺍﻟﺒﻴﺎﻧﺎﺕ(، ﺍﻟـ
+Entities ﺍﻟﻄﺒﻘﺔ ﺍﻷﺳﺎﺳﻴﺔ: ﺍﻟـCore
+. ﺑﺘﺎﻋﺔ ﺍﻟﺨﺪﻣﺎﺕ ﺍﻟﺨﺎﺭﺟﻴﺔInterfaces  )ﺷﻜﻞ ﺍﻟﻄﻠﺒﺎﺕ ﻭﺍﻟﺮﺩﻭﺩ(، ﺍﻟـDTOs ، ﺍﻟـServices ﺍﻟﻌﻤﻞ: ﺍﻟـ
+ﻣﻨﻄﻖApplication
+.(، ﺗﺨﺰﻳﻦ ﻣﻠﻔﺎﺕEmail) ، ﺍﻟﺨﺪﻣﺎﺕ ﺍﻟﺨﺎﺭﺟﻴﺔRepositories (، ﺍﻟـDbContext) ﺑﻘﺎﻋﺪﺓ ﺍﻟﺒﻴﺎﻧﺎﺕ
+ﺍﻟﺘﻨﻔﻴﺬ ﺍﻟﻔﻌﻠﻲ: ﺍﻻﺗﺼﺎﻝInfrastructure
+.(Program.cs) ، ﺇﻋﺪﺍﺩ ﺍﻟﻤﺸﺮﻭﻉMiddlewares ، ﺍﻟـControllers : ﺍﻟـFlutter ﺍﻟﻠﻲ ﺑﺘﻜﻠﻢ ﺍﻟـ
+ﺍﻟﻄﺒﻘﺔAPI
+Mizan.Core / Mizan.Application / Mizan.Infrastructure / Mizan.API ﻟﻤﺸﺮﻭﻉ ﻣﻴﺰﺍﻥ: ﺍﻋﻤﻞ ﻧﻔﺲ ﺍﻟﺘﻘﺴﻴﻢ ﺑﺲ ﺑﺄﺳﻤﺎﺀ
+
+=== PAGE 4 ===
+2. Repository + Unit of Work
+: ﻳﺘﻜﻠﻢ ﻣﻊ ﻗﺎﻋﺪﺓ ﺍﻟﺒﻴﺎﻧﺎﺕ ﻣﺒﺎﺷﺮﺓ، ﻓﻴﻪ ﻃﺒﻘﺔ ﻭﺳﻴﻄﺔ ﺑﺘﻨﻈﻢ ﺍﻟﻌﻤﻠﻴﺎﺕService ﺑﺪﻝ ﻣﺎ ﻛﻞ
+• BaseRepository<T>  ﻋﺎﻡ ﻓﻴﻪGetByIdAsync, GetAllAsync ( ﻣﻊpagination), AddAsync, Update
+ ﺧﺎﺻﺔ ﺑﻴﻪqueries  ﻭﻳﻀﻴﻒBaseRepository  ﺧﺎﺹ ﺑﻴﻬﺎ ﺑﻴﻮﺭﺙ ﻣﻦRepository  ﻟﻴﻬﺎEntity • ﻛﻞ
+• IUnitOfWork  ﺑﻴﺠﻤﻊ ﻛﻞ ﺍﻟـRepositories  ﻓﻲ ﻣﻜﺎﻥ ﻭﺍﺣﺪ، ﻭﻫﻮ ﺍﻟﻤﺴﺆﻭﻝ ﺍﻟﻮﺣﻴﺪ ﻋﻦSaveChangesAsync()
+ )ﻳﻌﻨﻲ ﻣﺘﺘﻨﺸﺌﺶ ﻏﻴﺮ ﻟﻤﺎ ﺗﺘﻄﻠﺐ ﻓﻌﻼ( — ﺑﻴﻮﻓﺮ ﺃﺩﺍﺀLazy  ﺑﺘﺘﻌﻤﻞRepositories • ﺍﻟـ
+IUnitOfWork — ﻣﺜﺎﻝ ﻣﻦ ﺍﻟﺮﻳﺒﻮ
+public IUserRepository Users => _users ??= new UserRepository(_context);
+public ICategoryRepository Categories => _categories ??= new CategoryRepository(_context);
+public async Task<int> SaveChangesAsync() => await _context.SaveChangesAsync();
+...Users, Contacts, Transactions, Installments, Reminders  ﻓﻴﻪIUnitOfWork ﻟﻤﺸﺮﻭﻉ ﻣﻴﺰﺍﻥ: ﻫﺘﺤﺘﺎﺝ
+
+=== PAGE 5 ===
+3. Entities ( ﻏﻨﻴﺔ ﺑﻤﻨﻄﻖ ﺍﻟﻌﻤﻞRich Domain Model)
+.Service  ﻭﻻ ﺍﻟـController  ﻓﻲ ﺍﻟﺮﻳﺒﻮ ﺑﺘﺤﺘﻮﻱ ﻋﻠﻰ ﻣﻨﻄﻖ ﺍﻟﺘﺤﻘﻖ ﺍﻟﺨﺎﺹ ﺑﻴﻬﺎ ﺟﻮﻩ ﻧﻔﺴﻬﺎ — ﻣﺶ ﻓﻲ ﺍﻟـEntity (، ﻛﻞAnemic Model)
+ ﺗﻜﻮﻥ ﺑﺲ ﺧﺼﺎﺋﺺ ﻓﺎﺿﻴﺔEntity ﺑﺪﻝ ﻣﺎ ﺍﻟـ
+ ﻣﺤﺪﺩﺓMethods  — ﻣﺘﺘﻐﻴﺮﺵ ﻣﻦ ﺑﺮﺓ ﺇﻻ ﻋﻦ ﻃﺮﻳﻖprivate set  ﻛﻠﻬﺎProperties • ﺍﻟـ
+ ﻋﺎﺩﻱconstructor )...(( ﻣﺶUser.CreateManual  )ﺯﻱFactory Method  ﺑﻴﺘﻢ ﻋﻦ ﻃﺮﻳﻖEntity • ﺇﻧﺸﺎﺀ ﺍﻟـ
+ ﻟﻮ ﻏﻠﻂDomainException  ﺟﻮﻩ ﻧﻔﺴﻪ ﻭﻳﺮﻣﻲvalidation ...( ﺑﻴﻌﻤﻞUpdateName, ChangePassword) • ﻛﻞ ﺗﻌﺪﻳﻞ
+Controller  ﻧﻔﺴﻪ ﻣﺶ ﻓﻲ ﺍﻟـEntity • ﻣﺜﺎﻝ ﺣﻘﻴﻘﻲ: ﺍﻟﺘﺤﻘﻖ ﻣﻦ ﺭﻗﻢ ﺍﻟﻬﺎﺗﻒ ﺍﻟﻤﺼﺮﻱ ﺑﻴﺘﻢ ﺟﻮﻩ ﺍﻟـ
+Entity ﻣﺜﺎﻝ ﻣﻦ ﺍﻟﺮﻳﺒﻮ — ﺍﻟﺘﺤﻘﻖ ﺩﺍﺧﻞ ﺍﻟـ
+private void SetPhone(string phone)
+{
+    if (string.IsNullOrWhiteSpace(phone))
+        throw new DomainException("Phone number is required");
+    phone = phone.Replace(" ", "").Replace("-", "");
+    if (phone.StartsWith("+20")) phone = "0" + phone[3..];
+    if (phone.Length != 11)
+        throw new DomainException("Phone must be 11 digits");
+    var validPrefixes = new[] { "010", "011", "012", "015" };
+    if (!validPrefixes.Any(p => phone.StartsWith(p)))
+        throw new DomainException("Phone must start with 010/011/012/015");
+    Phone = phone;
+}
+.Controller  ﻣﺶ ﻓﻲ ﺍﻟـInstallment  ﺍﻟـEntity  ﻓﻲ ﺍﻷﻗﺴﺎﻁ — ﻳﺘﺤﺴﺐ ﺟﻮﻩremaining_amount ﻭﻋﻠﻰ ﻣﻨﻄﻖ ﺣﺴﺎﺏ
+(،010/011/012/015  ﺃﻭ20 ﻟﻤﺸﺮﻭﻉ ﻣﻴﺰﺍﻥ: ﻧﻔﺲ ﺍﻟﻔﻜﺮﺓ ﺗﺘﻄﺒﻖ ﻋﻠﻰ ﺭﻗﻢ ﺍﻟﻮﺍﺗﺴﺎﺏ )ﻻﺯﻡ ﻳﺒﺪﺃ ﺑـ
+
+=== PAGE 6 ===
+(Exceptions + Global Middleware) . ﺍﻷﺧﻄﺎﺀ ﺍﻟﻤﻮﺣﺪﺓ4
+: ﻳﺘﻌﺎﻣﻞ ﻣﻊ ﺍﻷﺧﻄﺎﺀ ﺑﻄﺮﻳﻘﺘﻪ، ﻓﻴﻪ ﻧﻈﺎﻡ ﻣﻮﺣﺪ ﻟﻠﻤﺸﺮﻭﻉ ﻛﻠﻪController ﺑﺪﻝ ﻣﺎ ﻛﻞ
+DomainException, NotFoundException, BadRequestException, ForbiddenException :ﻣﺨﺼﺼﺔ
+Exceptions • ﺃﻧﻮﺍﻉ
+• Middleware ( ﻭﺍﺣﺪExceptionMiddleware)  ﺑﻴﻤﺴﻚ ﺃﻱException ﻓﻲ ﺃﻱ ﻣﻜﺎﻥ ﻓﻲ ﺍﻟﻤﺸﺮﻭﻉ
+ ﻣﻮﺣﺪJSON ...( ﻭﺷﻜﻞ403 ,400 ,404)  ﻣﻨﺎﺳﺐHTTP status code • ﺑﻴﺤﻮﻝ ﻛﻞ ﻧﻮﻉ ﻟـ
+• ﻓﻲ ﺑﻴﺌﺔ ﺍﻟﺘﻄﻮﻳﺮ ﺑﻴﻮﺭﻳﻚ ﺭﺳﺎﻟﺔ ﺍﻟﺨﻄﺄ ﺍﻟﺤﻘﻴﻘﻴﺔ، ﻭﻓﻲ ﺍﻹﻧﺘﺎﺝ ﺑﻴﻮﺭﻳﻚ ﺭﺳﺎﻟﺔ ﻋﺎﻣﺔ ﺁﻣﻨﺔ
+ﺷﻜﻞ ﺭﺩ ﺍﻟﺨﻄﺄ ﺍﻟﻤﻮﺣﺪ ﻓﻲ ﻛﻞ ﺍﻟﻤﺸﺮﻭﻉ
+{ "statusCode": 404, "message": "' فرعملاب جتنملا5' } "دوجوم ريغ
+ و //NotFoundException :نيلكش معديب
+throw new NotFoundException("Transaction not found");
+throw new NotFoundException(nameof(Transaction), id);  // يئاقلت ةلاسرلا د ّلويب
+
+=== PAGE 7 ===
+(JWT + Refresh Tokens) . ﺍﻟﻤﺼﺎﺩﻗﺔ5
+• Access Token  )ﻗﺼﻴﺮ ﺍﻟﻌﻤﺮ )ﻟﻼﺳﺘﺨﺪﺍﻡ ﺍﻟﻴﻮﻣﻲ+ Refresh Token  ﺃﻃﻮﻝ )ﻟﺘﺠﺪﻳﺪ ﺍﻟﺪﺧﻮﻝ ﻣﻦ ﻏﻴﺮOTP/)ﺑﺎﺳﻮﺭﺩ ﺗﺎﻧﻲ
+ ﻳﺘﻠﻐﻲ ﺗﻠﻘﺎﺋﻴﺎRefresh Token ( — ﻟﻮ ﺯﺍﺩ، ﺃﻗﺪﻡ5 • ﺣﺪ ﺃﻗﺼﻰ ﻟﻌﺪﺩ ﺍﻷﺟﻬﺰﺓ ﺍﻟﻤﺘﺼﻠﺔ ﻓﻲ ﻧﻔﺲ ﺍﻟﻮﻗﺖ )ﻣﺜﻼ
+• Rate Limiting  ﻋﻠﻰendpoints  ﺍﻟـAuth  ﻣﺤﺎﻭﻻﺕ ﻓﻲ ﺍﻟﺪﻗﻴﻘﺔ( — ﺑﻴﺤﻤﻲ ﻣﻦ ﻫﺠﻤﺎﺕ ﺗﺨﻤﻴﻦ ﺍﻟﺒﺎﺳﻮﺭﺩ5) /ﺑﺲOTP
+• CurrentUserId  ﺑﻴﺘﻘﺮﺍ ﻣﻦ ﺍﻟـJWT Claims  ﻓﻲBaseController،  ﻣﺶ ﻣﻦ ﺍﻟـrequest body — ﺃﺃﻣﻦ
+BaseController — ﻣﺜﺎﻝ ﻣﻦ ﺍﻟﺮﻳﺒﻮ
+protected int CurrentUserId =>
+    int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+protected IActionResult Success(object? data = null, string? message = null) =>
+    Ok(new { success = true, message, data });
+. ﺗﺘﻄﺒﻖ ﺯﻱ ﻣﺎ ﻫﻲRefresh Token  ﻭﺍﻟـRate Limiting  ﻋﺒﺮ ﻭﺍﺗﺴﺎﺏ — ﻟﻜﻦ ﻧﻔﺲ ﻓﻜﺮﺓ ﺍﻟـOTP ﻣﻴﺰﺍﻥ: ﺑﺪﻝ ﺍﻟﺒﺎﺳﻮﺭﺩ، ﺍﻟﺪﺧﻮﻝ ﺃﺳﺎﺳﻪ
+ﻟﻤﺸﺮﻭﻉ
+
+=== PAGE 8 ===
+(Middleware + Cache) . ﻓﺤﺺ ﺣﺎﻟﺔ ﺍﻟﺤﺴﺎﺏ ﺑﻜﻔﺎﺀﺓ6
+. ﻟﻤﺪﺓ ﺩﻗﻴﻘﺘﻴﻦMemory Cache ، ﻟﻜﻦ ﻣﻦ ﻏﻴﺮ ﻣﺎ ﻳﻀﻐﻂ ﻋﻠﻰ ﻗﺎﻋﺪﺓ ﺍﻟﺒﻴﺎﻧﺎﺕ ﻓﻲ ﻛﻞ ﻣﺮﺓ — ﺑﻴﺴﺘﺨﺪﻡrequest ﻟﺴﻪ "ﻣﻔﻌﻞ" ﻓﻲ ﻛﻞ
+ ﺑﻴﺘﺄﻛﺪ ﺇﻥ ﺍﻟﻤﺴﺘﺨﺪﻡMiddleware ﺍﻟﺮﻳﺒﻮ ﻓﻴﻪ
+.request  ﻓﻲ ﻛﻞDB ﻟﻤﺸﺮﻭﻉ ﻣﻴﺰﺍﻥ: ﻧﻔﺲ ﺍﻟﻔﻜﺮﺓ ﻣﻔﻴﺪﺓ ﻟﻮ ﺣﺪ ﻭﻗﻒ ﺣﺴﺎﺑﻪ ﺃﻭ ﺍﺗﺤﻈﺮ — ﺑﺪﻝ ﻣﺎ ﺗﺴﺄﻝ ﺍﻟـ
+
+=== PAGE 9 ===
+Fluent API . ﺇﻋﺪﺍﺩ ﻗﺎﻋﺪﺓ ﺍﻟﺒﻴﺎﻧﺎﺕ ﺑـ7
+Entity  ﻋﻠﻰ ﺍﻟـData Annotations ;( — ﻣﺶIEntityTypeConfiguration<T>)  ﺧﺎﺹ ﺑﻴﻬﺎConfiguration ﻟﻴﻬﺎ ﻣﻠﻒ
+Entity • ﻛﻞ
+( ﻓﻲ ﻣﻜﺎﻥ ﺗﺎﻧﻲMaxLength, Index, Unique)  ﻧﻈﻴﻔﺔ ﻭﻣﺮﻛﺰﺓ ﻋﻠﻰ ﻣﻨﻄﻖ ﺍﻟﻌﻤﻞ ﺑﺲ، ﻭﺍﻹﻋﺪﺍﺩﺍﺕ ﺍﻟﺘﻘﻨﻴﺔEntity • ﺩﻩ ﺑﻴﺨﻠﻲ ﺍﻟـ
+( — ﻣﻔﻴﺪ ﻟﻮ ﻋﻨﺪﻙ ﺑﻴﺎﻧﺎﺕ ﻣﺮﻛﺒﺔ ﺯﻱ ﻋﻨﻮﺍﻥ ﺍﻟﻤﺤﻞAddress  )ﺯﻱOwned Entity  ﻛـValue Objects • ﻓﻴﻪ ﺍﺳﺘﺨﺪﺍﻡ ﻟـ
+UserConfiguration — ﻣﺜﺎﻝ ﻣﻦ ﺍﻟﺮﻳﺒﻮ
+builder.Property(u => u.FirstName).IsRequired().HasMaxLength(50);
+builder.HasIndex(u => u.Email).IsUnique();
+builder.Property(u => u.IsActive).IsRequired().HasDefaultValue(true);
+
+=== PAGE 10 ===
+(DTOs + DataAnnotations) . ﺍﻟﺘﺤﻘﻖ ﻣﻦ ﺍﻟﻤﺪﺧﻼﺕ8
+: ﻣﻨﻔﺼﻞ، ﻣﻊ ﺭﺳﺎﺋﻞ ﺧﻄﺄ ﺑﺎﻟﻌﺮﺑﻲ ﻣﺒﺎﺷﺮﺓDTO  ﺑﻴﺘﺤﺪﺩ ﺷﻜﻠﻪ ﻓﻲRequest ﻛﻞ
+public class RegisterRequest
+{
+    [Required(ErrorMessage = "First name is required")]
+    [MaxLength(50, ErrorMessage = "First name max 50 chars")]
+    public string FirstName { get; set; } = string.Empty;
+    [Required(ErrorMessage = "Phone number is required")]
+    public string Phone { get; set; } = string.Empty;
+}
+. — ﺩﻩ ﻣﻌﻴﺎﺭ ﻣﻮﺟﻮﺩ ﻓﻌﻠﻴﺎ ﻓﻲ ﺍﻟﺮﻳﺒﻮ ﺩﻩERD  ﻓﻲ ﺍﻟـfirst_name/last_name ﺩﻩ ﺑﺎﻟﻈﺒﻂ ﺳﺒﺐ ﻃﻠﺒﻚ ﺗﻘﺴﻴﻢ
+
+=== PAGE 11 ===
+9. checklist — / ﻟﻤﺎ ﺗﻜﺘﺐspeckit.constitution ﻟﻤﺸﺮﻭﻉ ﻣﻴﺰﺍﻥ
+:Antigravity  ﺑﺘﺎﻋﻚ ﻓﻲconstitution ﺍﻧﺴﺦ ﺩﻩ ﻭﺍﺳﺘﺨﺪﻣﻪ ﻛﺄﺳﺎﺱ ﻟﻠـ
+ مدختسنهClean Architecture  :تاقبط عبرأبMizan.Core, Mizan.Application,
+Mizan.Infrastructure, Mizan.API — .طبظلاب هد تايلوؤسملا ميسقت سفنب
+- Repository + IUnitOfWork ( تانايبلا ةدعاقل لوصولا لكلlazy-loaded repos)
+- Entities  :لمعلا قطنمب ةينغprivate setters + factory methods + validation  ـلا هوجEntity
+- Exceptions ( ةصصخمDomainException, NotFoundException, BadRequestException,
+  ForbiddenException)  عمMiddleware  ـل مهلوحي دحاوHTTP responses ةدحوم
+- BaseController  هيفSuccess()/Created() helpers وCurrentUserId  ـلا نمJWT
+- JWT Access + Refresh Token، ةلصتملا ةزهجألا ددعل ىصقأ دح عم
+- Rate Limiting / ىلعauth endpoints ( سب5 )ةقيقد/تالواحم
+- EF Core Fluent API (IEntityTypeConfiguration)  لكلEntity،  شمData Annotations اهيلع
+- DTOs  لكل ةلصفنمRequest  عمDataAnnotations ةحضاو يبرع لئاسرو
+-  ـلا لكid  وFK  عون نمint (IDENTITY)
