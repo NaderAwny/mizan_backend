@@ -62,7 +62,7 @@
 | الغرض | الأداة |
 |---|---|
 | Backend Framework | ASP.NET Core Web API (.NET 8) |
-| قاعدة البيانات | PostgreSQL |
+| قاعدة البيانات | SQL Server (MSSQL) |
 | ORM | Entity Framework Core (Code-First, Migrations) |
 | المصادقة | JWT + OTP (عبر WhatsApp Cloud API) |
 | رسائل واتساب | WhatsApp Cloud API (Meta) |
@@ -220,7 +220,7 @@ Response: [{ "id": 55, "message": "...", "channel": "app" | "whatsapp" | "both",
 
 ### `/speckit.constitution`
 ```
-هنبني Backend بـ ASP.NET Core Web API (.NET 8) مع PostgreSQL عبر EF Core.
+هنبني Backend بـ ASP.NET Core Web API (.NET 8) مع SQL Server عبر EF Core.
 كل الـ id و Foreign Keys لازم تكون من نوع int (IDENTITY)، زي ملف ERD.md المرفق بالظبط —
 نفس أسماء الجداول والحقول من غير أي تغيير. USERS و CONTACTS بيستخدموا whatsapp_number
 بس (مفيش phone_number)، و USERS فيها first_name و last_name منفصلين.
@@ -291,7 +291,7 @@ Background Job يومي (Hangfire) يفحص كل الأقساط المستحقة
 
 ### المرحلة 1 — الإعداد المحلي
 1. نزّل .NET 8 SDK.
-2. اعمل حساب مجاني على **Supabase** أو **Neon** (قاعدة بيانات PostgreSQL مجانية أونلاين) وهات الـ connection string.
+2. استخدم **SQL Server** (سواء كان محلياً عبر SQL Server Express / LocalDB أو Docker، أو سحابياً عبر Azure SQL Database) وضع الـ connection string.
 3. اعمل git repo، وافتحه في Antigravity.
 4. حط ملفات `1_ERD_قاعدة_البيانات.pdf`، `4_Backend_Architecture_Skill.pdf`، وهذا الملف نفسه في الـ repo كمرجع دائم (اعمل منهم نسخة `.md` بسيطة لو الأداة مش بتقرأ PDF مباشرة).
 5. شغّل `specify init` (زي ما اتفقنا قبل كده) وابدأ بـ `/speckit.constitution`.

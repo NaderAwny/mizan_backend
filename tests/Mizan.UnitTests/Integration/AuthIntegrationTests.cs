@@ -86,7 +86,7 @@ public class AuthIntegrationTests : IClassFixture<CustomWebApplicationFactory>
         var profileData = meContent.GetProperty("data");
         Assert.Equal("محمد", profileData.GetProperty("firstName").GetString());
         Assert.Equal("أحمد", profileData.GetProperty("lastName").GetString());
-        Assert.Equal("01012345678", profileData.GetProperty("whatsAppNumber").GetString());
+        Assert.Equal("01012345678", profileData.GetProperty("whatsappNumber").GetString());
         Assert.Equal("shop_owner", profileData.GetProperty("userType").GetString());
         Assert.Equal("محل الأمل للإلكترونيات", profileData.GetProperty("shop").GetProperty("shopName").GetString());
     }

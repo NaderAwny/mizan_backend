@@ -1,6 +1,6 @@
 # ميزان — Mizan Backend
 
-نظام الـ Backend المتكامل لتطبيق **ميزان** لإدارة الديون والمبيعات والأقساط، مبني باستخدام **ASP.NET Core (.NET 9)** وقاعدة بيانات **PostgreSQL** باتباع معمارية **Clean Architecture** و **Rich Domain Model**.
+نظام الـ Backend المتكامل لتطبيق **ميزان** لإدارة الديون والمبيعات والأقساط، مبني باستخدام **ASP.NET Core (.NET 9)** وقاعدة بيانات **SQL Server** باتباع معمارية **Clean Architecture** و **Rich Domain Model**.
 
 ---
 

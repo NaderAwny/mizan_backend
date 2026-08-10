@@ -46,7 +46,7 @@ if (!builder.Environment.IsEnvironment("Testing"))
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
     builder.Services.AddDbContext<MizanDbContext>(options =>
     {
-        options.UseNpgsql(connectionString);
+        options.UseSqlServer(connectionString);
     });
 }
 

@@ -51,7 +51,7 @@ This way, the AI always has the full project context (from the constitution + at
 Run this once, before any feature work:
 
 ```
-We are building a Backend with ASP.NET Core Web API (.NET 8) and PostgreSQL via EF Core.
+We are building a Backend with ASP.NET Core Web API (.NET 8) and SQL Server via EF Core.
 Every id and Foreign Key must be of type int (IDENTITY), exactly matching the attached
 ERD.pdf — same table and field names, no changes. USERS and CONTACTS use whatsapp_number
 only (no phone_number), and USERS has separate first_name and last_name fields.
@@ -126,7 +126,7 @@ This command is different — **you don't write a prompt, the AI asks you questi
 Now, and only now, do we bring in technical details — scoped to this one feature:
 
 ```
-Use ASP.NET Core Web API (.NET 8) with PostgreSQL via EF Core Code-First.
+Use ASP.NET Core Web API (.NET 8) with SQL Server via EF Core Code-First.
 Core entity: User (in Mizan.Core) — factory method CreateWithWhatsapp(whatsappNumber,
 firstName, lastName) instead of a public constructor, with Egyptian WhatsApp number
 validation happening inside the entity itself.
