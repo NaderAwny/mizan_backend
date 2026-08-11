@@ -15,7 +15,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.Property(u => u.WhatsAppNumber)
             .HasColumnName("whatsapp_number")
-            .HasMaxLength(20)
+            .HasMaxLength(100)
             .IsRequired();
 
         builder.HasIndex(u => u.WhatsAppNumber)

@@ -30,12 +30,22 @@ public class User
         return user;
     }
 
-    public void SetWhatsAppNumber(string phone)
+    public void SetWhatsAppNumber(string phoneOrIdentifier)
     {
-        if (string.IsNullOrWhiteSpace(phone))
-            throw new DomainException("رقم الواتساب مطلوب");
+        if (string.IsNullOrWhiteSpace(phoneOrIdentifier))
+            throw new DomainException("البريد الإلكتروني أو رقم الهاتف مطلوب");
 
-        phone = phone.Trim().Replace(" ", "").Replace("-", "");
+        phoneOrIdentifier = phoneOrIdentifier.Trim();
+
+        // If Email
+        if (phoneOrIdentifier.Contains('@'))
+        {
+            WhatsAppNumber = phoneOrIdentifier.ToLowerInvariant();
+            return;
+        }
+
+        // If Phone
+        var phone = phoneOrIdentifier.Replace(" ", "").Replace("-", "");
 
         if (phone.StartsWith("+20"))
             phone = "0" + phone[3..];

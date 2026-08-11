@@ -27,9 +27,9 @@ public class AuthController : BaseController
 
     [EnableRateLimiting("AuthPolicy")]
     [HttpPost("send-otp")]
-    public async Task<IActionResult> SendOtp([FromBody] string whatsappNumber, CancellationToken cancellationToken)
+    public async Task<IActionResult> SendOtp([FromBody] SendOtpRequest request, CancellationToken cancellationToken)
     {
-        var response = await _authService.SendOtpAsync(whatsappNumber, cancellationToken);
+        var response = await _authService.SendOtpAsync(request.TargetIdentifier, cancellationToken);
         return Success(response, "تم إرسال كود التحقق بنجاح");
     }
 

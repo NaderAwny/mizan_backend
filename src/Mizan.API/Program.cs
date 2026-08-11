@@ -13,7 +13,7 @@ using Mizan.Core.Interfaces;
 using Mizan.Infrastructure.Persistence;
 using Mizan.Infrastructure.Persistence.Repositories;
 using Mizan.Infrastructure.Services.Auth;
-using Mizan.Infrastructure.Services.WhatsApp;
+using Mizan.Infrastructure.Services.Email;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -61,7 +61,8 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddSingleton<IJwtProvider, JwtProvider>();
-builder.Services.AddHttpClient<IWhatsAppService, WhatsAppService>();
+builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection(EmailOptions.SectionName));
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 // 6. JWT Authentication
 var jwtOptions = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? new JwtOptions();
@@ -91,13 +92,13 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
-// 7. Rate Limiting (5 requests / minute on Auth endpoints)
+// 7. Rate Limiting (10 requests / minute on Auth endpoints, relaxed in Testing)
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
     options.AddFixedWindowLimiter("AuthPolicy", opt =>
     {
-        opt.PermitLimit = 5;
+        opt.PermitLimit = builder.Environment.IsEnvironment("Testing") ? 1000 : 10;
         opt.Window = TimeSpan.FromMinutes(1);
         opt.QueueLimit = 0;
     });
@@ -152,6 +153,14 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 var app = builder.Build();
+
+// Ensure database is created in local development
+if (!app.Environment.IsEnvironment("Testing"))
+{
+    using var scope = app.Services.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<MizanDbContext>();
+    dbContext.Database.EnsureCreated();
+}
 
 // 10. Middleware Pipeline
 app.UseMiddleware<ExceptionHandlingMiddleware>();

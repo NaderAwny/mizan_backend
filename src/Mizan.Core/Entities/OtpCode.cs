@@ -19,7 +19,7 @@ public class OtpCode
     public static OtpCode Create(string whatsappNumber, string code, int expirySeconds = 120)
     {
         if (string.IsNullOrWhiteSpace(whatsappNumber))
-            throw new DomainException("رقم الواتساب مطلوب");
+            throw new DomainException("البريد الإلكتروني أو رقم الهاتف مطلوب");
 
         if (string.IsNullOrWhiteSpace(code) || code.Length != 6)
             throw new DomainException("كود التحقق يجب أن يتكون من 6 أرقام");

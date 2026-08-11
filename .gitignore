@@ -24,3 +24,8 @@ desktop.ini
 packages/
 !packages/build/
 .nuget/
+
+## Binaries & Logs
+*.exe
+*.old
+*.log

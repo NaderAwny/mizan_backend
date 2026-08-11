@@ -1,0 +1,320 @@
+{
+  "info": {
+    "name": "Mizan API — ميزان (Official Collection)",
+    "_postman_id": "mizan-api-official-2026",
+    "description": "🚀 مجموعة طلبات API الرسمية الكاملة لتطبيق ميزان — Mizan\n\n📌 الميزات المدعومة:\n1. تسجيل مستخدم جديد بالبريد الإلكتروني والـ OTP الحقيقي.\n2. تسجيل الدخول بالبريد الإلكتروني واستلام كود الـ OTP على صندوق الوارد.\n3. التحقق من الكود وإصدار JWT Token صالح لمدة 7 أيام + Refresh Token.\n4. حفظ التوكن تلقائياً في البيئة (Environment) واستخدامه في جميع الطلبات المحمية.\n5. تحديد نوع الحساب (عميل / صاحب محل مع بيانات المحل).\n6. عرض الملف الشخصي للمستخدم.\n7. تجديد التوكن وتسجيل الخروج.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [],
+  "item": [
+    {
+      "name": "🔐 1. المصادقة والتحقق (Authentication & OTP)",
+      "item": [
+        {
+          "name": "1 — تسجيل حساب جديد (Register)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    if (json.data && json.data.devCode) {",
+                  "        pm.environment.set('otp_code', json.data.devCode);",
+                  "    }",
+                  "    pm.test('تم إرسال كود التحقق بنجاح', function() {",
+                  "        pm.expect(json.success).to.be.true;",
+                  "        pm.expect(json.data.otpSent).to.be.true;",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"aatttaa478@gmail.com\",\n  \"firstName\": \"نادر\",\n  \"lastName\": \"عوني\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "register"]
+            },
+            "description": "تسجيل مستخدم جديد في التطبيق وإرسال كود الـ OTP المكون من 6 أرقام على بريده الإلكتروني مباشرة."
+          }
+        },
+        {
+          "name": "2 — طلب كود تسجيل الدخول (Send OTP)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    if (json.data && json.data.devCode) {",
+                  "        pm.environment.set('otp_code', json.data.devCode);",
+                  "    }",
+                  "    pm.test('تم طلب كود التحقق بنجاح', function() {",
+                  "        pm.expect(json.success).to.be.true;",
+                  "        pm.expect(json.data.otpSent).to.be.true;",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"aatttaa478@gmail.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/send-otp",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "send-otp"]
+            },
+            "description": "طلب كود OTP جديد لتسجيل الدخول لمستخدم مسجل بالفعل."
+          }
+        },
+        {
+          "name": "3 — تأكيد الكود وتسجيل الدخول (Verify OTP)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    if (json.data && json.data.token) {",
+                  "        pm.environment.set('access_token', json.data.token);",
+                  "        pm.environment.set('refresh_token', json.data.refreshToken);",
+                  "        pm.environment.set('user_id', json.data.userId);",
+                  "        console.log('✅ تم حفظ التوكن تلقائياً:', json.data.token);",
+                  "        console.log('نوع الحساب:', json.data.userType);",
+                  "        console.log('هل هو مستخدم جديد؟:', json.data.isNewUser);",
+                  "    }",
+                  "    pm.test('تسجيل الدخول ناجح وتم استلام التوكن', function() {",
+                  "        pm.expect(json.success).to.be.true;",
+                  "        pm.expect(json.data.token).to.be.a('string');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"aatttaa478@gmail.com\",\n  \"code\": \"{{otp_code}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/verify-otp",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "verify-otp"]
+            },
+            "description": "إدخال كود الـ OTP المكون من 6 أرقام للتحقق وإصدار الـ JWT Access Token والـ Refresh Token."
+          }
+        },
+        {
+          "name": "4 — اختيار نوع الحساب: عميل (Select Type - Customer)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('تم تحديد نوع الحساب كعميل', function() {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "    pm.expect(pm.response.json().success).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userType\": \"customer\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/select-user-type",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "select-user-type"]
+            },
+            "description": "تحديد نوع حساب المستخدم كـ عميل (Customer).\n🔒 يتطلب Bearer Token (يتم تمريره تلقائياً من الخطوة 3)."
+          }
+        },
+        {
+          "name": "4b — اختيار نوع الحساب: صاحب محل (Select Type - Shop Owner)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('تم تحديد نوع الحساب كصاحب محل وإنشاء المحل', function() {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "    pm.expect(pm.response.json().success).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userType\": \"shop_owner\",\n  \"shopName\": \"محل ميزان للإلكترونيات\",\n  \"address\": \"القاهرة - مدينة نصر\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/select-user-type",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "select-user-type"]
+            },
+            "description": "تحديد نوع الحساب كـ صاحب محل (Shop Owner) مع حفظ اسم المحل وعنوانه.\n🔒 يتطلب Bearer Token."
+          }
+        },
+        {
+          "name": "5 — تجديد التوكن (Refresh Token)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    if (json.data && json.data.token) {",
+                  "        pm.environment.set('access_token', json.data.token);",
+                  "        pm.environment.set('refresh_token', json.data.refreshToken);",
+                  "        console.log('✅ تم تجديد التوكن وحفظه في البيئة.');",
+                  "    }",
+                  "    pm.test('تم تجديد التوكن بنجاح', function() {",
+                  "        pm.expect(json.success).to.be.true;",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{access_token}}\",\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/refresh-token",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "refresh-token"]
+            },
+            "description": "تجديد صلاحية الـ Access Token باستخدام الـ Refresh Token عند انتهائه."
+          }
+        },
+        {
+          "name": "6 — تسجيل الخروج (Logout)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    pm.environment.unset('access_token');",
+                  "    pm.environment.unset('refresh_token');",
+                  "    console.log('✅ تم تسجيل الخروج ومسح التوكن من البيئة.');",
+                  "    pm.test('تم تسجيل الخروج بنجاح', function() {",
+                  "        pm.expect(pm.response.json().success).to.be.true;",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "\"{{refresh_token}}\""
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "logout"]
+            },
+            "description": "تسجيل الخروج وإلغاء صلاحية الـ Refresh Token من السيرفر.\n🔒 يتطلب Bearer Token."
+          }
+        }
+      ]
+    },
+    {
+      "name": "👤 2. إدارة المستخدم (User Profile)",
+      "item": [
+        {
+          "name": "عرض الملف الشخصي الحالي (Get Profile)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('تم جلب بيانات الملف الشخصي بنجاح', function() {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.true;",
+                  "    pm.expect(json.data.id).to.be.a('number');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users/me",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "me"]
+            },
+            "description": "جلب بيانات المستخدم المسجل حالياً (الاسم، البريد، نوع الحساب، بيانات المحل إن وجدت).\n🔒 يتطلب Bearer Token (يتم تمريره تلقائياً)."
+          }
+        }
+      ]
+    }
+  ]
+}

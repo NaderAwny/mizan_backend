@@ -12,7 +12,9 @@ public class RegisterRequest
     [MaxLength(50, ErrorMessage = "الاسم الأخير يجب ألا يتجاوز 50 حرف")]
     public string LastName { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "رقم الواتساب مطلوب")]
     [MaxLength(20, ErrorMessage = "رقم الواتساب غير صالح")]
-    public string WhatsAppNumber { get; set; } = string.Empty;
+    public string? WhatsAppNumber { get; set; }
+
+    [EmailAddress(ErrorMessage = "صيغة البريد الإلكتروني غير صالحة")]
+    public string? Email { get; set; }
 }

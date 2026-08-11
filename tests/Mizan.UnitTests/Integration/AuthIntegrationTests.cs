@@ -125,4 +125,53 @@ public class AuthIntegrationTests : IClassFixture<CustomWebApplicationFactory>
         var response = await client.GetAsync("/api/users/me");
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
+
+    [Fact]
+    public async Task SendOtp_WithPhoneNumber_ShouldReturnOk()
+    {
+        var sendOtpRequest = new SendOtpRequest
+        {
+            PhoneNumber = "01206347094"
+        };
+
+        var response = await _client.PostAsJsonAsync("/api/auth/send-otp", sendOtpRequest);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var content = await response.Content.ReadFromJsonAsync<JsonElement>(_jsonOptions);
+        Assert.True(content.GetProperty("success").GetBoolean());
+        Assert.True(content.GetProperty("data").GetProperty("otpSent").GetBoolean());
+    }
+
+    [Fact]
+    public async Task EmailOtp_FullFlow_ShouldSendOtpAndLoginSuccessfully()
+    {
+        // 1. Send OTP to email
+        var sendOtpRequest = new SendOtpRequest
+        {
+            Email = "user@mizan.app"
+        };
+
+        var sendResponse = await _client.PostAsJsonAsync("/api/auth/send-otp", sendOtpRequest);
+        Assert.Equal(HttpStatusCode.OK, sendResponse.StatusCode);
+
+        var sendContent = await sendResponse.Content.ReadFromJsonAsync<JsonElement>(_jsonOptions);
+        Assert.True(sendContent.GetProperty("success").GetBoolean());
+        var devCode = sendContent.GetProperty("data").GetProperty("devCode").GetString();
+        Assert.NotNull(devCode);
+
+        // 2. Verify OTP with email
+        var verifyRequest = new VerifyOtpRequest
+        {
+            Email = "user@mizan.app",
+            Code = devCode
+        };
+
+        var verifyResponse = await _client.PostAsJsonAsync("/api/auth/verify-otp", verifyRequest);
+        Assert.Equal(HttpStatusCode.OK, verifyResponse.StatusCode);
+
+        var verifyContent = await verifyResponse.Content.ReadFromJsonAsync<JsonElement>(_jsonOptions);
+        Assert.True(verifyContent.GetProperty("success").GetBoolean());
+        var token = verifyContent.GetProperty("data").GetProperty("token").GetString();
+        Assert.False(string.IsNullOrEmpty(token));
+    }
 }
