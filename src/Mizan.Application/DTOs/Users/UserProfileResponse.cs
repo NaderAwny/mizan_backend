@@ -13,8 +13,8 @@ public class UserProfileResponse
     [JsonPropertyName("lastName")]
     public string LastName { get; set; } = string.Empty;
 
-    [JsonPropertyName("whatsappNumber")]
-    public string WhatsAppNumber { get; set; } = string.Empty;
+    [JsonPropertyName("email")]
+    public string Email { get; set; } = string.Empty;
 
     [JsonPropertyName("userType")]
     public string UserType { get; set; } = "customer";

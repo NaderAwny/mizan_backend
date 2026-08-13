@@ -5,24 +5,18 @@ namespace Mizan.Application.DTOs.Auth;
 
 public class VerifyOtpRequest
 {
+    [Required(ErrorMessage = "البريد الإلكتروني مطلوب")]
+    [EmailAddress(ErrorMessage = "صيغة البريد الإلكتروني غير صالحة")]
+    [MaxLength(100, ErrorMessage = "البريد الإلكتروني لا يمكن أن يتجاوز 100 حرف")]
     [JsonPropertyName("email")]
-    public string? Email { get; set; }
-
-    [JsonPropertyName("whatsappNumber")]
-    public string? WhatsAppNumber { get; set; }
-
-    [JsonPropertyName("phoneNumber")]
-    public string? PhoneNumber
-    {
-        get => WhatsAppNumber;
-        set => WhatsAppNumber = value;
-    }
+    public string Email { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "كود التحقق مطلوب")]
-    [StringLength(6, MinimumLength = 6, ErrorMessage = "كود التحقق يجب أن يتكون من 6 أرقام")]
+    [StringLength(6, MinimumLength = 6, ErrorMessage = "كود التحقق يجب أن يتكون من 6 أرقام بالضبط")]
+    [RegularExpression(@"^\d{6}$", ErrorMessage = "كود التحقق يجب أن يتكون من أرقام فقط")]
     [JsonPropertyName("code")]
     public string Code { get; set; } = string.Empty;
 
     [JsonIgnore]
-    public string TargetIdentifier => !string.IsNullOrWhiteSpace(Email) ? Email.Trim() : (WhatsAppNumber?.Trim() ?? string.Empty);
+    public string TargetIdentifier => Email.Trim().ToLowerInvariant();
 }

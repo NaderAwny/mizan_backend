@@ -13,12 +13,13 @@ public class OtpCodeConfiguration : IEntityTypeConfiguration<OtpCode>
         builder.HasKey(o => o.Id);
         builder.Property(o => o.Id).UseIdentityColumn();
 
-        builder.Property(o => o.WhatsAppNumber)
-            .HasColumnName("whatsapp_number")
-            .HasMaxLength(20)
+        builder.Property(o => o.Email)
+            .HasColumnName("email")
+            .HasMaxLength(100)
             .IsRequired();
 
-        builder.HasIndex(o => o.WhatsAppNumber);
+        builder.HasIndex(o => o.Email)
+            .HasDatabaseName("IX_otp_codes_email");
 
         builder.Property(o => o.Code)
             .HasColumnName("code")

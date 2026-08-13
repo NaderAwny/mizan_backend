@@ -13,13 +13,14 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.HasKey(u => u.Id);
         builder.Property(u => u.Id).UseIdentityColumn();
 
-        builder.Property(u => u.WhatsAppNumber)
-            .HasColumnName("whatsapp_number")
+        builder.Property(u => u.Email)
+            .HasColumnName("email")
             .HasMaxLength(100)
             .IsRequired();
 
-        builder.HasIndex(u => u.WhatsAppNumber)
-            .IsUnique();
+        builder.HasIndex(u => u.Email)
+            .IsUnique()
+            .HasDatabaseName("IX_users_email");
 
         builder.Property(u => u.FirstName)
             .HasColumnName("first_name")

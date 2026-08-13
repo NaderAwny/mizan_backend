@@ -29,7 +29,7 @@ public class JwtProvider : IJwtProvider
         var claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new(ClaimTypes.MobilePhone, user.WhatsAppNumber),
+            new(ClaimTypes.Email, user.Email),
             new(ClaimTypes.Role, user.UserType),
             new(ClaimTypes.GivenName, user.FirstName),
             new(ClaimTypes.Surname, user.LastName),

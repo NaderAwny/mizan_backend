@@ -26,30 +26,12 @@ public class AuthService : IAuthService
 
     public async Task<OtpResponse> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default)
     {
-        string identifier = !string.IsNullOrWhiteSpace(request.Email) 
-            ? request.Email.Trim() 
-            : (request.WhatsAppNumber?.Trim() ?? string.Empty);
+        var email = request.Email.Trim().ToLowerInvariant();
 
-        if (string.IsNullOrWhiteSpace(identifier))
-        {
-            throw new BadRequestException("البريد الإلكتروني أو رقم الهاتف مطلوب للتسجيل");
-        }
-
-        string normalizedIdentifier = identifier;
-        if (!identifier.Contains('@'))
-        {
-            var tempUser = User.Create(identifier, request.FirstName, request.LastName);
-            normalizedIdentifier = tempUser.WhatsAppNumber;
-        }
-
-        var existingUser = await _unitOfWork.Users.GetByWhatsAppNumberAsync(normalizedIdentifier, cancellationToken);
+        var existingUser = await _unitOfWork.Users.GetByEmailAsync(email, cancellationToken);
         if (existingUser == null)
         {
-            var newUser = User.Create(
-                normalizedIdentifier, 
-                request.FirstName, 
-                request.LastName
-            );
+            var newUser = User.Create(email, request.FirstName, request.LastName);
             await _unitOfWork.Users.AddAsync(newUser, cancellationToken);
         }
         else
@@ -58,46 +40,27 @@ public class AuthService : IAuthService
             _unitOfWork.Users.Update(existingUser);
         }
 
-        return await GenerateAndSendOtpAsync(normalizedIdentifier, $"{request.FirstName} {request.LastName}", cancellationToken);
+        return await GenerateAndSendOtpAsync(email, $"{request.FirstName} {request.LastName}", cancellationToken);
     }
 
     public async Task<OtpResponse> SendOtpAsync(string identifier, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(identifier))
-        {
-            throw new BadRequestException("البريد الإلكتروني أو رقم الهاتف مطلوب");
-        }
+            throw new BadRequestException("البريد الإلكتروني مطلوب");
 
-        string normalizedIdentifier = identifier.Trim();
-        if (!normalizedIdentifier.Contains('@'))
-        {
-            var tempUser = User.Create(normalizedIdentifier, "مستخدم", "جديد");
-            normalizedIdentifier = tempUser.WhatsAppNumber;
-        }
-
-        return await GenerateAndSendOtpAsync(normalizedIdentifier, "مستخدم", cancellationToken);
+        var email = identifier.Trim().ToLowerInvariant();
+        return await GenerateAndSendOtpAsync(email, "مستخدم", cancellationToken);
     }
 
     public async Task<AuthResponse> VerifyOtpAsync(VerifyOtpRequest request, CancellationToken cancellationToken = default)
     {
-        string identifier = request.TargetIdentifier;
-        if (string.IsNullOrWhiteSpace(identifier))
-        {
-            throw new BadRequestException("البريد الإلكتروني أو رقم الهاتف مطلوب");
-        }
+        var email = request.TargetIdentifier;
+        if (string.IsNullOrWhiteSpace(email))
+            throw new BadRequestException("البريد الإلكتروني مطلوب");
 
-        string normalizedIdentifier = identifier.Trim();
-        if (!normalizedIdentifier.Contains('@'))
-        {
-            var tempUser = User.Create(normalizedIdentifier, "مستخدم", "جديد");
-            normalizedIdentifier = tempUser.WhatsAppNumber;
-        }
-
-        var otp = await _unitOfWork.OtpCodes.GetLatestValidOtpAsync(normalizedIdentifier, cancellationToken);
+        var otp = await _unitOfWork.OtpCodes.GetLatestValidOtpAsync(email, cancellationToken);
         if (otp == null)
-        {
             throw new BadRequestException("كود التحقق غير صحيح أو منتهي الصلاحية");
-        }
 
         bool isVerified = otp.Verify(request.Code);
         _unitOfWork.OtpCodes.Update(otp);
@@ -108,16 +71,12 @@ public class AuthService : IAuthService
             throw new BadRequestException("كود التحقق غير صحيح");
         }
 
-        var user = await _unitOfWork.Users.GetByWhatsAppNumberAsync(normalizedIdentifier, cancellationToken);
+        var user = await _unitOfWork.Users.GetByEmailAsync(email, cancellationToken);
         bool isNewUser = false;
 
         if (user == null)
         {
-            user = User.Create(
-                normalizedIdentifier, 
-                "مستخدم", 
-                "جديد"
-            );
+            user = User.Create(email, "مستخدم", "جديد");
             await _unitOfWork.Users.AddAsync(user, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             isNewUser = true;
@@ -160,7 +119,7 @@ public class AuthService : IAuthService
             UserId = user.Id,
             FirstName = user.FirstName,
             LastName = user.LastName,
-            WhatsAppNumber = user.WhatsAppNumber,
+            Email = user.Email,
             UserType = user.UserType,
             ShopName = shop?.ShopName
         };
@@ -217,7 +176,7 @@ public class AuthService : IAuthService
             UserId = user.Id,
             FirstName = user.FirstName,
             LastName = user.LastName,
-            WhatsAppNumber = user.WhatsAppNumber,
+            Email = user.Email,
             UserType = user.UserType,
             ShopName = shopName
         };
@@ -227,15 +186,11 @@ public class AuthService : IAuthService
     {
         var existingRefreshToken = await _unitOfWork.RefreshTokens.GetByTokenAsync(request.RefreshToken, cancellationToken);
         if (existingRefreshToken == null || !existingRefreshToken.IsActive)
-        {
             throw new UnauthorizedException("رمز التحديث غير صالح أو منتهي الصلاحية");
-        }
 
         var user = await _unitOfWork.Users.GetByIdAsync(existingRefreshToken.UserId, cancellationToken);
         if (user == null || !user.IsActive)
-        {
             throw new UnauthorizedException("الحساب غير مفعل أو غير موجود");
-        }
 
         var newAccessToken = _jwtProvider.GenerateAccessToken(user);
         var newRefreshTokenString = _jwtProvider.GenerateRefreshToken();
@@ -263,7 +218,7 @@ public class AuthService : IAuthService
             UserId = user.Id,
             FirstName = user.FirstName,
             LastName = user.LastName,
-            WhatsAppNumber = user.WhatsAppNumber,
+            Email = user.Email,
             UserType = user.UserType,
             ShopName = shop?.ShopName
         };
@@ -280,28 +235,25 @@ public class AuthService : IAuthService
         }
     }
 
-    private async Task<OtpResponse> GenerateAndSendOtpAsync(string identifier, string recipientName, CancellationToken cancellationToken)
+    private async Task<OtpResponse> GenerateAndSendOtpAsync(string email, string recipientName, CancellationToken cancellationToken)
     {
-        await _unitOfWork.OtpCodes.InvalidatePreviousOtpsAsync(identifier, cancellationToken);
+        await _unitOfWork.OtpCodes.InvalidatePreviousOtpsAsync(email, cancellationToken);
 
-        // Generate 6 digit cryptographic random number
+        // Generate 6-digit cryptographic random number
         var randomCode = RandomNumberGenerator.GetInt32(100000, 999999).ToString();
-        var otp = OtpCode.Create(identifier, randomCode, expirySeconds: 120);
+        var otp = OtpCode.Create(email, randomCode, expirySeconds: 120);
 
         await _unitOfWork.OtpCodes.AddAsync(otp, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        // Send via Email Service
-        await _emailService.SendOtpEmailAsync(identifier, randomCode, recipientName, cancellationToken);
-
-        var isEmail = identifier.Contains('@');
+        await _emailService.SendOtpEmailAsync(email, randomCode, recipientName, cancellationToken);
 
         return new OtpResponse
         {
             OtpSent = true,
             ExpiresInSeconds = 120,
-            Message = isEmail ? "تم إرسال كود التحقق بنجاح إلى بريدك الإلكتروني" : "تم إرسال كود التحقق بنجاح",
-            DevCode = randomCode // Exposed for testing/development
+            Message = "تم إرسال كود التحقق بنجاح إلى بريدك الإلكتروني",
+            DevCode = randomCode
         };
     }
 }

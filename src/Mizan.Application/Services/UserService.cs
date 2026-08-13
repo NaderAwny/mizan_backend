@@ -25,7 +25,7 @@ public class UserService : IUserService
             Id = user.Id,
             FirstName = user.FirstName,
             LastName = user.LastName,
-            WhatsAppNumber = user.WhatsAppNumber,
+            Email = user.Email,
             UserType = user.UserType,
             IsActive = user.IsActive,
             CreatedAt = user.CreatedAt,

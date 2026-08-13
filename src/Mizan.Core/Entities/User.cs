@@ -1,11 +1,12 @@
 using Mizan.Core.Exceptions;
+using System.Text.RegularExpressions;
 
 namespace Mizan.Core.Entities;
 
 public class User
 {
     public int Id { get; private set; }
-    public string WhatsAppNumber { get; private set; } = string.Empty;
+    public string Email { get; private set; } = string.Empty;
     public string FirstName { get; private set; } = string.Empty;
     public string LastName { get; private set; } = string.Empty;
     public string UserType { get; private set; } = "customer"; // "customer" | "shop_owner"
@@ -19,10 +20,10 @@ public class User
 
     private User() { } // Required for EF Core
 
-    public static User Create(string whatsappNumber, string firstName, string lastName, string userType = "customer")
+    public static User Create(string email, string firstName, string lastName, string userType = "customer")
     {
         var user = new User();
-        user.SetWhatsAppNumber(whatsappNumber);
+        user.SetEmail(email);
         user.UpdateProfile(firstName, lastName);
         user.SetUserType(userType);
         user.CreatedAt = DateTime.UtcNow;
@@ -30,36 +31,22 @@ public class User
         return user;
     }
 
-    public void SetWhatsAppNumber(string phoneOrIdentifier)
+    public void SetEmail(string email)
     {
-        if (string.IsNullOrWhiteSpace(phoneOrIdentifier))
-            throw new DomainException("البريد الإلكتروني أو رقم الهاتف مطلوب");
+        if (string.IsNullOrWhiteSpace(email))
+            throw new DomainException("البريد الإلكتروني مطلوب");
 
-        phoneOrIdentifier = phoneOrIdentifier.Trim();
+        email = email.Trim().ToLowerInvariant();
 
-        // If Email
-        if (phoneOrIdentifier.Contains('@'))
-        {
-            WhatsAppNumber = phoneOrIdentifier.ToLowerInvariant();
-            return;
-        }
+        // Validate proper email format
+        var emailRegex = new Regex(@"^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$", RegexOptions.IgnoreCase);
+        if (!emailRegex.IsMatch(email))
+            throw new DomainException("صيغة البريد الإلكتروني غير صالحة");
 
-        // If Phone
-        var phone = phoneOrIdentifier.Replace(" ", "").Replace("-", "");
+        if (email.Length > 100)
+            throw new DomainException("البريد الإلكتروني لا يمكن أن يتجاوز 100 حرف");
 
-        if (phone.StartsWith("+20"))
-            phone = "0" + phone[3..];
-        else if (phone.StartsWith("20") && phone.Length == 12)
-            phone = "0" + phone[2..];
-
-        if (phone.Length != 11)
-            throw new DomainException("رقم الواتساب يجب أن يتكون من 11 رقم");
-
-        var validPrefixes = new[] { "010", "011", "012", "015" };
-        if (!validPrefixes.Any(p => phone.StartsWith(p)))
-            throw new DomainException("رقم الواتساب يجب أن يبدأ بـ 010 أو 011 أو 012 أو 015");
-
-        WhatsAppNumber = phone;
+        Email = email;
     }
 
     public void UpdateProfile(string firstName, string lastName)
@@ -70,14 +57,25 @@ public class User
         if (string.IsNullOrWhiteSpace(lastName))
             throw new DomainException("الاسم الأخير مطلوب");
 
-        if (firstName.Trim().Length > 50)
+        firstName = firstName.Trim();
+        lastName = lastName.Trim();
+
+        if (firstName.Length > 50)
             throw new DomainException("الاسم الأول لا يمكن أن يتجاوز 50 حرف");
 
-        if (lastName.Trim().Length > 50)
+        if (lastName.Length > 50)
             throw new DomainException("الاسم الأخير لا يمكن أن يتجاوز 50 حرف");
 
-        FirstName = firstName.Trim();
-        LastName = lastName.Trim();
+        // Only allow letters (Arabic + English) and spaces
+        var nameRegex = new Regex(@"^[\u0600-\u06FFa-zA-Z\s]+$");
+        if (!nameRegex.IsMatch(firstName))
+            throw new DomainException("الاسم الأول يجب أن يحتوي على أحرف فقط (عربي أو إنجليزي)");
+
+        if (!nameRegex.IsMatch(lastName))
+            throw new DomainException("الاسم الأخير يجب أن يحتوي على أحرف فقط (عربي أو إنجليزي)");
+
+        FirstName = firstName;
+        LastName = lastName;
     }
 
     public void SetUserType(string userType)

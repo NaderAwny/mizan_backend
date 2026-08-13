@@ -1,9 +1,7 @@
-using Mizan.Core.Entities;
-
 namespace Mizan.Core.Interfaces;
 
-public interface IOtpCodeRepository : IBaseRepository<OtpCode>
+public interface IOtpCodeRepository : IBaseRepository<Core.Entities.OtpCode>
 {
-    Task<OtpCode?> GetLatestValidOtpAsync(string whatsappNumber, CancellationToken cancellationToken = default);
-    Task InvalidatePreviousOtpsAsync(string whatsappNumber, CancellationToken cancellationToken = default);
+    Task<Core.Entities.OtpCode?> GetLatestValidOtpAsync(string email, CancellationToken cancellationToken = default);
+    Task InvalidatePreviousOtpsAsync(string email, CancellationToken cancellationToken = default);
 }

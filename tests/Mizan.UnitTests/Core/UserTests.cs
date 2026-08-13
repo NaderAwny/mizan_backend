@@ -7,20 +7,17 @@ namespace Mizan.UnitTests.Core;
 public class UserTests
 {
     [Theory]
-    [InlineData("01012345678", "01012345678")]
-    [InlineData("+201012345678", "01012345678")]
-    [InlineData("201012345678", "01012345678")]
-    [InlineData("01198765432", "01198765432")]
-    [InlineData("01234567890", "01234567890")]
-    [InlineData("01555555555", "01555555555")]
-    [InlineData(" 010 1234 5678 ", "01012345678")]
-    public void CreateUser_WithValidEgyptianPhone_ShouldNormalizeAndSucceed(string inputPhone, string expectedPhone)
+    [InlineData("test@example.com", "test@example.com")]
+    [InlineData("USER@EXAMPLE.COM", "user@example.com")]
+    [InlineData("  ahmed@gmail.com  ", "ahmed@gmail.com")]
+    [InlineData("name+tag@domain.org", "name+tag@domain.org")]
+    public void CreateUser_WithValidEmail_ShouldNormalizeAndSucceed(string inputEmail, string expectedEmail)
     {
         // Act
-        var user = User.Create(inputPhone, "أحمد", "علي");
+        var user = User.Create(inputEmail, "أحمد", "علي");
 
         // Assert
-        Assert.Equal(expectedPhone, user.WhatsAppNumber);
+        Assert.Equal(expectedEmail, user.Email);
         Assert.Equal("أحمد", user.FirstName);
         Assert.Equal("علي", user.LastName);
         Assert.True(user.IsActive);
@@ -30,14 +27,24 @@ public class UserTests
     [Theory]
     [InlineData("")]
     [InlineData("   ")]
-    [InlineData("01412345678")] // Invalid prefix
-    [InlineData("0101234")]     // Too short
-    [InlineData("0101234567890")] // Too long
-    [InlineData("abcdefghijk")]  // Non-numeric
-    public void CreateUser_WithInvalidPhone_ShouldThrowDomainException(string invalidPhone)
+    [InlineData("notanemail")]
+    [InlineData("missing@")]
+    [InlineData("@nodomain.com")]
+    [InlineData("no spaces@domain.com")]
+    public void CreateUser_WithInvalidEmail_ShouldThrowDomainException(string invalidEmail)
     {
         // Act & Assert
-        Assert.Throws<DomainException>(() => User.Create(invalidPhone, "أحمد", "علي"));
+        Assert.Throws<DomainException>(() => User.Create(invalidEmail, "أحمد", "علي"));
+    }
+
+    [Theory]
+    [InlineData("Ahmed123", "أحمد")]
+    [InlineData("أحمد123", "علي")]
+    [InlineData("Name!", "علي")]
+    public void CreateUser_WithInvalidName_ShouldThrowDomainException(string invalidFirst, string validLast)
+    {
+        // Act & Assert
+        Assert.Throws<DomainException>(() => User.Create("valid@email.com", invalidFirst, validLast));
     }
 
     [Theory]
@@ -48,7 +55,7 @@ public class UserTests
     public void SetUserType_WithValidType_ShouldSucceed(string userType)
     {
         // Arrange
-        var user = User.Create("01012345678", "أحمد", "علي");
+        var user = User.Create("test@example.com", "أحمد", "علي");
 
         // Act
         user.SetUserType(userType);
@@ -64,7 +71,7 @@ public class UserTests
     public void SetUserType_WithInvalidType_ShouldThrowDomainException(string invalidType)
     {
         // Arrange
-        var user = User.Create("01012345678", "أحمد", "علي");
+        var user = User.Create("test@example.com", "أحمد", "علي");
 
         // Act & Assert
         Assert.Throws<DomainException>(() => user.SetUserType(invalidType));

@@ -10,18 +10,18 @@ public class OtpCodeRepository : BaseRepository<OtpCode>, IOtpCodeRepository
     {
     }
 
-    public async Task<OtpCode?> GetLatestValidOtpAsync(string whatsappNumber, CancellationToken cancellationToken = default)
+    public async Task<OtpCode?> GetLatestValidOtpAsync(string email, CancellationToken cancellationToken = default)
     {
         return await _dbSet
-            .Where(o => o.WhatsAppNumber == whatsappNumber && !o.IsUsed && o.ExpiresAt > DateTime.UtcNow)
+            .Where(o => o.Email == email.ToLowerInvariant() && !o.IsUsed && o.ExpiresAt > DateTime.UtcNow)
             .OrderByDescending(o => o.CreatedAt)
             .FirstOrDefaultAsync(cancellationToken);
     }
 
-    public async Task InvalidatePreviousOtpsAsync(string whatsappNumber, CancellationToken cancellationToken = default)
+    public async Task InvalidatePreviousOtpsAsync(string email, CancellationToken cancellationToken = default)
     {
         var validOtps = await _dbSet
-            .Where(o => o.WhatsAppNumber == whatsappNumber && !o.IsUsed)
+            .Where(o => o.Email == email.ToLowerInvariant() && !o.IsUsed)
             .ToListAsync(cancellationToken);
 
         foreach (var otp in validOtps)

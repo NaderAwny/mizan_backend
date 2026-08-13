@@ -20,12 +20,12 @@ public class AuthIntegrationTests : IClassFixture<CustomWebApplicationFactory>
     [Fact]
     public async Task Full_Auth_Flow_Should_Work_Successfully()
     {
-        // 1. Register new user
+        // 1. Register new user with email
         var registerRequest = new RegisterRequest
         {
             FirstName = "محمد",
             LastName = "أحمد",
-            WhatsAppNumber = "01012345678"
+            Email = "test.user@mizan.app"
         };
 
         var regResponse = await _client.PostAsJsonAsync("/api/auth/register", registerRequest);
@@ -42,7 +42,7 @@ public class AuthIntegrationTests : IClassFixture<CustomWebApplicationFactory>
         // 2. Verify OTP
         var verifyRequest = new VerifyOtpRequest
         {
-            WhatsAppNumber = "01012345678",
+            Email = "test.user@mizan.app",
             Code = devCode
         };
 
@@ -86,7 +86,7 @@ public class AuthIntegrationTests : IClassFixture<CustomWebApplicationFactory>
         var profileData = meContent.GetProperty("data");
         Assert.Equal("محمد", profileData.GetProperty("firstName").GetString());
         Assert.Equal("أحمد", profileData.GetProperty("lastName").GetString());
-        Assert.Equal("01012345678", profileData.GetProperty("whatsappNumber").GetString());
+        Assert.Equal("test.user@mizan.app", profileData.GetProperty("email").GetString());
         Assert.Equal("shop_owner", profileData.GetProperty("userType").GetString());
         Assert.Equal("محل الأمل للإلكترونيات", profileData.GetProperty("shop").GetProperty("shopName").GetString());
     }
@@ -99,14 +99,14 @@ public class AuthIntegrationTests : IClassFixture<CustomWebApplicationFactory>
         {
             FirstName = "محمود",
             LastName = "علي",
-            WhatsAppNumber = "01122334455"
+            Email = "wrong.otp@mizan.app"
         };
         await _client.PostAsJsonAsync("/api/auth/register", registerRequest);
 
         // 2. Verify with wrong OTP
         var verifyRequest = new VerifyOtpRequest
         {
-            WhatsAppNumber = "01122334455",
+            Email = "wrong.otp@mizan.app",
             Code = "000000"
         };
 
@@ -127,11 +127,11 @@ public class AuthIntegrationTests : IClassFixture<CustomWebApplicationFactory>
     }
 
     [Fact]
-    public async Task SendOtp_WithPhoneNumber_ShouldReturnOk()
+    public async Task SendOtp_WithEmail_ShouldReturnOk()
     {
         var sendOtpRequest = new SendOtpRequest
         {
-            PhoneNumber = "01206347094"
+            Email = "sendotp@mizan.app"
         };
 
         var response = await _client.PostAsJsonAsync("/api/auth/send-otp", sendOtpRequest);

@@ -1,11 +1,12 @@
 using Mizan.Core.Exceptions;
+using System.Text.RegularExpressions;
 
 namespace Mizan.Core.Entities;
 
 public class OtpCode
 {
     public int Id { get; private set; }
-    public string WhatsAppNumber { get; private set; } = string.Empty;
+    public string Email { get; private set; } = string.Empty;
     public string Code { get; private set; } = string.Empty;
     public DateTime ExpiresAt { get; private set; }
     public int AttemptsCount { get; private set; } = 0;
@@ -16,17 +17,23 @@ public class OtpCode
 
     private OtpCode() { }
 
-    public static OtpCode Create(string whatsappNumber, string code, int expirySeconds = 120)
+    public static OtpCode Create(string email, string code, int expirySeconds = 120)
     {
-        if (string.IsNullOrWhiteSpace(whatsappNumber))
-            throw new DomainException("البريد الإلكتروني أو رقم الهاتف مطلوب");
+        if (string.IsNullOrWhiteSpace(email))
+            throw new DomainException("البريد الإلكتروني مطلوب");
 
-        if (string.IsNullOrWhiteSpace(code) || code.Length != 6)
+        // Validate email format
+        var emailRegex = new Regex(@"^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$", RegexOptions.IgnoreCase);
+        if (!emailRegex.IsMatch(email.Trim()))
+            throw new DomainException("صيغة البريد الإلكتروني غير صالحة");
+
+        // Validate OTP code: exactly 6 numeric digits
+        if (string.IsNullOrWhiteSpace(code) || code.Length != 6 || !code.All(char.IsDigit))
             throw new DomainException("كود التحقق يجب أن يتكون من 6 أرقام");
 
         return new OtpCode
         {
-            WhatsAppNumber = whatsappNumber,
+            Email = email.Trim().ToLowerInvariant(),
             Code = code,
             ExpiresAt = DateTime.UtcNow.AddSeconds(expirySeconds),
             AttemptsCount = 0,
@@ -45,6 +52,10 @@ public class OtpCode
 
         if (AttemptsCount >= MaxAttempts)
             throw new BadRequestException("تم تجاوز الحد الأقصى للمحاولات (3 محاولات). يرجى طلب كود جديد");
+
+        // Validate input format before comparing
+        if (string.IsNullOrWhiteSpace(inputCode) || inputCode.Trim().Length != 6 || !inputCode.Trim().All(char.IsDigit))
+            throw new BadRequestException("كود التحقق يجب أن يتكون من 6 أرقام");
 
         AttemptsCount++;
 
