@@ -1,11 +1,10 @@
 {
   "info": {
+    "_postman_id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
     "name": "Mizan API — ميزان (Official Collection)",
-    "_postman_id": "mizan-api-official-2026",
     "description": "🚀 مجموعة طلبات API الرسمية الكاملة لتطبيق ميزان — Mizan\n\n📌 الميزات المدعومة:\n1. تسجيل مستخدم جديد بالبريد الإلكتروني والـ OTP الحقيقي.\n2. تسجيل الدخول بالبريد الإلكتروني واستلام كود الـ OTP على صندوق الوارد.\n3. التحقق من الكود وإصدار JWT Token صالح لمدة 7 أيام + Refresh Token.\n4. حفظ التوكن تلقائياً في البيئة (Environment) واستخدامه في جميع الطلبات المحمية.\n5. تحديد نوع الحساب (عميل / صاحب محل مع بيانات المحل).\n6. عرض الملف الشخصي للمستخدم.\n7. تجديد التوكن وتسجيل الخروج.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
-  "variable": [],
   "item": [
     {
       "name": "🔐 1. المصادقة والتحقق (Authentication & OTP)",
@@ -19,13 +18,11 @@
                 "exec": [
                   "if (pm.response.code === 200) {",
                   "    var json = pm.response.json();",
-                  "    if (json.data && json.data.devCode) {",
-                  "        pm.environment.set('otp_code', json.data.devCode);",
-                  "    }",
-                  "    pm.test('تم إرسال كود التحقق بنجاح', function() {",
+                  "    pm.test('تم إرسال كود التحقق بنجاح إلى البريد', function() {",
                   "        pm.expect(json.success).to.be.true;",
                   "        pm.expect(json.data.otpSent).to.be.true;",
                   "    });",
+                  "    console.log('✉️ تم إرسال كود الـ OTP إلى البريد الإلكتروني. تفقد صندوق الوارد وأدخل الكود في متغير البيئة otp_code أو مباشرة في الخطوة 3.');",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -35,7 +32,10 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -43,8 +43,14 @@
             },
             "url": {
               "raw": "{{base_url}}/api/auth/register",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "register"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
             },
             "description": "تسجيل مستخدم جديد في التطبيق وإرسال كود الـ OTP المكون من 6 أرقام على بريده الإلكتروني مباشرة."
           }
@@ -58,13 +64,11 @@
                 "exec": [
                   "if (pm.response.code === 200) {",
                   "    var json = pm.response.json();",
-                  "    if (json.data && json.data.devCode) {",
-                  "        pm.environment.set('otp_code', json.data.devCode);",
-                  "    }",
                   "    pm.test('تم طلب كود التحقق بنجاح', function() {",
                   "        pm.expect(json.success).to.be.true;",
                   "        pm.expect(json.data.otpSent).to.be.true;",
                   "    });",
+                  "    console.log('✉️ تم إرسال كود التحقق إلى البريد الإلكتروني.');",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -74,7 +78,10 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -82,8 +89,14 @@
             },
             "url": {
               "raw": "{{base_url}}/api/auth/send-otp",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "send-otp"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "send-otp"
+              ]
             },
             "description": "طلب كود OTP جديد لتسجيل الدخول لمستخدم مسجل بالفعل."
           }
@@ -118,7 +131,10 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -126,8 +142,14 @@
             },
             "url": {
               "raw": "{{base_url}}/api/auth/verify-otp",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "verify-otp"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "verify-otp"
+              ]
             },
             "description": "إدخال كود الـ OTP المكون من 6 أرقام للتحقق وإصدار الـ JWT Access Token والـ Refresh Token."
           }
@@ -151,8 +173,14 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -160,8 +188,14 @@
             },
             "url": {
               "raw": "{{base_url}}/api/auth/select-user-type",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "select-user-type"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "select-user-type"
+              ]
             },
             "description": "تحديد نوع حساب المستخدم كـ عميل (Customer).\n🔒 يتطلب Bearer Token (يتم تمريره تلقائياً من الخطوة 3)."
           }
@@ -185,8 +219,14 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -194,8 +234,14 @@
             },
             "url": {
               "raw": "{{base_url}}/api/auth/select-user-type",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "select-user-type"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "select-user-type"
+              ]
             },
             "description": "تحديد نوع الحساب كـ صاحب محل (Shop Owner) مع حفظ اسم المحل وعنوانه.\n🔒 يتطلب Bearer Token."
           }
@@ -226,16 +272,25 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"token\": \"{{access_token}}\",\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
+              "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/auth/refresh-token",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "refresh-token"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "refresh-token"
+              ]
             },
             "description": "تجديد صلاحية الـ Access Token باستخدام الـ Refresh Token عند انتهائه."
           }
@@ -263,17 +318,29 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "body": {
               "mode": "raw",
-              "raw": "\"{{refresh_token}}\""
+              "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/auth/logout",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "logout"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "logout"
+              ]
             },
             "description": "تسجيل الخروج وإلغاء صلاحية الـ Refresh Token من السيرفر.\n🔒 يتطلب Bearer Token."
           }
@@ -304,12 +371,21 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/api/users/me",
-              "host": ["{{base_url}}"],
-              "path": ["api", "users", "me"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "me"
+              ]
             },
             "description": "جلب بيانات المستخدم المسجل حالياً (الاسم، البريد، نوع الحساب، بيانات المحل إن وجدت).\n🔒 يتطلب Bearer Token (يتم تمريره تلقائياً)."
           }
