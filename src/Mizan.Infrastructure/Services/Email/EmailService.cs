@@ -42,9 +42,10 @@ public class EmailService : IEmailService
         {
             var message = new MimeMessage();
             var fromEmail = _options.SenderEmail;
-            message.From.Add(new MailboxAddress(_options.FromName, fromEmail));
-            message.To.Add(new MailboxAddress(toEmail.Trim(), toEmail.Trim()));
-            message.Subject = $"🔐 كود التحقق لتطبيق ميزان: {otpCode}";
+            message.From.Add(new MailboxAddress("Mizan App", fromEmail));
+            message.To.Add(MailboxAddress.Parse(toEmail.Trim()));
+            message.Subject = "كود التحقق لتطبيق ميزان";
+            message.Date = DateTimeOffset.Now;
 
             var bodyBuilder = new BodyBuilder
             {
