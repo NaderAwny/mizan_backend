@@ -42,44 +42,31 @@ public class EmailService : IEmailService
         {
             var message = new MimeMessage();
             var fromEmail = _options.SenderEmail;
-            message.From.Add(new MailboxAddress("Mizan App", fromEmail));
+            message.From.Add(new MailboxAddress("تطبيق ميزان", fromEmail));
             message.To.Add(MailboxAddress.Parse(toEmail.Trim()));
             message.Subject = "كود التحقق لتطبيق ميزان";
             message.Date = DateTimeOffset.Now;
 
             var bodyBuilder = new BodyBuilder
             {
-                TextBody = $"مرحباً بك،\n\nكود التحقق لتسجيل الدخول إلى حسابك في تطبيق ميزان هو: {otpCode}\n\nهذا الكود صالح لمدة دقيقتين فقط.\n\nتطبيق ميزان.",
+                TextBody = $"مرحباً بك في تطبيق ميزان،\n\nكود التحقق الخاص بك هو:\n{otpCode}\n\nهذا الكود صالح لمدة دقيقتين فقط.\nيرجى عدم مشاركة هذا الكود مع أي شخص.\n\nتطبيق ميزان",
                 HtmlBody = $@"
 <!DOCTYPE html>
 <html dir=""rtl"" lang=""ar"">
 <head>
     <meta charset=""UTF-8"">
-    <style>
-        body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; text-align: right; }}
-        .container {{ max-width: 500px; margin: 0 auto; background: #ffffff; border-radius: 12px; padding: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }}
-        .header {{ text-align: center; margin-bottom: 25px; }}
-        .logo {{ font-size: 28px; font-weight: bold; color: #10B981; }}
-        .content {{ color: #374151; font-size: 16px; line-height: 1.6; text-align: right; }}
-        .otp-box {{ background: #ECFDF5; border: 2px dashed #10B981; border-radius: 10px; padding: 18px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 6px; color: #065F46; margin: 25px 0; }}
-        .footer {{ text-align: center; color: #9CA3AF; font-size: 13px; margin-top: 25px; border-top: 1px solid #E5E7EB; padding-top: 15px; }}
-    </style>
 </head>
-<body>
-    <div class=""container"">
-        <div class=""header"">
-            <div class=""logo"">ميزان — Mizan</div>
+<body style=""font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px; text-align: right; direction: rtl;"">
+    <div style=""max-width: 480px; margin: 0 auto; background: #ffffff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 24px;"">
+        <h2 style=""color: #10b981; text-align: center; margin-bottom: 20px;"">تطبيق ميزان — Mizan</h2>
+        <p style=""font-size: 16px; color: #333333;"">مرحباً بك،</p>
+        <p style=""font-size: 15px; color: #555555;"">استخدم كود التحقق التالي لتسجيل الدخول إلى حسابك:</p>
+        <div style=""background-color: #f0fdf4; border: 2px dashed #10b981; border-radius: 8px; padding: 14px; text-align: center; font-size: 28px; font-weight: bold; letter-spacing: 4px; color: #065f46; margin: 20px 0;"">
+            {otpCode}
         </div>
-        <div class=""content"">
-            <p>مرحباً بك،</p>
-            <p>استخدم كود التحقق التالي لتسجيل الدخول إلى حسابك في تطبيق ميزان:</p>
-            <div class=""otp-box"">{otpCode}</div>
-            <p>⚠️ هذا الكود صالح لمدة <strong>دقيقتين فقط</strong>. برجاء عدم مشاركة الكود مع أي شخص.</p>
-        </div>
-        <div class=""footer"">
-            <p>إذا لم تطلب هذا الكود، يمكنك تجاهل هذه الرسالة بأمان.</p>
-            <p>&copy; {DateTime.UtcNow.Year} تطبيق ميزان. جميع الحقوق محفوظة.</p>
-        </div>
+        <p style=""font-size: 13px; color: #888888;"">⚠️ هذا الكود صالح لمدة <strong>دقيقتين فقط</strong>. برجاء عدم مشاركته مع أي شخص.</p>
+        <hr style=""border: none; border-top: 1px solid #eeeeee; margin: 20px 0;"" />
+        <p style=""font-size: 12px; color: #aaaaaa; text-align: center;"">&copy; {DateTime.UtcNow.Year} تطبيق ميزان. جميع الحقوق محفوظة.</p>
     </div>
 </body>
 </html>"
