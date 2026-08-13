@@ -73,8 +73,8 @@ public class User
         if (lastName.Length > 50)
             throw new DomainException("Last name must not exceed 50 characters");
 
-        // Allow letters (Arabic + Latin) and spaces only - reject digits and symbols
-        var nameRegex = new Regex(@"^[\u0600-\u06FFa-zA-Z\s]+$", RegexOptions.Compiled);
+        // Allow letters (any language) and spaces only - reject digits and symbols
+        var nameRegex = new Regex(@"^[\p{L}\s]+$", RegexOptions.Compiled);
         if (!nameRegex.IsMatch(firstName))
             throw new DomainException("First name must contain letters and spaces only");
 
