@@ -12,9 +12,10 @@ public class UserRepository : BaseRepository<User>, IUserRepository
 
     public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
     {
+        var normalizedEmail = (email ?? string.Empty).Trim().ToLowerInvariant();
         return await _dbSet
             .Include(u => u.Shop)
-            .FirstOrDefaultAsync(u => u.Email == email.ToLowerInvariant(), cancellationToken);
+            .FirstOrDefaultAsync(u => u.Email == normalizedEmail, cancellationToken);
     }
 
     public async Task<User?> GetWithShopAsync(int userId, CancellationToken cancellationToken = default)

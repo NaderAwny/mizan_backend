@@ -15,12 +15,11 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.Property(u => u.Email)
             .HasColumnName("email")
-            .HasMaxLength(100)
+            .HasMaxLength(254)
             .IsRequired();
 
         builder.HasIndex(u => u.Email)
-            .IsUnique()
-            .HasDatabaseName("IX_users_email");
+            .IsUnique();
 
         builder.Property(u => u.FirstName)
             .HasColumnName("first_name")

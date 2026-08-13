@@ -19,7 +19,7 @@ public class EmailService : IEmailService
         _logger = logger;
     }
 
-    public async Task SendOtpEmailAsync(string toEmail, string otpCode, string recipientName = "", CancellationToken cancellationToken = default)
+    public async Task<bool> SendOtpEmailAsync(string toEmail, string otpCode, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(toEmail))
         {
@@ -31,19 +31,19 @@ public class EmailService : IEmailService
             throw new BadRequestException("كود التحقق مطلوب");
         }
 
-        // In development mode if credentials not configured, log clearly and proceed
-        if (_options.UseMockInDevelopment && (string.IsNullOrWhiteSpace(_options.UserName) || string.IsNullOrWhiteSpace(_options.Password)))
+        // In development / mock mode when credentials are not configured or UseMockInDevelopment is true
+        if (_options.UseMockInDevelopment && (string.IsNullOrWhiteSpace(_options.SenderEmail) || string.IsNullOrWhiteSpace(_options.SenderPassword)))
         {
             _logger.LogInformation("📧 [DEV MOCK EMAIL] OTP for {Email} is: {OtpCode}", toEmail, otpCode);
-            return;
+            return true;
         }
 
         try
         {
             var message = new MimeMessage();
-            var fromAddress = string.IsNullOrWhiteSpace(_options.FromEmail) ? _options.UserName : _options.FromEmail;
-            message.From.Add(new MailboxAddress(_options.FromName, fromAddress));
-            message.To.Add(new MailboxAddress(recipientName, toEmail.Trim()));
+            var fromEmail = _options.SenderEmail;
+            message.From.Add(new MailboxAddress(_options.FromName, fromEmail));
+            message.To.Add(new MailboxAddress(toEmail.Trim(), toEmail.Trim()));
             message.Subject = $"🔐 كود التحقق لتطبيق ميزان: {otpCode}";
 
             var bodyBuilder = new BodyBuilder
@@ -69,7 +69,7 @@ public class EmailService : IEmailService
             <div class=""logo"">ميزان — Mizan</div>
         </div>
         <div class=""content"">
-            <p>مرحباً {(string.IsNullOrWhiteSpace(recipientName) ? "بك" : recipientName)}،</p>
+            <p>مرحباً بك،</p>
             <p>استخدم كود التحقق التالي لتسجيل الدخول إلى حسابك في تطبيق ميزان:</p>
             <div class=""otp-box"">{otpCode}</div>
             <p>⚠️ هذا الكود صالح لمدة <strong>دقيقتين فقط</strong>. برجاء عدم مشاركة الكود مع أي شخص.</p>
@@ -87,23 +87,24 @@ public class EmailService : IEmailService
 
             using var client = new SmtpClient();
             client.CheckCertificateRevocation = false;
-            client.Timeout = 10000; // 10 seconds timeout
+            client.Timeout = 10000;
 
-            var socketOption = _options.Port == 465 
+            var socketOption = _options.SmtpPort == 465 
                 ? SecureSocketOptions.SslOnConnect 
                 : (_options.EnableSsl ? SecureSocketOptions.StartTls : SecureSocketOptions.Auto);
 
-            await client.ConnectAsync(_options.Host, _options.Port, socketOption, cancellationToken);
+            await client.ConnectAsync(_options.SmtpHost, _options.SmtpPort, socketOption, cancellationToken);
             
-            if (!string.IsNullOrWhiteSpace(_options.UserName) && !string.IsNullOrWhiteSpace(_options.Password))
+            if (!string.IsNullOrWhiteSpace(_options.SenderEmail) && !string.IsNullOrWhiteSpace(_options.SenderPassword))
             {
-                await client.AuthenticateAsync(_options.UserName, _options.Password, cancellationToken);
+                await client.AuthenticateAsync(_options.SenderEmail, _options.SenderPassword, cancellationToken);
             }
 
             await client.SendAsync(message, cancellationToken);
             await client.DisconnectAsync(true, cancellationToken);
 
             _logger.LogInformation("✅ OTP email sent successfully to {Email}", toEmail);
+            return true;
         }
         catch (Exception ex)
         {

@@ -10,6 +10,7 @@ namespace Mizan.UnitTests.Integration;
 public class CustomWebApplicationFactory : WebApplicationFactory<Program>
 {
     private readonly string _dbName = Guid.NewGuid().ToString();
+    public static readonly FakeEmailService EmailServiceInstance = new();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -28,15 +29,20 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
                 services.Remove(descriptor);
             }
 
-            services.AddScoped<IEmailService, FakeEmailService>();
+            services.AddSingleton<IEmailService>(EmailServiceInstance);
         });
     }
 
-    private class FakeEmailService : IEmailService
+    public class FakeEmailService : IEmailService
     {
-        public Task SendOtpEmailAsync(string toEmail, string otpCode, string recipientName = "", CancellationToken cancellationToken = default)
+        public string? LastCapturedOtp { get; set; }
+        public string? LastRecipientEmail { get; set; }
+
+        public Task<bool> SendOtpEmailAsync(string toEmail, string otpCode, CancellationToken cancellationToken = default)
         {
-            return Task.CompletedTask;
+            LastCapturedOtp = otpCode;
+            LastRecipientEmail = toEmail;
+            return Task.FromResult(true);
         }
     }
 }

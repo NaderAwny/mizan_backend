@@ -1,5 +1,7 @@
+using System.Net.Mail;
+using System.Security.Cryptography;
+using System.Text;
 using Mizan.Core.Exceptions;
-using System.Text.RegularExpressions;
 
 namespace Mizan.Core.Entities;
 
@@ -19,21 +21,31 @@ public class OtpCode
 
     public static OtpCode Create(string email, string code, int expirySeconds = 120)
     {
-        if (string.IsNullOrWhiteSpace(email))
-            throw new DomainException("البريد الإلكتروني مطلوب");
+        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(email.Trim()))
+            throw new DomainException("Email is required");
 
-        // Validate email format
-        var emailRegex = new Regex(@"^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$", RegexOptions.IgnoreCase);
-        if (!emailRegex.IsMatch(email.Trim()))
-            throw new DomainException("صيغة البريد الإلكتروني غير صالحة");
+        email = email.Trim().ToLowerInvariant();
 
-        // Validate OTP code: exactly 6 numeric digits
+        if (email.Length > 254)
+            throw new DomainException("Email must not exceed 254 characters");
+
+        try
+        {
+            var mailAddress = new MailAddress(email);
+            if (mailAddress.Address != email)
+                throw new DomainException("Invalid email format");
+        }
+        catch
+        {
+            throw new DomainException("Invalid email format");
+        }
+
         if (string.IsNullOrWhiteSpace(code) || code.Length != 6 || !code.All(char.IsDigit))
-            throw new DomainException("كود التحقق يجب أن يتكون من 6 أرقام");
+            throw new DomainException("OTP code must be 6 digits");
 
         return new OtpCode
         {
-            Email = email.Trim().ToLowerInvariant(),
+            Email = email,
             Code = code,
             ExpiresAt = DateTime.UtcNow.AddSeconds(expirySeconds),
             AttemptsCount = 0,
@@ -42,24 +54,22 @@ public class OtpCode
         };
     }
 
-    public bool Verify(string inputCode)
+    public bool Verify(string? inputCode)
     {
-        if (IsUsed)
-            throw new BadRequestException("تم استخدام هذا الكود من قبل");
+        if (inputCode == null)
+            throw new BadRequestException("Invalid or expired verification code");
 
-        if (DateTime.UtcNow > ExpiresAt)
-            throw new BadRequestException("انتهت صلاحية كود التحقق");
+        var trimmedInput = inputCode.Trim();
 
-        if (AttemptsCount >= MaxAttempts)
-            throw new BadRequestException("تم تجاوز الحد الأقصى للمحاولات (3 محاولات). يرجى طلب كود جديد");
-
-        // Validate input format before comparing
-        if (string.IsNullOrWhiteSpace(inputCode) || inputCode.Trim().Length != 6 || !inputCode.Trim().All(char.IsDigit))
-            throw new BadRequestException("كود التحقق يجب أن يتكون من 6 أرقام");
+        if (IsUsed || DateTime.UtcNow > ExpiresAt || AttemptsCount >= MaxAttempts)
+            throw new BadRequestException("Invalid or expired verification code");
 
         AttemptsCount++;
 
-        if (Code != inputCode.Trim())
+        var expectedBytes = Encoding.UTF8.GetBytes(Code);
+        var inputBytes = Encoding.UTF8.GetBytes(trimmedInput);
+
+        if (expectedBytes.Length != inputBytes.Length || !CryptographicOperations.FixedTimeEquals(expectedBytes, inputBytes))
             return false;
 
         IsUsed = true;

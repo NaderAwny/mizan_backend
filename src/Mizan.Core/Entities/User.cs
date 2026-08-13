@@ -1,5 +1,6 @@
-using Mizan.Core.Exceptions;
+using System.Net.Mail;
 using System.Text.RegularExpressions;
+using Mizan.Core.Exceptions;
 
 namespace Mizan.Core.Entities;
 
@@ -33,46 +34,52 @@ public class User
 
     public void SetEmail(string email)
     {
-        if (string.IsNullOrWhiteSpace(email))
-            throw new DomainException("البريد الإلكتروني مطلوب");
+        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(email.Trim()))
+            throw new DomainException("Email is required");
 
         email = email.Trim().ToLowerInvariant();
 
-        // Validate proper email format
-        var emailRegex = new Regex(@"^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$", RegexOptions.IgnoreCase);
-        if (!emailRegex.IsMatch(email))
-            throw new DomainException("صيغة البريد الإلكتروني غير صالحة");
+        if (email.Length > 254)
+            throw new DomainException("Email must not exceed 254 characters");
 
-        if (email.Length > 100)
-            throw new DomainException("البريد الإلكتروني لا يمكن أن يتجاوز 100 حرف");
+        try
+        {
+            var mailAddress = new MailAddress(email);
+            if (mailAddress.Address != email)
+                throw new DomainException("Invalid email format");
+        }
+        catch
+        {
+            throw new DomainException("Invalid email format");
+        }
 
         Email = email;
     }
 
     public void UpdateProfile(string firstName, string lastName)
     {
-        if (string.IsNullOrWhiteSpace(firstName))
-            throw new DomainException("الاسم الأول مطلوب");
+        if (string.IsNullOrWhiteSpace(firstName) || string.IsNullOrWhiteSpace(firstName.Trim()))
+            throw new DomainException("First name is required");
 
-        if (string.IsNullOrWhiteSpace(lastName))
-            throw new DomainException("الاسم الأخير مطلوب");
+        if (string.IsNullOrWhiteSpace(lastName) || string.IsNullOrWhiteSpace(lastName.Trim()))
+            throw new DomainException("Last name is required");
 
         firstName = firstName.Trim();
         lastName = lastName.Trim();
 
         if (firstName.Length > 50)
-            throw new DomainException("الاسم الأول لا يمكن أن يتجاوز 50 حرف");
+            throw new DomainException("First name must not exceed 50 characters");
 
         if (lastName.Length > 50)
-            throw new DomainException("الاسم الأخير لا يمكن أن يتجاوز 50 حرف");
+            throw new DomainException("Last name must not exceed 50 characters");
 
-        // Only allow letters (Arabic + English) and spaces
-        var nameRegex = new Regex(@"^[\u0600-\u06FFa-zA-Z\s]+$");
+        // Allow letters (Arabic + Latin) and spaces only - reject digits and symbols
+        var nameRegex = new Regex(@"^[\u0600-\u06FFa-zA-Z\s]+$", RegexOptions.Compiled);
         if (!nameRegex.IsMatch(firstName))
-            throw new DomainException("الاسم الأول يجب أن يحتوي على أحرف فقط (عربي أو إنجليزي)");
+            throw new DomainException("First name must contain letters and spaces only");
 
         if (!nameRegex.IsMatch(lastName))
-            throw new DomainException("الاسم الأخير يجب أن يحتوي على أحرف فقط (عربي أو إنجليزي)");
+            throw new DomainException("Last name must contain letters and spaces only");
 
         FirstName = firstName;
         LastName = lastName;
@@ -80,12 +87,12 @@ public class User
 
     public void SetUserType(string userType)
     {
-        if (string.IsNullOrWhiteSpace(userType))
-            throw new DomainException("نوع المستخدم مطلوب");
+        if (string.IsNullOrWhiteSpace(userType) || string.IsNullOrWhiteSpace(userType.Trim()))
+            throw new DomainException("User type is required");
 
         userType = userType.Trim().ToLowerInvariant();
         if (userType != "customer" && userType != "shop_owner")
-            throw new DomainException("نوع المستخدم يجب أن يكون customer أو shop_owner");
+            throw new DomainException("User type must be either customer or shop_owner");
 
         UserType = userType;
     }

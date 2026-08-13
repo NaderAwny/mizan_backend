@@ -2,7 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Mizan.Application.Interfaces;
 using Mizan.Core.Entities;
@@ -13,9 +13,9 @@ public class JwtProvider : IJwtProvider
 {
     private readonly JwtOptions _options;
 
-    public JwtProvider(IConfiguration configuration)
+    public JwtProvider(IOptions<JwtOptions> options)
     {
-        _options = configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? new JwtOptions();
+        _options = options.Value;
     }
 
     public int AccessTokenExpirationSeconds => _options.AccessTokenExpirationDays * 24 * 60 * 60;

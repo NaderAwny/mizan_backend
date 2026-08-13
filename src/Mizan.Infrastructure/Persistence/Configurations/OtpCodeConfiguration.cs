@@ -15,11 +15,10 @@ public class OtpCodeConfiguration : IEntityTypeConfiguration<OtpCode>
 
         builder.Property(o => o.Email)
             .HasColumnName("email")
-            .HasMaxLength(100)
+            .HasMaxLength(254)
             .IsRequired();
 
-        builder.HasIndex(o => o.Email)
-            .HasDatabaseName("IX_otp_codes_email");
+        builder.HasIndex(o => o.Email);
 
         builder.Property(o => o.Code)
             .HasColumnName("code")

@@ -29,7 +29,7 @@ public class AuthController : BaseController
     [HttpPost("send-otp")]
     public async Task<IActionResult> SendOtp([FromBody] SendOtpRequest request, CancellationToken cancellationToken)
     {
-        var response = await _authService.SendOtpAsync(request.TargetIdentifier, cancellationToken);
+        var response = await _authService.SendOtpAsync(request.Email, cancellationToken);
         return Success(response, "تم إرسال كود التحقق بنجاح");
     }
 
@@ -49,6 +49,7 @@ public class AuthController : BaseController
         return Success(response, "تم تحديث نوع الحساب بنجاح");
     }
 
+    [EnableRateLimiting("AuthPolicy")]
     [HttpPost("refresh-token")]
     public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request, CancellationToken cancellationToken)
     {
@@ -58,9 +59,9 @@ public class AuthController : BaseController
 
     [Authorize]
     [HttpPost("logout")]
-    public async Task<IActionResult> Logout([FromBody] string refreshToken, CancellationToken cancellationToken)
+    public async Task<IActionResult> Logout([FromBody] LogoutRequest request, CancellationToken cancellationToken)
     {
-        await _authService.RevokeTokenAsync(refreshToken, cancellationToken);
+        await _authService.RevokeTokenAsync(request.RefreshToken, cancellationToken);
         return Success(null, "تم تسجيل الخروج بنجاح");
     }
 }

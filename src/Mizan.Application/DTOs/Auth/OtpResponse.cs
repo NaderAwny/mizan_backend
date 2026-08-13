@@ -12,7 +12,4 @@ public class OtpResponse
 
     [JsonPropertyName("message")]
     public string Message { get; set; } = string.Empty;
-
-    [JsonPropertyName("devCode")]
-    public string? DevCode { get; set; }
 }

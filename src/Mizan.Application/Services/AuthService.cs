@@ -1,4 +1,6 @@
 using System.Security.Cryptography;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Mizan.Application.DTOs.Auth;
 using Mizan.Application.Interfaces;
 using Mizan.Core.Entities;
@@ -12,16 +14,22 @@ public class AuthService : IAuthService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IJwtProvider _jwtProvider;
     private readonly IEmailService _emailService;
+    private readonly IHostEnvironment _environment;
+    private readonly ILogger<AuthService> _logger;
     private const int MaxActiveDevices = 5;
 
     public AuthService(
         IUnitOfWork unitOfWork,
         IJwtProvider jwtProvider,
-        IEmailService emailService)
+        IEmailService emailService,
+        IHostEnvironment environment,
+        ILogger<AuthService> logger)
     {
         _unitOfWork = unitOfWork;
         _jwtProvider = jwtProvider;
         _emailService = emailService;
+        _environment = environment;
+        _logger = logger;
     }
 
     public async Task<OtpResponse> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default)
@@ -40,7 +48,8 @@ public class AuthService : IAuthService
             _unitOfWork.Users.Update(existingUser);
         }
 
-        return await GenerateAndSendOtpAsync(email, $"{request.FirstName} {request.LastName}", cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        return await GenerateAndSendOtpAsync(email, cancellationToken);
     }
 
     public async Task<OtpResponse> SendOtpAsync(string identifier, CancellationToken cancellationToken = default)
@@ -49,18 +58,18 @@ public class AuthService : IAuthService
             throw new BadRequestException("البريد الإلكتروني مطلوب");
 
         var email = identifier.Trim().ToLowerInvariant();
-        return await GenerateAndSendOtpAsync(email, "مستخدم", cancellationToken);
+        return await GenerateAndSendOtpAsync(email, cancellationToken);
     }
 
     public async Task<AuthResponse> VerifyOtpAsync(VerifyOtpRequest request, CancellationToken cancellationToken = default)
     {
-        var email = request.TargetIdentifier;
+        var email = (request.Email ?? string.Empty).Trim().ToLowerInvariant();
         if (string.IsNullOrWhiteSpace(email))
-            throw new BadRequestException("البريد الإلكتروني مطلوب");
+            throw new BadRequestException("Invalid or expired verification code");
 
         var otp = await _unitOfWork.OtpCodes.GetLatestValidOtpAsync(email, cancellationToken);
         if (otp == null)
-            throw new BadRequestException("كود التحقق غير صحيح أو منتهي الصلاحية");
+            throw new BadRequestException("Invalid or expired verification code");
 
         bool isVerified = otp.Verify(request.Code);
         _unitOfWork.OtpCodes.Update(otp);
@@ -68,7 +77,7 @@ public class AuthService : IAuthService
         if (!isVerified)
         {
             await _unitOfWork.SaveChangesAsync(cancellationToken);
-            throw new BadRequestException("كود التحقق غير صحيح");
+            throw new BadRequestException("Invalid or expired verification code");
         }
 
         var user = await _unitOfWork.Users.GetByEmailAsync(email, cancellationToken);
@@ -235,7 +244,7 @@ public class AuthService : IAuthService
         }
     }
 
-    private async Task<OtpResponse> GenerateAndSendOtpAsync(string email, string recipientName, CancellationToken cancellationToken)
+    private async Task<OtpResponse> GenerateAndSendOtpAsync(string email, CancellationToken cancellationToken)
     {
         await _unitOfWork.OtpCodes.InvalidatePreviousOtpsAsync(email, cancellationToken);
 
@@ -246,14 +255,18 @@ public class AuthService : IAuthService
         await _unitOfWork.OtpCodes.AddAsync(otp, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        await _emailService.SendOtpEmailAsync(email, randomCode, recipientName, cancellationToken);
+        await _emailService.SendOtpEmailAsync(email, randomCode, cancellationToken);
+
+        if (_environment.IsDevelopment())
+        {
+            _logger.LogInformation("🔐 [DEV SERVER-ONLY OTP] Code for {Email} is: {Code}", email, randomCode);
+        }
 
         return new OtpResponse
         {
             OtpSent = true,
             ExpiresInSeconds = 120,
-            Message = "تم إرسال كود التحقق بنجاح إلى بريدك الإلكتروني",
-            DevCode = randomCode
+            Message = "تم إرسال كود التحقق بنجاح إلى بريدك الإلكتروني"
         };
     }
 }

@@ -33,6 +33,7 @@ public class OtpCodeTests
         Assert.Throws<DomainException>(() => OtpCode.Create("test@example.com", "12345"));   // 5 digits
         Assert.Throws<DomainException>(() => OtpCode.Create("test@example.com", "1234567")); // 7 digits
         Assert.Throws<DomainException>(() => OtpCode.Create("test@example.com", "abcdef"));  // non-numeric
+        Assert.Throws<DomainException>(() => OtpCode.Create("test@example.com", "12a456"));  // mixed
     }
 
     [Fact]
@@ -78,7 +79,7 @@ public class OtpCodeTests
 
         // 4th attempt should throw
         var ex = Assert.Throws<BadRequestException>(() => otp.Verify("123456"));
-        Assert.Contains("3 محاولات", ex.Message);
+        Assert.Contains("Invalid or expired verification code", ex.Message);
     }
 
     [Fact]
@@ -89,7 +90,7 @@ public class OtpCodeTests
 
         // Act & Assert
         var ex = Assert.Throws<BadRequestException>(() => otp.Verify("123456"));
-        Assert.Contains("انتهت صلاحية", ex.Message);
+        Assert.Contains("Invalid or expired verification code", ex.Message);
     }
 
     [Fact]
@@ -101,6 +102,14 @@ public class OtpCodeTests
 
         // Act & Assert (second attempt)
         var ex = Assert.Throws<BadRequestException>(() => otp.Verify("123456"));
-        Assert.Contains("تم استخدام هذا الكود", ex.Message);
+        Assert.Contains("Invalid or expired verification code", ex.Message);
+    }
+
+    [Fact]
+    public void Verify_WithNullInput_ShouldThrowBadRequestException()
+    {
+        var otp = OtpCode.Create("test@example.com", "123456", expirySeconds: 120);
+        var ex = Assert.Throws<BadRequestException>(() => otp.Verify(null));
+        Assert.Contains("Invalid or expired verification code", ex.Message);
     }
 }

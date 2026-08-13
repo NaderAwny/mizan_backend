@@ -4,7 +4,7 @@ public class JwtOptions
 {
     public const string SectionName = "Jwt";
 
-    public string SecretKey { get; set; } = "MizanSecretSuperKeyForJwtSigning_MustBeAtLeast32BytesLong!";
+    public string SecretKey { get; set; } = string.Empty;
     public string Issuer { get; set; } = "MizanBackend";
     public string Audience { get; set; } = "MizanApp";
     public int AccessTokenExpirationDays { get; set; } = 7;

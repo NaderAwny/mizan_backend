@@ -64,8 +64,38 @@ builder.Services.AddSingleton<IJwtProvider, JwtProvider>();
 builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection(EmailOptions.SectionName));
 builder.Services.AddScoped<IEmailService, EmailService>();
 
-// 6. JWT Authentication
+// 6. JWT Authentication & Strict Key Validation
 var jwtOptions = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? new JwtOptions();
+const string compromisedLeakedKey = "MizanSecretSuperKeyForJwtSigning_MustBeAtLeast32BytesLong_2026!";
+
+if (!builder.Environment.IsEnvironment("Testing"))
+{
+    if (string.IsNullOrWhiteSpace(jwtOptions.SecretKey) ||
+        Encoding.UTF8.GetByteCount(jwtOptions.SecretKey) < 32 ||
+        jwtOptions.SecretKey == compromisedLeakedKey)
+    {
+        throw new InvalidOperationException(
+            "FATAL SECURITY ERROR: A secure JWT secret key (minimum 32 bytes) must be configured via user-secrets or environment variables. " +
+            "The leaked default key and empty keys are strictly rejected.");
+    }
+}
+else
+{
+    if (string.IsNullOrWhiteSpace(jwtOptions.SecretKey) || Encoding.UTF8.GetByteCount(jwtOptions.SecretKey) < 32)
+    {
+        jwtOptions.SecretKey = "TestEnvironmentSecretKey_MustBeAtLeast32BytesLong_ForTestingOnly!";
+    }
+}
+
+builder.Services.Configure<JwtOptions>(options =>
+{
+    options.SecretKey = jwtOptions.SecretKey;
+    options.Issuer = jwtOptions.Issuer;
+    options.Audience = jwtOptions.Audience;
+    options.AccessTokenExpirationDays = jwtOptions.AccessTokenExpirationDays;
+    options.RefreshTokenExpirationDays = jwtOptions.RefreshTokenExpirationDays;
+});
+
 var key = Encoding.UTF8.GetBytes(jwtOptions.SecretKey);
 
 builder.Services.AddAuthentication(options =>
@@ -75,7 +105,7 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
-    options.RequireHttpsMetadata = false;
+    options.RequireHttpsMetadata = !builder.Environment.IsDevelopment() && !builder.Environment.IsEnvironment("Testing");
     options.SaveToken = true;
     options.TokenValidationParameters = new TokenValidationParameters
     {
@@ -104,14 +134,26 @@ builder.Services.AddRateLimiter(options =>
     });
 });
 
-// 8. CORS
+// 8. CORS Policies (Permissive in Dev, Restricted in Production)
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
+    options.AddPolicy("DevelopmentCors", policy =>
     {
         policy.AllowAnyOrigin()
               .AllowAnyHeader()
               .AllowAnyMethod();
+    });
+
+    var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
+    options.AddPolicy("ProductionCors", policy =>
+    {
+        if (allowedOrigins.Length > 0)
+        {
+            policy.WithOrigins(allowedOrigins)
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials();
+        }
     });
 });
 
@@ -165,6 +207,11 @@ if (!app.Environment.IsEnvironment("Testing"))
 // 10. Middleware Pipeline
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
+if (!app.Environment.IsEnvironment("Testing") && !app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -175,7 +222,7 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.UseCors("AllowAll");
+app.UseCors(app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing") ? "DevelopmentCors" : "ProductionCors");
 app.UseRateLimiter();
 
 app.UseAuthentication();

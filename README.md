@@ -1,48 +1,30 @@
-# ميزان — Mizan Backend
+# ⚖️ Mizan Backend — نظام ميزان
 
-نظام الـ Backend المتكامل لتطبيق **ميزان** لإدارة الديون والمبيعات والأقساط، مبني باستخدام **ASP.NET Core (.NET 9)** وقاعدة بيانات **SQL Server** باتباع معمارية **Clean Architecture** و **Rich Domain Model**.
+نظام Backend متكامل لإدارة الديون والمبيعات والأقساط مصمم وفق معايير **Clean Architecture** باستخدام **.NET 9** و **SQL Server**.
 
----
+## 🏗️ البنية المعمارية (Architecture)
 
-## 🏛️ البنية المعمارية (Clean Architecture)
+- **`Mizan.Core`**: الكيانات الأساسية (`User`, `OtpCode`, `Shop`, `RefreshToken`)، الاستثناءات الخاصة بالمجال (`DomainException`, `BadRequestException`).
+- **`Mizan.Application`**: الخدمات والمنطق التطبيقي (`AuthService`, `UserService`)، الـ DTOs مع التحقق الصارم، واجهات الخدمات الخارجية (`IEmailService`, `IJwtProvider`).
+- **`Mizan.Infrastructure`**: طبقة الوصول للبيانات (`MizanDbContext`, `UnitOfWork`, Repositories مع EF Core Fluent API)، مزود JWT، خدمة Email SMTP / Mock.
+- **`Mizan.API`**: وحدات التحكم (Controllers)، وسيط معالجة الأخطاء الموحد (`ExceptionHandlingMiddleware`)، توثيق Swagger/OpenAPI مع JWT Bearer، وسياسات الحماية و Rate Limiting.
 
-- **`Mizan.Core`**: الكيانات الأساسية (Entities غنية بمنطق العمل وValidation داخلي)، الاستثناءات المخصصة (`DomainException`, `NotFoundException`, ...)، واجهات الـ Repositories و `IUnitOfWork`.
-- **`Mizan.Application`**: الخدمات والمنطق التطبيقي (`AuthService`, `UserService`)، الـ DTOs مع التحقق باللغة العربية، واجهات الخدمات الخارجية (`IWhatsAppService`, `IJwtProvider`).
-- **`Mizan.Infrastructure`**: طبقة الوصول للبيانات (`MizanDbContext`, `UnitOfWork`, Repositories مع EF Core Fluent API)، مزود JWT، خدمة WhatsApp Cloud API.
-- **`Mizan.API`**: الـ Controllers (`AuthController`, `UsersController`)، الـ Middlewares (`ExceptionHandlingMiddleware`, `AccountStatusMiddleware` مع Memory Cache)، إعدادات Rate Limiting و Swagger.
-- **`Mizan.UnitTests`**: اختبارات الوحدة والاختبارات التكاملية (Integration Tests مع `WebApplicationFactory`).
+## 🔐 الأمان والمصادقة (Security & Authentication)
 
----
+- **المصادقة عبر البريد الإلكتروني**: يتم تسجيل الدخول وإنشاء الحسابات حصرياً عبر البريد الإلكتروني ورمز التحقق (Email OTP).
+- **التحقق من الكود**: مقارنة ثابتة الوقت (`CryptographicOperations.FixedTimeEquals`) ضد هجمات التوقيت.
+- **إصدار التوكن**: JWT Access Token مشفر وموقع بمفتاح آمن غير معلن في الكود، مع دعم Refresh Token وإلغاء الجلسات.
+- **إخفاء التفاصيل الأمنية**: حماية كاملة ضد هجمات الاستكشاف، مع حذف أي حقول حساسة من الاستجابات (`DevCode`).
 
-## 🚀 التشغيل محلياً
+## 🚀 تشغيل المشروع
 
 ```bash
-# استعادة الحزم والبناء
-dotnet restore
+# 1. استعادة الحزم والبناء
 dotnet build
 
-# تشغيل الاختبارات
+# 2. تشغيل الاختبارات الآلية
 dotnet test
 
-# تشغيل الـ API
-cd src/Mizan.API
-dotnet run
+# 3. تشغيل الـ API
+dotnet run --project src/Mizan.API
 ```
-
----
-
-## 🔑 المميزات المنفذة (Feature 1: Auth & Foundation)
-
-1. **التسجيل والمصادقة برقم الواتساب**:
-   - التحقق من صيغة أرقام الهواتف المصرية (`010/011/012/015` أو `+20` والتوحيد التلقائي إلى 11 رقماً).
-   - إرسال OTP عبر WhatsApp Cloud API (صالح 120 ثانية، حد أقصى 3 محاولات).
-2. **إدارة الجلسات والأمان (JWT + Refresh Tokens)**:
-   - Access Token صالح 7 أيام.
-   - Refresh Token صالح 30 يوماً.
-   - سياسة أقصى 5 أجهزة متصلة للمستخدم في نفس الوقت (إلغاء الأقدم تلقائياً).
-   - Rate Limiting (5 محاولات / دقيقة على endpoints الـ Auth).
-3. **تحديد نوع الحساب**:
-   - `customer` (مستخدم عادي) أو `shop_owner` (صاحب محل مع حفظ بيانات المحل).
-4. **تنسيق موحد للاستجابة والأخطاء**:
-   - صيغة أخطاء موحدة في كل النظام: `{ "statusCode": ..., "message": "..." }`.
-   - كاش لحالة تفعيل الحساب (2 دقيقة) لتخفيف الضغط على قاعدة البيانات.

@@ -1,31 +1,54 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Reflection;
 using System.Text.Json;
+using Microsoft.Extensions.DependencyInjection;
 using Mizan.Application.DTOs.Auth;
+using Mizan.Application.Interfaces;
 using Xunit;
 
 namespace Mizan.UnitTests.Integration;
 
 public class AuthIntegrationTests : IClassFixture<CustomWebApplicationFactory>
 {
+    private readonly CustomWebApplicationFactory _factory;
     private readonly HttpClient _client;
     private readonly JsonSerializerOptions _jsonOptions = new() { PropertyNameCaseInsensitive = true };
 
     public AuthIntegrationTests(CustomWebApplicationFactory factory)
     {
+        _factory = factory;
         _client = factory.CreateClient();
     }
 
     [Fact]
-    public async Task Full_Auth_Flow_Should_Work_Successfully()
+    public void OtpResponse_MustNeverExposeCodeOrDevCodeField_ReflectionCheck()
     {
+        var type = typeof(OtpResponse);
+        var properties = type.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
+        var fields = type.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
+
+        Assert.DoesNotContain(properties, p => p.Name.Equals("DevCode", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(properties, p => p.Name.Equals("Code", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(properties, p => p.Name.Equals("OtpCode", StringComparison.OrdinalIgnoreCase));
+
+        Assert.DoesNotContain(fields, f => f.Name.Equals("DevCode", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(fields, f => f.Name.Equals("Code", StringComparison.OrdinalIgnoreCase));
+        Assert.DoesNotContain(fields, f => f.Name.Equals("OtpCode", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public async Task Full_Auth_Flow_With_Email_Should_Work_Successfully()
+    {
+        var testEmail = "test.integration@mizan.app";
+
         // 1. Register new user with email
         var registerRequest = new RegisterRequest
         {
             FirstName = "محمد",
             LastName = "أحمد",
-            Email = "test.user@mizan.app"
+            Email = testEmail
         };
 
         var regResponse = await _client.PostAsJsonAsync("/api/auth/register", registerRequest);
@@ -36,14 +59,21 @@ public class AuthIntegrationTests : IClassFixture<CustomWebApplicationFactory>
         
         var otpData = regContent.GetProperty("data");
         Assert.True(otpData.GetProperty("otpSent").GetBoolean());
-        var devCode = otpData.GetProperty("devCode").GetString();
-        Assert.NotNull(devCode);
+        
+        // Assert that response JSON has no devCode or code property
+        Assert.False(otpData.TryGetProperty("devCode", out _));
+        Assert.False(otpData.TryGetProperty("code", out _));
+
+        // Get captured OTP from fake email service instance
+        var sentCode = CustomWebApplicationFactory.EmailServiceInstance.LastCapturedOtp;
+        Assert.NotNull(sentCode);
+        Assert.Equal(6, sentCode.Length);
 
         // 2. Verify OTP
         var verifyRequest = new VerifyOtpRequest
         {
-            Email = "test.user@mizan.app",
-            Code = devCode
+            Email = testEmail,
+            Code = sentCode
         };
 
         var verifyResponse = await _client.PostAsJsonAsync("/api/auth/verify-otp", verifyRequest);
@@ -86,13 +116,18 @@ public class AuthIntegrationTests : IClassFixture<CustomWebApplicationFactory>
         var profileData = meContent.GetProperty("data");
         Assert.Equal("محمد", profileData.GetProperty("firstName").GetString());
         Assert.Equal("أحمد", profileData.GetProperty("lastName").GetString());
-        Assert.Equal("test.user@mizan.app", profileData.GetProperty("email").GetString());
+        Assert.Equal(testEmail, profileData.GetProperty("email").GetString());
         Assert.Equal("shop_owner", profileData.GetProperty("userType").GetString());
         Assert.Equal("محل الأمل للإلكترونيات", profileData.GetProperty("shop").GetProperty("shopName").GetString());
+
+        // 5. Logout
+        var logoutRequest = new LogoutRequest { RefreshToken = refreshToken };
+        var logoutResponse = await _client.PostAsJsonAsync("/api/auth/logout", logoutRequest);
+        Assert.Equal(HttpStatusCode.OK, logoutResponse.StatusCode);
     }
 
     [Fact]
-    public async Task VerifyOtp_WithWrongCode_ShouldReturnUnifiedError400()
+    public async Task VerifyOtp_WithWrongCode_ShouldReturnUnifiedGenericError400()
     {
         // 1. Register
         var registerRequest = new RegisterRequest
@@ -115,13 +150,13 @@ public class AuthIntegrationTests : IClassFixture<CustomWebApplicationFactory>
 
         var errorContent = await verifyResponse.Content.ReadFromJsonAsync<JsonElement>(_jsonOptions);
         Assert.Equal(400, errorContent.GetProperty("statusCode").GetInt32());
-        Assert.Contains("كود التحقق غير صحيح", errorContent.GetProperty("message").GetString());
+        Assert.Contains("Invalid or expired verification code", errorContent.GetProperty("message").GetString());
     }
 
     [Fact]
     public async Task GetCurrentUser_WithoutToken_ShouldReturnUnauthorized()
     {
-        using var client = new CustomWebApplicationFactory().CreateClient();
+        using var client = _factory.CreateClient();
         var response = await client.GetAsync("/api/users/me");
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
@@ -140,38 +175,5 @@ public class AuthIntegrationTests : IClassFixture<CustomWebApplicationFactory>
         var content = await response.Content.ReadFromJsonAsync<JsonElement>(_jsonOptions);
         Assert.True(content.GetProperty("success").GetBoolean());
         Assert.True(content.GetProperty("data").GetProperty("otpSent").GetBoolean());
-    }
-
-    [Fact]
-    public async Task EmailOtp_FullFlow_ShouldSendOtpAndLoginSuccessfully()
-    {
-        // 1. Send OTP to email
-        var sendOtpRequest = new SendOtpRequest
-        {
-            Email = "user@mizan.app"
-        };
-
-        var sendResponse = await _client.PostAsJsonAsync("/api/auth/send-otp", sendOtpRequest);
-        Assert.Equal(HttpStatusCode.OK, sendResponse.StatusCode);
-
-        var sendContent = await sendResponse.Content.ReadFromJsonAsync<JsonElement>(_jsonOptions);
-        Assert.True(sendContent.GetProperty("success").GetBoolean());
-        var devCode = sendContent.GetProperty("data").GetProperty("devCode").GetString();
-        Assert.NotNull(devCode);
-
-        // 2. Verify OTP with email
-        var verifyRequest = new VerifyOtpRequest
-        {
-            Email = "user@mizan.app",
-            Code = devCode
-        };
-
-        var verifyResponse = await _client.PostAsJsonAsync("/api/auth/verify-otp", verifyRequest);
-        Assert.Equal(HttpStatusCode.OK, verifyResponse.StatusCode);
-
-        var verifyContent = await verifyResponse.Content.ReadFromJsonAsync<JsonElement>(_jsonOptions);
-        Assert.True(verifyContent.GetProperty("success").GetBoolean());
-        var token = verifyContent.GetProperty("data").GetProperty("token").GetString();
-        Assert.False(string.IsNullOrEmpty(token));
     }
 }

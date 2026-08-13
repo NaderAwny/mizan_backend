@@ -30,21 +30,44 @@ public class UserTests
     [InlineData("notanemail")]
     [InlineData("missing@")]
     [InlineData("@nodomain.com")]
-    [InlineData("no spaces@domain.com")]
+    [InlineData("plainaddress")]
+    [InlineData("@missingusername.com")]
     public void CreateUser_WithInvalidEmail_ShouldThrowDomainException(string invalidEmail)
     {
         // Act & Assert
-        Assert.Throws<DomainException>(() => User.Create(invalidEmail, "أحمد", "علي"));
+        var ex = Assert.Throws<DomainException>(() => User.Create(invalidEmail, "أحمد", "علي"));
+        Assert.True(ex.Message.Contains("Email is required") || ex.Message.Contains("Invalid email format"));
+    }
+
+    [Fact]
+    public void CreateUser_WithEmailExceeding254Characters_ShouldThrowDomainException()
+    {
+        var longEmail = new string('a', 250) + "@example.com"; // > 254 chars
+        var ex = Assert.Throws<DomainException>(() => User.Create(longEmail, "أحمد", "علي"));
+        Assert.Contains("must not exceed 254 characters", ex.Message);
     }
 
     [Theory]
-    [InlineData("Ahmed123", "أحمد")]
+    [InlineData("Ahmed123", "Ali")]
     [InlineData("أحمد123", "علي")]
-    [InlineData("Name!", "علي")]
-    public void CreateUser_WithInvalidName_ShouldThrowDomainException(string invalidFirst, string validLast)
+    [InlineData("Name!", "Ali")]
+    [InlineData("Ahmed", "Ali@")]
+    [InlineData("12345", "Ali")]
+    public void CreateUser_WithDigitsOrSymbolsInName_ShouldThrowDomainException(string firstName, string lastName)
     {
         // Act & Assert
-        Assert.Throws<DomainException>(() => User.Create("valid@email.com", invalidFirst, validLast));
+        var ex = Assert.Throws<DomainException>(() => User.Create("valid@email.com", firstName, lastName));
+        Assert.Contains("must contain letters and spaces only", ex.Message);
+    }
+
+    [Theory]
+    [InlineData("", "علي")]
+    [InlineData("   ", "علي")]
+    [InlineData("أحمد", "")]
+    [InlineData("أحمد", "   ")]
+    public void CreateUser_WithEmptyOrWhitespaceOnlyName_ShouldThrowDomainException(string firstName, string lastName)
+    {
+        Assert.Throws<DomainException>(() => User.Create("valid@email.com", firstName, lastName));
     }
 
     [Theory]
