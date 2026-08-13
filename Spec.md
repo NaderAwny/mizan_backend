@@ -9,6 +9,7 @@
 - **كود التحقق (OtpCode)**: `id`, `email`, `code`, `expires_at`, `attempts_count`, `is_used`, `created_at`.
 - **المحل (Shop)**: `id`, `owner_id`, `shop_name`, `address`, `created_at`.
 - **رمز التحديث (RefreshToken)**: `id`, `user_id`, `token`, `expires_at`, `created_at`, `revoked_at`, `replaced_by_token`.
+- **الطرف (Contact)**: `id` (Guid), `owner_user_id` (FK → User), `name`, `phone_number` (optional), `notes` (optional, max 500), `is_active` (soft-delete), `created_at`, `updated_at`.
 
 ## 3. مسارات المصادقة (Auth Endpoints)
 - `POST /api/auth/register`: تسجيل مستخدم جديد بالبريد والاسم.
@@ -17,3 +18,11 @@
 - `POST /api/auth/select-user-type`: تحديد نوع الحساب (`customer` أو `shop_owner`).
 - `POST /api/auth/refresh-token`: تجديد رمز الوصول.
 - `POST /api/auth/logout`: تسجيل الخروج وإلغاء رمز التحديث.
+
+## 4. مسارات الأطراف (Contacts Endpoints)
+جميع المسارات تتطلب JWT Bearer Token ومقيّدة بالمستخدم المسجل (owner-scoped).
+- `POST /api/contacts`: إضافة طرف جديد. يعيد 201 مع بيانات الطرف.
+- `GET /api/contacts?page=1&pageSize=20&search=`: قائمة الأطراف مع البحث والتصفح (pageSize مقيّد بين 1 و50).
+- `GET /api/contacts/{id}`: جلب طرف بالمعرف. يعيد 404 إذا لم يوجد أو لا يملكه المستخدم (منع enumeration).
+- `PUT /api/contacts/{id}`: تعديل طرف. يعيد 200 مع البيانات المحدّثة.
+- `DELETE /api/contacts/{id}`: حذف ناعم (soft delete). يعيد 204.

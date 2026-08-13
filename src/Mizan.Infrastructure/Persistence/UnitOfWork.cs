@@ -13,6 +13,7 @@ public class UnitOfWork : IUnitOfWork
     private IShopRepository? _shops;
     private IRefreshTokenRepository? _refreshTokens;
     private IOtpCodeRepository? _otpCodes;
+    private IContactRepository? _contacts;
 
     public UnitOfWork(MizanDbContext context)
     {
@@ -23,6 +24,7 @@ public class UnitOfWork : IUnitOfWork
     public IShopRepository Shops => _shops ??= new ShopRepository(_context);
     public IRefreshTokenRepository RefreshTokens => _refreshTokens ??= new RefreshTokenRepository(_context);
     public IOtpCodeRepository OtpCodes => _otpCodes ??= new OtpCodeRepository(_context);
+    public IContactRepository Contacts => _contacts ??= new ContactRepository(_context);
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {

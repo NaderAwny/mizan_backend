@@ -391,6 +391,175 @@
           }
         }
       ]
+    },
+    {
+      "name": "📋 3. إدارة الأطراف (Contacts)",
+      "item": [
+        {
+          "name": "1 — إضافة طرف جديد (Create Contact)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var json = pm.response.json();",
+                  "    pm.environment.set('contact_id', json.data.id);",
+                  "    pm.test('تم إنشاء الطرف بنجاح', function() {",
+                  "        pm.expect(json.success).to.be.true;",
+                  "        pm.expect(json.data.id).to.be.a('string');",
+                  "    });",
+                  "    console.log('✅ تم حفظ contact_id:', json.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"محمد علي\",\n  \"phoneNumber\": \"01012345678\",\n  \"notes\": \"عميل مميز\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/contacts",
+              "host": ["{{base_url}}"],
+              "path": ["api", "contacts"]
+            },
+            "description": "إضافة طرف جديد (عميل أو مورد).\n🔒 يتطلب Bearer Token."
+          }
+        },
+        {
+          "name": "2 — قائمة الأطراف (List Contacts)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('تم جلب قائمة الأطراف بنجاح', function() {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "    pm.expect(pm.response.json().success).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/contacts?page=1&pageSize=20&search=",
+              "host": ["{{base_url}}"],
+              "path": ["api", "contacts"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "20" },
+                { "key": "search", "value": "", "disabled": true }
+              ]
+            },
+            "description": "جلب قائمة الأطراف مع دعم البحث والتصفح.\n🔒 يتطلب Bearer Token."
+          }
+        },
+        {
+          "name": "3 — طرف بالمعرف (Get Contact by ID)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('تم جلب بيانات الطرف بنجاح', function() {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "    pm.expect(pm.response.json().success).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/contacts/{{contact_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "contacts", "{{contact_id}}"]
+            },
+            "description": "جلب بيانات طرف واحد بمعرفه.\n🔒 يتطلب Bearer Token. يعيد 404 إذا لم يكن الطرف موجوداً أو لا يملكه المستخدم."
+          }
+        },
+        {
+          "name": "4 — تعديل طرف (Update Contact)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('تم تعديل الطرف بنجاح', function() {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "    pm.expect(pm.response.json().success).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"محمد علي — معدّل\",\n  \"phoneNumber\": \"01098765432\",\n  \"notes\": \"ملاحظة محدّثة\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/contacts/{{contact_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "contacts", "{{contact_id}}"]
+            },
+            "description": "تعديل بيانات طرف موجود.\n🔒 يتطلب Bearer Token."
+          }
+        },
+        {
+          "name": "5 — حذف طرف (Deactivate Contact)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('تم حذف الطرف بنجاح', function() {",
+                  "    pm.expect(pm.response.code).to.equal(204);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/contacts/{{contact_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "contacts", "{{contact_id}}"]
+            },
+            "description": "حذف ناعم (soft delete) للطرف — لا يُحذف من قاعدة البيانات نهائياً.\n🔒 يتطلب Bearer Token. يعيد 204 بدون محتوى."
+          }
+        }
+      ]
     }
   ]
 }
