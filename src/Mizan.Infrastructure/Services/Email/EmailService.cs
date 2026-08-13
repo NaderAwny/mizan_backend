@@ -48,6 +48,7 @@ public class EmailService : IEmailService
 
             var bodyBuilder = new BodyBuilder
             {
+                TextBody = $"مرحباً بك،\n\nكود التحقق لتسجيل الدخول إلى حسابك في تطبيق ميزان هو: {otpCode}\n\nهذا الكود صالح لمدة دقيقتين فقط.\n\nتطبيق ميزان.",
                 HtmlBody = $@"
 <!DOCTYPE html>
 <html dir=""rtl"" lang=""ar"">
