@@ -163,7 +163,7 @@ public class ContactServiceTests
 
         var response = await service.CreateAsync(ownerUserId: 5, request);
 
-        Assert.NotEqual(Guid.Empty, response.Id);
+        Assert.NotEqual(0, response.Id);
         Assert.Equal("Test Contact", response.Name);
         Assert.Equal("01012345678", response.PhoneNumber);
         Assert.Equal("Test notes", response.Notes);

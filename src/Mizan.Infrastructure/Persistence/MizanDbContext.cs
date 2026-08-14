@@ -14,6 +14,8 @@ public class MizanDbContext : DbContext
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<OtpCode> OtpCodes => Set<OtpCode>();
     public DbSet<Contact> Contacts => Set<Contact>();
+    public DbSet<Transaction> Transactions => Set<Transaction>();
+    public DbSet<Installment> Installments => Set<Installment>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

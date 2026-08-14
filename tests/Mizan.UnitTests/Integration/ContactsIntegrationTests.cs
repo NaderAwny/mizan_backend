@@ -72,7 +72,7 @@ public class ContactsIntegrationTests : IClassFixture<ContactsWebApplicationFact
     public async Task GetContactById_WithoutToken_ShouldReturn401()
     {
         using var client = _factory.CreateClient();
-        var response = await client.GetAsync($"/api/contacts/{Guid.NewGuid()}");
+        var response = await client.GetAsync("/api/contacts/999999");
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
@@ -80,7 +80,7 @@ public class ContactsIntegrationTests : IClassFixture<ContactsWebApplicationFact
     public async Task PutContact_WithoutToken_ShouldReturn401()
     {
         using var client = _factory.CreateClient();
-        var response = await client.PutAsJsonAsync($"/api/contacts/{Guid.NewGuid()}", new { name = "Test" });
+        var response = await client.PutAsJsonAsync("/api/contacts/999999", new { name = "Test" });
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
@@ -88,7 +88,7 @@ public class ContactsIntegrationTests : IClassFixture<ContactsWebApplicationFact
     public async Task DeleteContact_WithoutToken_ShouldReturn401()
     {
         using var client = _factory.CreateClient();
-        var response = await client.DeleteAsync($"/api/contacts/{Guid.NewGuid()}");
+        var response = await client.DeleteAsync("/api/contacts/999999");
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
@@ -115,8 +115,7 @@ public class ContactsIntegrationTests : IClassFixture<ContactsWebApplicationFact
 
         var createJson = await createResponse.Content.ReadFromJsonAsync<JsonElement>(_jsonOptions);
         Assert.True(createJson.GetProperty("success").GetBoolean());
-        var contactId = createJson.GetProperty("data").GetProperty("id").GetString();
-        Assert.NotNull(contactId);
+        var contactId = createJson.GetProperty("data").GetProperty("id").GetInt32();
 
         // 2. Get by id
         var getResponse = await client.GetAsync($"/api/contacts/{contactId}");
@@ -156,7 +155,7 @@ public class ContactsIntegrationTests : IClassFixture<ContactsWebApplicationFact
         var createResponse = await clientA.PostAsJsonAsync("/api/contacts",
             new CreateContactRequest { Name = "User A Contact" });
         var createJson = await createResponse.Content.ReadFromJsonAsync<JsonElement>(_jsonOptions);
-        var contactId = createJson.GetProperty("data").GetProperty("id").GetString();
+        var contactId = createJson.GetProperty("data").GetProperty("id").GetInt32();
 
         // User B tries to access it
         var clientB = _factory.CreateClient();

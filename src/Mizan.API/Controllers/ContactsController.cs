@@ -38,24 +38,24 @@ public class ContactsController : BaseController
     }
 
     /// <summary>GET /api/contacts/{id} — طرف بالمعرف</summary>
-    [HttpGet("{id:guid}")]
-    public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
+    [HttpGet("{id:int}")]
+    public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken)
     {
         var response = await _contactService.GetByIdAsync(CurrentUserId, id, cancellationToken);
         return Success(response);
     }
 
     /// <summary>PUT /api/contacts/{id} — تعديل طرف</summary>
-    [HttpPut("{id:guid}")]
-    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateContactRequest request, CancellationToken cancellationToken)
+    [HttpPut("{id:int}")]
+    public async Task<IActionResult> Update(int id, [FromBody] UpdateContactRequest request, CancellationToken cancellationToken)
     {
         var response = await _contactService.UpdateAsync(CurrentUserId, id, request, cancellationToken);
         return Success(response, "تم تعديل الطرف بنجاح");
     }
 
     /// <summary>DELETE /api/contacts/{id} — حذف ناعم (soft delete)</summary>
-    [HttpDelete("{id:guid}")]
-    public async Task<IActionResult> Deactivate(Guid id, CancellationToken cancellationToken)
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> Deactivate(int id, CancellationToken cancellationToken)
     {
         await _contactService.DeactivateAsync(CurrentUserId, id, cancellationToken);
         return NoContent();

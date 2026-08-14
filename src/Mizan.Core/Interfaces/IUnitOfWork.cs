@@ -7,6 +7,8 @@ public interface IUnitOfWork : IDisposable
     IRefreshTokenRepository RefreshTokens { get; }
     IOtpCodeRepository OtpCodes { get; }
     IContactRepository Contacts { get; }
+    ITransactionRepository Transactions { get; }
+    IInstallmentRepository Installments { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     Task BeginTransactionAsync(CancellationToken cancellationToken = default);

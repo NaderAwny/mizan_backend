@@ -26,7 +26,7 @@ public class ContactService : IContactService
         return MapToResponse(contact);
     }
 
-    public async Task<ContactResponse> UpdateAsync(int ownerUserId, Guid contactId, UpdateContactRequest request, CancellationToken cancellationToken = default)
+    public async Task<ContactResponse> UpdateAsync(int ownerUserId, int contactId, UpdateContactRequest request, CancellationToken cancellationToken = default)
     {
         var contact = await GetOwnedContactOrThrowAsync(ownerUserId, contactId, cancellationToken);
         contact.Update(request.Name, request.PhoneNumber, request.Notes);
@@ -35,7 +35,7 @@ public class ContactService : IContactService
         return MapToResponse(contact);
     }
 
-    public async Task DeactivateAsync(int ownerUserId, Guid contactId, CancellationToken cancellationToken = default)
+    public async Task DeactivateAsync(int ownerUserId, int contactId, CancellationToken cancellationToken = default)
     {
         var contact = await GetOwnedContactOrThrowAsync(ownerUserId, contactId, cancellationToken);
         contact.Deactivate();
@@ -43,7 +43,7 @@ public class ContactService : IContactService
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<ContactResponse> GetByIdAsync(int ownerUserId, Guid contactId, CancellationToken cancellationToken = default)
+    public async Task<ContactResponse> GetByIdAsync(int ownerUserId, int contactId, CancellationToken cancellationToken = default)
     {
         var contact = await GetOwnedContactOrThrowAsync(ownerUserId, contactId, cancellationToken);
         return MapToResponse(contact);
@@ -77,7 +77,7 @@ public class ContactService : IContactService
     /// Throws NotFoundException in BOTH cases (not found + wrong owner)
     /// to prevent enumeration attacks — never leak whether an id exists for a different user.
     /// </summary>
-    private async Task<Contact> GetOwnedContactOrThrowAsync(int ownerUserId, Guid contactId, CancellationToken cancellationToken)
+    private async Task<Contact> GetOwnedContactOrThrowAsync(int ownerUserId, int contactId, CancellationToken cancellationToken)
     {
         var contact = await _unitOfWork.Contacts.GetByIdAsync(contactId, ownerUserId, cancellationToken);
         if (contact == null)

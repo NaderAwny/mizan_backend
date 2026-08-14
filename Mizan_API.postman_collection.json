@@ -560,6 +560,176 @@
           }
         }
       ]
+    },
+    {
+      "name": "💸 3. العمليات والأقساط (Transactions & Installments)",
+      "item": [
+        {
+          "name": "1 — إنشاء عملية بيع آجل بأقساط تلقائية (Create Transaction - Automatic)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var json = pm.response.json();",
+                  "    pm.test('تم إنشاء العملية بنجاح', function() {",
+                  "        pm.expect(json.success).to.be.true;",
+                  "    });",
+                  "    if (json.data && json.data.id) {",
+                  "        pm.environment.set('transaction_id', json.data.id);",
+                  "        console.log('📌 تم حفظ transaction_id:', json.data.id);",
+                  "    }",
+                  "    if (json.data && json.data.installments && json.data.installments.length > 0) {",
+                  "        pm.environment.set('installment_id', json.data.installments[0].id);",
+                  "        console.log('📌 تم حفظ installment_id:', json.data.installments[0].id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contactId\": \"{{contact_id}}\",\n  \"type\": 0,\n  \"amount\": 1500,\n  \"transactionDate\": \"2026-08-14T00:00:00Z\",\n  \"noteType\": 1,\n  \"noteText\": \"بيع بضاعة بالأقساط\",\n  \"isInstallment\": true,\n  \"installmentPlanMode\": 0,\n  \"installmentCount\": 3,\n  \"firstInstallmentDate\": \"2026-08-21T00:00:00Z\",\n  \"frequency\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/transactions",
+              "host": ["{{base_url}}"],
+              "path": ["api", "transactions"]
+            },
+            "description": "إنشاء عملية جديدة بين المستخدم والطرف بأقساط تلقائية.\n🔒 يتطلب Bearer Token."
+          }
+        },
+        {
+          "name": "2 — إنشاء عملية بأقساط مخصصة (Create Transaction - Custom)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contactId\": \"{{contact_id}}\",\n  \"type\": 0,\n  \"amount\": 1000,\n  \"transactionDate\": \"2026-08-14T00:00:00Z\",\n  \"noteType\": 0,\n  \"isInstallment\": true,\n  \"installmentPlanMode\": 1,\n  \"customInstallments\": [\n    { \"amount\": 400, \"dueDate\": \"2026-08-21T00:00:00Z\" },\n    { \"amount\": 600, \"dueDate\": \"2026-09-01T00:00:00Z\" }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/transactions",
+              "host": ["{{base_url}}"],
+              "path": ["api", "transactions"]
+            },
+            "description": "إنشاء عملية بأقساط مخصصة المبالغ والمواعيد (يجب أن تتطابق المبالغ بالضبط مع إجمالي العملية).\n🔒 يتطلب Bearer Token."
+          }
+        },
+        {
+          "name": "3 — قائمة العمليات مع التصفح والفلترة (Get Paged Transactions)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/transactions?page=1&pageSize=20&type=0",
+              "host": ["{{base_url}}"],
+              "path": ["api", "transactions"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "20" },
+                { "key": "type", "value": "0" }
+              ]
+            },
+            "description": "قائمة العمليات التابعة للمستخدم المسجل مع إمكانية التصفية بحسب الطرف، النوع، أو التاريخ.\n🔒 يتطلب Bearer Token."
+          }
+        },
+        {
+          "name": "4 — تفاصيل عملية بالمعرف (Get Transaction By ID)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/transactions/{{transaction_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "transactions", "{{transaction_id}}"]
+            },
+            "description": "جلب بيانات عملية محددة مع أقساطها.\n🔒 يتطلب Bearer Token."
+          }
+        },
+        {
+          "name": "5 — إرفاق ملاحظة صوتية (Attach Voice Note)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": [] }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/transactions/{{transaction_id}}/voice-note",
+              "host": ["{{base_url}}"],
+              "path": ["api", "transactions", "{{transaction_id}}", "voice-note"]
+            },
+            "description": "إرفاق ملف صوتي كملاحظة للعملية (الحد الأقصى 10MB).\n🔒 يتطلب Bearer Token."
+          }
+        },
+        {
+          "name": "6 — الاستماع للملاحظة الصوتية (Stream Voice Note)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/transactions/{{transaction_id}}/voice-note",
+              "host": ["{{base_url}}"],
+              "path": ["api", "transactions", "{{transaction_id}}", "voice-note"]
+            },
+            "description": "بث الملف الصوتي المحمي الخاص بالملاحظة الصوتية.\n🔒 يتطلب Bearer Token."
+          }
+        },
+        {
+          "name": "7 — تسديد قسط (Pay Installment)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/transactions/{{transaction_id}}/installments/{{installment_id}}/pay",
+              "host": ["{{base_url}}"],
+              "path": ["api", "transactions", "{{transaction_id}}", "installments", "{{installment_id}}", "pay"]
+            },
+            "description": "تسجيل قسط كـ مدفوع وتحديث الإجماليات.\n🔒 يتطلب Bearer Token."
+          }
+        },
+        {
+          "name": "8 — حذف عملية ناعم (Deactivate Transaction)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/transactions/{{transaction_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "transactions", "{{transaction_id}}"]
+            },
+            "description": "حذف ناعم للعملية وإلغاء أقساطها المعلقة.\n🔒 يتطلب Bearer Token."
+          }
+        }
+      ]
     }
   ]
 }

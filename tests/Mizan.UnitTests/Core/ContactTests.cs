@@ -21,7 +21,7 @@ public class ContactTests
         Assert.Equal(name.Trim(), contact.Name);
         Assert.Equal(1, contact.OwnerUserId);
         Assert.True(contact.IsActive);
-        Assert.NotEqual(Guid.Empty, contact.Id);
+        Assert.Equal(0, contact.Id);
     }
 
     // ── Name validation ───────────────────────────────────────────────────────
@@ -176,7 +176,7 @@ public class ContactTests
         var after = DateTime.UtcNow.AddSeconds(1);
 
         Assert.True(contact.IsActive);
-        Assert.NotEqual(Guid.Empty, contact.Id);
+        Assert.Equal(0, contact.Id);
         Assert.Equal(42, contact.OwnerUserId);
         Assert.True(contact.CreatedAt >= before && contact.CreatedAt <= after);
         Assert.True(contact.UpdatedAt >= before && contact.UpdatedAt <= after);

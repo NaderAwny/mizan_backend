@@ -14,6 +14,8 @@ public class UnitOfWork : IUnitOfWork
     private IRefreshTokenRepository? _refreshTokens;
     private IOtpCodeRepository? _otpCodes;
     private IContactRepository? _contacts;
+    private ITransactionRepository? _transactions;
+    private IInstallmentRepository? _installments;
 
     public UnitOfWork(MizanDbContext context)
     {
@@ -25,6 +27,8 @@ public class UnitOfWork : IUnitOfWork
     public IRefreshTokenRepository RefreshTokens => _refreshTokens ??= new RefreshTokenRepository(_context);
     public IOtpCodeRepository OtpCodes => _otpCodes ??= new OtpCodeRepository(_context);
     public IContactRepository Contacts => _contacts ??= new ContactRepository(_context);
+    public ITransactionRepository Transactions => _transactions ??= new TransactionRepository(_context);
+    public IInstallmentRepository Installments => _installments ??= new InstallmentRepository(_context);
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
