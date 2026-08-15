@@ -11,7 +11,9 @@ public class TransactionConfiguration : IEntityTypeConfiguration<Transaction>
         builder.ToTable("transactions");
 
         builder.HasKey(t => t.Id);
-        builder.Property(t => t.Id).ValueGeneratedOnAdd();
+        builder.Property(t => t.Id)
+            .HasColumnName("id")
+            .UseIdentityColumn();
 
         builder.Property(t => t.Amount)
             .HasPrecision(18, 2)

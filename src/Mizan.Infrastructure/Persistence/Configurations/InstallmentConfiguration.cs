@@ -11,7 +11,9 @@ public class InstallmentConfiguration : IEntityTypeConfiguration<Installment>
         builder.ToTable("installments");
 
         builder.HasKey(i => i.Id);
-        builder.Property(i => i.Id).ValueGeneratedOnAdd();
+        builder.Property(i => i.Id)
+            .HasColumnName("id")
+            .UseIdentityColumn();
 
         builder.Property(i => i.Amount)
             .HasPrecision(18, 2)
