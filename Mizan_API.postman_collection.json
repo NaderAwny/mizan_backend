@@ -730,6 +730,76 @@
           }
         }
       ]
+    },
+    {
+      "name": "🔔 5. التذكيرات والإشعارات (Notifications & Reminders)",
+      "item": [
+        {
+          "name": "1 — قائمة الإشعارات (Get Notifications)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/notifications?page=1&pageSize=20&unreadOnly=false",
+              "host": ["{{base_url}}"],
+              "path": ["api", "notifications"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "20" },
+                { "key": "unreadOnly", "value": "false" }
+              ]
+            },
+            "description": "جلب قائمة الإشعارات والتذكيرات الخاصة بالمستخدم مع التصفح والفلترة.\n🔒 يتطلب Bearer Token."
+          }
+        },
+        {
+          "name": "2 — عدد الإشعارات غير المقروءة (Get Unread Count)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/notifications/unread-count",
+              "host": ["{{base_url}}"],
+              "path": ["api", "notifications", "unread-count"]
+            },
+            "description": "استرجاع عدد الإشعارات غير المقروءة لعرضها في شارة التنبيهات.\n🔒 يتطلب Bearer Token."
+          }
+        },
+        {
+          "name": "3 — تمييز إشعار كمقروء (Mark Notification Read)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/notifications/1/read",
+              "host": ["{{base_url}}"],
+              "path": ["api", "notifications", "1", "read"]
+            },
+            "description": "تمييز إشعار معين كمقروء (يعيد 204 NoContent).\n🔒 يتطلب Bearer Token."
+          }
+        },
+        {
+          "name": "4 — تمييز كل الإشعارات كمقروءة (Mark All Read)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/notifications/read-all",
+              "host": ["{{base_url}}"],
+              "path": ["api", "notifications", "read-all"]
+            },
+            "description": "تمييز جميع إشعارات المستخدم الحالي كمقروءة بطلب واحد (يعيد 204 NoContent).\n🔒 يتطلب Bearer Token."
+          }
+        }
+      ]
     }
   ]
 }

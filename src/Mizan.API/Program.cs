@@ -62,6 +62,8 @@ builder.Services.AddScoped<IOtpCodeRepository, OtpCodeRepository>();
 builder.Services.AddScoped<IContactRepository, ContactRepository>();
 builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
 builder.Services.AddScoped<IInstallmentRepository, InstallmentRepository>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+builder.Services.AddScoped<IInstallmentReminderLogRepository, InstallmentReminderLogRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 // 5. Dependency Injection - Application Services
@@ -69,9 +71,13 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IContactService, ContactService>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IReminderScanner, ReminderScanner>();
 builder.Services.AddSingleton<IJwtProvider, JwtProvider>();
 builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection(EmailOptions.SectionName));
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.Configure<Mizan.Application.DTOs.Notifications.RemindersOptions>(builder.Configuration.GetSection(Mizan.Application.DTOs.Notifications.RemindersOptions.SectionName));
+builder.Services.AddHostedService<Mizan.Infrastructure.BackgroundServices.ReminderCheckService>();
 
 // 6. JWT Authentication & Strict Key Validation
 var jwtOptions = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? new JwtOptions();
@@ -131,13 +137,19 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
-// 7. Rate Limiting (10 requests / minute on Auth endpoints, relaxed in Testing)
+// 7. Rate Limiting (10 requests / minute on Auth endpoints, 100 requests / minute on General endpoints)
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
     options.AddFixedWindowLimiter("AuthPolicy", opt =>
     {
         opt.PermitLimit = builder.Environment.IsEnvironment("Testing") ? 1000 : 10;
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.QueueLimit = 0;
+    });
+    options.AddFixedWindowLimiter("GeneralPolicy", opt =>
+    {
+        opt.PermitLimit = builder.Environment.IsEnvironment("Testing") ? 2000 : 100;
         opt.Window = TimeSpan.FromMinutes(1);
         opt.QueueLimit = 0;
     });
@@ -205,12 +217,12 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// Ensure database is created in local development
+// Ensure database migrations are applied in local development
 if (!app.Environment.IsEnvironment("Testing"))
 {
     using var scope = app.Services.CreateScope();
     var dbContext = scope.ServiceProvider.GetRequiredService<MizanDbContext>();
-    dbContext.Database.EnsureCreated();
+    dbContext.Database.Migrate();
 }
 
 // 10. Middleware Pipeline

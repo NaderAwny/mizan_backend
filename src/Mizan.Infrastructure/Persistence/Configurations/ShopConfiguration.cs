@@ -11,7 +11,9 @@ public class ShopConfiguration : IEntityTypeConfiguration<Shop>
         builder.ToTable("shops");
 
         builder.HasKey(s => s.Id);
-        builder.Property(s => s.Id).UseIdentityColumn();
+        builder.Property(s => s.Id)
+            .HasColumnName("id")
+            .UseIdentityColumn();
 
         builder.Property(s => s.OwnerId)
             .HasColumnName("owner_id")

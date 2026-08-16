@@ -11,7 +11,9 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.ToTable("users");
 
         builder.HasKey(u => u.Id);
-        builder.Property(u => u.Id).UseIdentityColumn();
+        builder.Property(u => u.Id)
+            .HasColumnName("id")
+            .UseIdentityColumn();
 
         builder.Property(u => u.Email)
             .HasColumnName("email")

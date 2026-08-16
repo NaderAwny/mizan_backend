@@ -1,0 +1,73 @@
+using Mizan.Core.Entities;
+using Mizan.Core.Enums;
+using Xunit;
+
+namespace Mizan.UnitTests.Core;
+
+public class NotificationTests
+{
+    [Fact]
+    public void CreateInstallmentReminder_WhenDaysUntilDueGreaterThanZero_ProducesCorrectArabicText()
+    {
+        // Arrange
+        int ownerUserId = 10;
+        int transactionId = 101;
+        int installmentId = 501;
+        string contactName = "أحمد محمد";
+        decimal amount = 1500.50m;
+        var dueDate = DateTime.UtcNow.Date.AddDays(3);
+        int daysUntilDue = 3;
+
+        // Act
+        var notification = Notification.CreateInstallmentReminder(
+            ownerUserId, transactionId, installmentId, contactName, amount, dueDate, daysUntilDue);
+
+        // Assert
+        Assert.Equal(ownerUserId, notification.OwnerUserId);
+        Assert.Equal(NotificationType.InstallmentReminder, notification.Type);
+        Assert.Equal(transactionId, notification.TransactionId);
+        Assert.Equal(installmentId, notification.InstallmentId);
+        Assert.False(notification.IsRead);
+        Assert.Contains("تذكير بقسط مستحق قريباً", notification.Title);
+        Assert.Contains("1500.5", notification.Message);
+        Assert.Contains("3 أيام", notification.Message);
+        Assert.Contains(contactName, notification.Message);
+    }
+
+    [Fact]
+    public void CreateInstallmentReminder_WhenDaysUntilDueIsZero_ProducesDueTodayArabicText()
+    {
+        // Arrange
+        int ownerUserId = 12;
+        int transactionId = 102;
+        int installmentId = 502;
+        string contactName = "محمود علي";
+        decimal amount = 2000m;
+        var dueDate = DateTime.UtcNow.Date;
+        int daysUntilDue = 0;
+
+        // Act
+        var notification = Notification.CreateInstallmentReminder(
+            ownerUserId, transactionId, installmentId, contactName, amount, dueDate, daysUntilDue);
+
+        // Assert
+        Assert.Equal("تذكير بقسط مستحق اليوم", notification.Title);
+        Assert.Contains("مستحق اليوم", notification.Message);
+        Assert.Contains("2000", notification.Message);
+        Assert.Contains(contactName, notification.Message);
+    }
+
+    [Fact]
+    public void MarkAsRead_SetsIsReadToTrue()
+    {
+        // Arrange
+        var notification = Notification.CreateInstallmentReminder(
+            1, 1, 1, "عميل", 100m, DateTime.UtcNow.Date, 1);
+
+        // Act
+        notification.MarkAsRead();
+
+        // Assert
+        Assert.True(notification.IsRead);
+    }
+}

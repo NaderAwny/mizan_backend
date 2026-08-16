@@ -42,6 +42,7 @@ public class AuthController : BaseController
     }
 
     [Authorize]
+    [EnableRateLimiting("GeneralPolicy")]
     [HttpPost("select-user-type")]
     public async Task<IActionResult> SelectUserType([FromBody] SelectUserTypeRequest request, CancellationToken cancellationToken)
     {
@@ -58,6 +59,7 @@ public class AuthController : BaseController
     }
 
     [Authorize]
+    [EnableRateLimiting("GeneralPolicy")]
     [HttpPost("logout")]
     public async Task<IActionResult> Logout([FromBody] LogoutRequest request, CancellationToken cancellationToken)
     {

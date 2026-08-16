@@ -16,6 +16,8 @@ public class UnitOfWork : IUnitOfWork
     private IContactRepository? _contacts;
     private ITransactionRepository? _transactions;
     private IInstallmentRepository? _installments;
+    private INotificationRepository? _notifications;
+    private IInstallmentReminderLogRepository? _installmentReminderLogs;
 
     public UnitOfWork(MizanDbContext context)
     {
@@ -29,6 +31,8 @@ public class UnitOfWork : IUnitOfWork
     public IContactRepository Contacts => _contacts ??= new ContactRepository(_context);
     public ITransactionRepository Transactions => _transactions ??= new TransactionRepository(_context);
     public IInstallmentRepository Installments => _installments ??= new InstallmentRepository(_context);
+    public INotificationRepository Notifications => _notifications ??= new NotificationRepository(_context);
+    public IInstallmentReminderLogRepository InstallmentReminderLogs => _installmentReminderLogs ??= new InstallmentReminderLogRepository(_context);
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {

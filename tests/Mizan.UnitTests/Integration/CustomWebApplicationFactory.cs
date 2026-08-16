@@ -44,5 +44,18 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
             LastRecipientEmail = toEmail;
             return Task.FromResult(true);
         }
+
+        public Task<bool> SendInstallmentReminderEmailAsync(
+            string toEmail,
+            string recipientName,
+            string contactName,
+            decimal amount,
+            DateTime dueDate,
+            int daysUntilDue,
+            CancellationToken cancellationToken = default)
+        {
+            LastRecipientEmail = toEmail;
+            return Task.FromResult(true);
+        }
     }
 }

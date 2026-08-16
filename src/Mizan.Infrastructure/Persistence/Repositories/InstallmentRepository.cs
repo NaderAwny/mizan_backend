@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Mizan.Core.Entities;
+using Mizan.Core.Enums;
 using Mizan.Core.Interfaces;
 
 namespace Mizan.Infrastructure.Persistence.Repositories;
@@ -28,6 +29,21 @@ public class InstallmentRepository : IInstallmentRepository
         return await _dbSet
             .Include(i => i.Transaction)
             .FirstOrDefaultAsync(i => i.Id == id, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<Installment>> GetPendingByDueDateAsync(DateTime dueDate, CancellationToken cancellationToken = default)
+    {
+        var targetDate = dueDate.Date;
+        return await _dbSet
+            .Include(i => i.Transaction)
+                .ThenInclude(t => t!.Owner)
+            .Include(i => i.Transaction)
+                .ThenInclude(t => t!.Contact)
+            .Where(i => i.Status == InstallmentStatus.Pending
+                     && i.Transaction != null
+                     && i.Transaction.IsActive
+                     && i.DueDate.Date == targetDate)
+            .ToListAsync(cancellationToken);
     }
 
     public async Task AddRangeAsync(IEnumerable<Installment> installments, CancellationToken cancellationToken = default)

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Mizan.Application.DTOs.Transactions;
 using Mizan.Application.Interfaces;
 using Mizan.Core.Enums;
@@ -7,6 +8,7 @@ using Mizan.Core.Enums;
 namespace Mizan.API.Controllers;
 
 [Authorize]
+[EnableRateLimiting("GeneralPolicy")]
 [ApiController]
 [Route("api/[controller]")]
 public class TransactionsController : BaseController

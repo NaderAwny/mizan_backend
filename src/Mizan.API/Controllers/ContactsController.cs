@@ -1,11 +1,13 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Mizan.Application.DTOs.Contacts;
 using Mizan.Application.Interfaces;
 
 namespace Mizan.API.Controllers;
 
 [Authorize]
+[EnableRateLimiting("GeneralPolicy")]
 [ApiController]
 [Route("api/[controller]")]
 public class ContactsController : BaseController

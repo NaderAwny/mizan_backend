@@ -15,18 +15,58 @@ public class TransactionConfiguration : IEntityTypeConfiguration<Transaction>
             .HasColumnName("id")
             .UseIdentityColumn();
 
+        builder.Property(t => t.OwnerUserId)
+            .HasColumnName("owner_user_id")
+            .IsRequired();
+
+        builder.Property(t => t.ContactId)
+            .HasColumnName("contact_id")
+            .IsRequired();
+
+        builder.Property(t => t.Type)
+            .HasColumnName("type")
+            .IsRequired();
+
         builder.Property(t => t.Amount)
+            .HasColumnName("amount")
             .HasPrecision(18, 2)
             .IsRequired();
 
+        builder.Property(t => t.TransactionDate)
+            .HasColumnName("transaction_date")
+            .IsRequired();
+
+        builder.Property(t => t.IsInstallment)
+            .HasColumnName("is_installment")
+            .IsRequired();
+
+        builder.Property(t => t.InstallmentPlanMode)
+            .HasColumnName("installment_plan_mode");
+
+        builder.Property(t => t.NoteType)
+            .HasColumnName("note_type")
+            .IsRequired();
+
         builder.Property(t => t.NoteText)
+            .HasColumnName("note_text")
             .HasMaxLength(1000);
 
         builder.Property(t => t.NoteAudioPath)
+            .HasColumnName("note_audio_path")
             .HasMaxLength(500);
 
         builder.Property(t => t.IsActive)
-            .HasDefaultValue(true);
+            .HasColumnName("is_active")
+            .HasDefaultValue(true)
+            .IsRequired();
+
+        builder.Property(t => t.CreatedAt)
+            .HasColumnName("created_at")
+            .IsRequired();
+
+        builder.Property(t => t.UpdatedAt)
+            .HasColumnName("updated_at")
+            .IsRequired();
 
         builder.HasOne(t => t.Owner)
             .WithMany()

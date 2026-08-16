@@ -11,7 +11,9 @@ public class OtpCodeConfiguration : IEntityTypeConfiguration<OtpCode>
         builder.ToTable("otp_codes");
 
         builder.HasKey(o => o.Id);
-        builder.Property(o => o.Id).UseIdentityColumn();
+        builder.Property(o => o.Id)
+            .HasColumnName("id")
+            .UseIdentityColumn();
 
         builder.Property(o => o.Email)
             .HasColumnName("email")

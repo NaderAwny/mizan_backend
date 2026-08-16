@@ -16,6 +16,8 @@ public class MizanDbContext : DbContext
     public DbSet<Contact> Contacts => Set<Contact>();
     public DbSet<Transaction> Transactions => Set<Transaction>();
     public DbSet<Installment> Installments => Set<Installment>();
+    public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<InstallmentReminderLog> InstallmentReminderLogs => Set<InstallmentReminderLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

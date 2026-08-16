@@ -8,6 +8,8 @@ public interface IInstallmentRepository
 
     Task<Installment?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<Installment>> GetPendingByDueDateAsync(DateTime dueDate, CancellationToken cancellationToken = default);
+
     Task AddRangeAsync(IEnumerable<Installment> installments, CancellationToken cancellationToken = default);
 
     void Update(Installment installment);

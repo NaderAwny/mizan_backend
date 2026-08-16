@@ -11,7 +11,9 @@ public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
         builder.ToTable("refresh_tokens");
 
         builder.HasKey(t => t.Id);
-        builder.Property(t => t.Id).UseIdentityColumn();
+        builder.Property(t => t.Id)
+            .HasColumnName("id")
+            .UseIdentityColumn();
 
         builder.Property(t => t.UserId)
             .HasColumnName("user_id")

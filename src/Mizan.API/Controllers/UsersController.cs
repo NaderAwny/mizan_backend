@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Mizan.Application.Interfaces;
 
 namespace Mizan.API.Controllers;
 
+[EnableRateLimiting("GeneralPolicy")]
 [ApiController]
 [Route("api/[controller]")]
 public class UsersController : BaseController
