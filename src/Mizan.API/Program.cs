@@ -67,6 +67,7 @@ builder.Services.AddScoped<IInstallmentReminderLogRepository, InstallmentReminde
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 // 5. Dependency Injection - Application Services
+// 5. Dependency Injection - Application Services & Email Configuration
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IContactService, ContactService>();
@@ -74,7 +75,23 @@ builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IReminderScanner, ReminderScanner>();
 builder.Services.AddSingleton<IJwtProvider, JwtProvider>();
+
+var emailOptions = builder.Configuration.GetSection(EmailOptions.SectionName).Get<EmailOptions>() ?? new EmailOptions();
+if (!builder.Environment.IsEnvironment("Testing"))
+{
+    if (!emailOptions.UseMockInDevelopment && string.IsNullOrWhiteSpace(emailOptions.ApiKey))
+    {
+        throw new InvalidOperationException(
+            "FATAL CONFIGURATION ERROR: SendGrid API Key must be configured via user-secrets (Email:ApiKey) or environment variable (Email__ApiKey) when UseMockInDevelopment is false.");
+    }
+}
+
 builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection(EmailOptions.SectionName));
+builder.Services.AddScoped<SendGrid.ISendGridClient>(sp =>
+{
+    var emailOpts = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<EmailOptions>>().Value;
+    return new SendGrid.SendGridClient(emailOpts.ApiKey ?? string.Empty);
+});
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.Configure<Mizan.Application.DTOs.Notifications.RemindersOptions>(builder.Configuration.GetSection(Mizan.Application.DTOs.Notifications.RemindersOptions.SectionName));
 builder.Services.AddHostedService<Mizan.Infrastructure.BackgroundServices.ReminderCheckService>();

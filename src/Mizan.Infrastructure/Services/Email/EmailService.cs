@@ -1,22 +1,26 @@
-using MailKit.Net.Smtp;
-using MailKit.Security;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using MimeKit;
 using Mizan.Application.Interfaces;
 using Mizan.Core.Exceptions;
+using SendGrid;
+using SendGrid.Helpers.Mail;
 
 namespace Mizan.Infrastructure.Services.Email;
 
 public class EmailService : IEmailService
 {
     private readonly EmailOptions _options;
+    private readonly ISendGridClient _sendGridClient;
     private readonly ILogger<EmailService> _logger;
 
-    public EmailService(IOptions<EmailOptions> options, ILogger<EmailService> logger)
+    public EmailService(
+        IOptions<EmailOptions> options,
+        ILogger<EmailService> logger,
+        ISendGridClient? sendGridClient = null)
     {
         _options = options.Value;
         _logger = logger;
+        _sendGridClient = sendGridClient ?? new SendGridClient(_options.ApiKey ?? string.Empty);
     }
 
     public async Task<bool> SendOtpEmailAsync(string toEmail, string otpCode, CancellationToken cancellationToken = default)
@@ -31,8 +35,8 @@ public class EmailService : IEmailService
             throw new BadRequestException("كود التحقق مطلوب");
         }
 
-        // In development / mock mode when credentials are not configured or UseMockInDevelopment is true
-        if (_options.UseMockInDevelopment && (string.IsNullOrWhiteSpace(_options.SenderEmail) || string.IsNullOrWhiteSpace(_options.SenderPassword)))
+        // In development / mock mode: log without sending
+        if (_options.UseMockInDevelopment)
         {
             _logger.LogInformation("📧 [DEV MOCK EMAIL] OTP for {Email} is: {OtpCode}", toEmail, otpCode);
             return true;
@@ -40,18 +44,13 @@ public class EmailService : IEmailService
 
         try
         {
-            var message = new MimeMessage();
-            var fromEmail = _options.SenderEmail;
-            message.From.Add(new MailboxAddress("تطبيق ميزان", fromEmail));
-            message.To.Add(MailboxAddress.Parse(toEmail.Trim()));
-            message.Subject = "كود التحقق لتطبيق ميزان";
-            message.Date = DateTimeOffset.Now;
+            var from = new EmailAddress(_options.SenderEmail, _options.SenderName);
+            var to = new EmailAddress(toEmail.Trim());
+            const string subject = "كود التحقق لتطبيق ميزان";
 
-            var bodyBuilder = new BodyBuilder
-            {
-                TextBody = $"مرحباً بك في تطبيق ميزان،\n\nكود التحقق الخاص بك هو:\n{otpCode}\n\nهذا الكود صالح لمدة دقيقتين فقط.\nيرجى عدم مشاركة هذا الكود مع أي شخص.\n\nتطبيق ميزان",
-                HtmlBody = $@"
-<!DOCTYPE html>
+            var plainTextContent = $"مرحباً بك في تطبيق ميزان،\n\nكود التحقق الخاص بك هو:\n{otpCode}\n\nهذا الكود صالح لمدة دقيقتين فقط.\nيرجى عدم مشاركة هذا الكود مع أي شخص.\n\nتطبيق ميزان";
+
+            var htmlContent = $@"<!DOCTYPE html>
 <html dir=""rtl"" lang=""ar"">
 <head>
     <meta charset=""UTF-8"">
@@ -69,36 +68,31 @@ public class EmailService : IEmailService
         <p style=""font-size: 12px; color: #aaaaaa; text-align: center;"">&copy; {DateTime.UtcNow.Year} تطبيق ميزان. جميع الحقوق محفوظة.</p>
     </div>
 </body>
-</html>"
-            };
+</html>";
 
-            message.Body = bodyBuilder.ToMessageBody();
+            var msg = MailHelper.CreateSingleEmail(from, to, subject, plainTextContent, htmlContent);
+            var response = await _sendGridClient.SendEmailAsync(msg, cancellationToken);
 
-            using var client = new SmtpClient();
-            client.CheckCertificateRevocation = false;
-            client.Timeout = 10000;
-
-            var socketOption = _options.SmtpPort == 465 
-                ? SecureSocketOptions.SslOnConnect 
-                : (_options.EnableSsl ? SecureSocketOptions.StartTls : SecureSocketOptions.Auto);
-
-            await client.ConnectAsync(_options.SmtpHost, _options.SmtpPort, socketOption, cancellationToken);
-            
-            if (!string.IsNullOrWhiteSpace(_options.SenderEmail) && !string.IsNullOrWhiteSpace(_options.SenderPassword))
+            if (response.IsSuccessStatusCode)
             {
-                await client.AuthenticateAsync(_options.SenderEmail, _options.SenderPassword, cancellationToken);
+                _logger.LogInformation("✅ OTP email sent successfully via SendGrid to {Email} (StatusCode: {StatusCode})", toEmail, response.StatusCode);
+                return true;
             }
 
-            await client.SendAsync(message, cancellationToken);
-            await client.DisconnectAsync(true, cancellationToken);
+            string responseBody = string.Empty;
+            if (response.Body != null)
+            {
+                responseBody = await response.Body.ReadAsStringAsync();
+            }
 
-            _logger.LogInformation("✅ OTP email sent successfully to {Email}", toEmail);
-            return true;
+            _logger.LogWarning("⚠️ SendGrid returned non-success status code {StatusCode} when sending OTP to {Email}. Response body: {ResponseBody}",
+                response.StatusCode, toEmail, responseBody);
+            return false;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "❌ Failed to send OTP email to {Email}", toEmail);
-            throw new BadRequestException("فشل إرسال كود التحقق عبر البريد الإلكتروني، يرجى التأكد من صحة البريد والمحاولة لاحقاً");
+            _logger.LogError(ex, "❌ Transient error sending OTP email via SendGrid to {Email}", toEmail);
+            return false;
         }
     }
 
@@ -126,8 +120,8 @@ public class EmailService : IEmailService
             _ => $"مستحق خلال {daysUntilDue} أيام"
         };
 
-        // In development / mock mode when credentials are not configured or UseMockInDevelopment is true
-        if (_options.UseMockInDevelopment && (string.IsNullOrWhiteSpace(_options.SenderEmail) || string.IsNullOrWhiteSpace(_options.SenderPassword)))
+        // In development / mock mode: log without sending
+        if (_options.UseMockInDevelopment)
         {
             _logger.LogInformation(
                 "📧 [DEV MOCK EMAIL] Installment reminder for {Email} ({Recipient}) | Contact: {Contact} | Amount: {Amount} | DueDate: {DueDate:yyyy-MM-dd} | Status: {DueText}",
@@ -137,20 +131,15 @@ public class EmailService : IEmailService
 
         try
         {
-            var message = new MimeMessage();
-            var fromEmail = _options.SenderEmail;
-            message.From.Add(new MailboxAddress("تطبيق ميزان", fromEmail));
-            message.To.Add(MailboxAddress.Parse(toEmail.Trim()));
-            message.Subject = daysUntilDue == 0 
-                ? $"تذكير: قسط مستحق اليوم بقيمة {formattedAmount} — تطبيق ميزان" 
+            var from = new EmailAddress(_options.SenderEmail, _options.SenderName);
+            var to = new EmailAddress(toEmail.Trim());
+            string subject = daysUntilDue == 0
+                ? $"تذكير: قسط مستحق اليوم بقيمة {formattedAmount} — تطبيق ميزان"
                 : $"تذكير: موعد استحقاق قسط بقيمة {formattedAmount} — تطبيق ميزان";
-            message.Date = DateTimeOffset.Now;
 
-            var bodyBuilder = new BodyBuilder
-            {
-                TextBody = $"مرحباً {recipientName}،\n\nنود تذكيرك بأن هناك قسطاً مسجلاً في حسابك بتطبيق ميزan:\n- الطرف: {contactName}\n- المبلغ: {formattedAmount}\n- موعد الاستحقاق: {dueDate:yyyy-MM-dd} ({dueText})\n\nتطبيق ميزان",
-                HtmlBody = $@"
-<!DOCTYPE html>
+            var plainTextContent = $"مرحباً {recipientName}،\n\nنود تذكيرك بأن هناك قسطاً مسجلاً في حسابك بتطبيق ميزان:\n- الطرف: {contactName}\n- المبلغ: {formattedAmount}\n- موعد الاستحقاق: {dueDate:yyyy-MM-dd} ({dueText})\n\nتطبيق ميزان";
+
+            var htmlContent = $@"<!DOCTYPE html>
 <html dir=""rtl"" lang=""ar"">
 <head>
     <meta charset=""UTF-8"">
@@ -171,35 +160,30 @@ public class EmailService : IEmailService
         <p style=""font-size: 12px; color: #aaaaaa; text-align: center;"">&copy; {DateTime.UtcNow.Year} تطبيق ميزان. جميع الحقوق محفوظة.</p>
     </div>
 </body>
-</html>"
-            };
+</html>";
 
-            message.Body = bodyBuilder.ToMessageBody();
+            var msg = MailHelper.CreateSingleEmail(from, to, subject, plainTextContent, htmlContent);
+            var response = await _sendGridClient.SendEmailAsync(msg, cancellationToken);
 
-            using var client = new SmtpClient();
-            client.CheckCertificateRevocation = false;
-            client.Timeout = 10000;
-
-            var socketOption = _options.SmtpPort == 465 
-                ? SecureSocketOptions.SslOnConnect 
-                : (_options.EnableSsl ? SecureSocketOptions.StartTls : SecureSocketOptions.Auto);
-
-            await client.ConnectAsync(_options.SmtpHost, _options.SmtpPort, socketOption, cancellationToken);
-            
-            if (!string.IsNullOrWhiteSpace(_options.SenderEmail) && !string.IsNullOrWhiteSpace(_options.SenderPassword))
+            if (response.IsSuccessStatusCode)
             {
-                await client.AuthenticateAsync(_options.SenderEmail, _options.SenderPassword, cancellationToken);
+                _logger.LogInformation("✅ Installment reminder email sent successfully via SendGrid to {Email} (StatusCode: {StatusCode})", toEmail, response.StatusCode);
+                return true;
             }
 
-            await client.SendAsync(message, cancellationToken);
-            await client.DisconnectAsync(true, cancellationToken);
+            string responseBody = string.Empty;
+            if (response.Body != null)
+            {
+                responseBody = await response.Body.ReadAsStringAsync();
+            }
 
-            _logger.LogInformation("✅ Installment reminder email sent successfully to {Email}", toEmail);
-            return true;
+            _logger.LogWarning("⚠️ SendGrid returned non-success status code {StatusCode} when sending reminder to {Email}. Response body: {ResponseBody}",
+                response.StatusCode, toEmail, responseBody);
+            return false;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "❌ Failed to send installment reminder email to {Email}", toEmail);
+            _logger.LogError(ex, "❌ Transient error sending installment reminder email via SendGrid to {Email}", toEmail);
             return false;
         }
     }
