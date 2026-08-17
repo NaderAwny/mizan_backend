@@ -28,9 +28,8 @@
 | :--- | :--- | :--- |
 | `base_url` | رابط الخادم المحلي | `http://localhost:5210` (افتراضي) |
 | `otp_code` | كود التحقق من 6 أرقام | يتم استلامه على الإيميل وإدخاله أو جلبه |
-| `access_token` | توكن الـ JWT لصاحب المحل الرئيسي | يُحفظ تلقائياً عند نجاح Verify OTP |
-| `refresh_token` | توكن التجديد لصاحب المحل | يُحفظ تلقائياً عند نجاح Verify OTP |
-| `customer_access_token` | توكن الـ JWT لمستخدم تجريبي كعميل (لاختبار العزل) | يُحفظ تلقائياً عند فحص العميل |
+| `access_token` | توكن الـ JWT للمستخدم | يُحفظ تلقائياً عند نجاح Verify OTP |
+| `refresh_token` | توكن التجديد للمستخدم | يُحفظ تلقائياً عند نجاح Verify OTP |
 | `contact_id` | معرف الطرف (عميل/مورد) | يُحفظ تلقائياً عند إضافة طرف جديد |
 | `contact_supplier_id` | معرف طرف كمورد | يُحفظ تلقائياً عند إضافة مورد |
 | `transaction_id` | معرف آخر عملية منشأة | يُحفظ تلقائياً عند إنشاء أي عملية |
@@ -41,7 +40,7 @@
 
 ## 2. القسم 1: المصادقة وإنشاء الحسابات
 
-### السيناريو 1.1: تسجيل حساب جديد كصاحب محل (Shop Owner)
+### السيناريو 1.1: تسجيل حساب جديد (Register)
 - **Method**: `POST`
 - **URL**: `{{base_url}}/api/auth/register`
 - **Body (JSON)**:
@@ -70,7 +69,7 @@
 
 ---
 
-### السيناريو 1.3: تأكيد الكود والحصول على التوكن (Verify OTP - Shop Owner)
+### السيناريو 1.3: تأكيد الكود والحصول على التوكن (Verify OTP)
 - **Method**: `POST`
 - **URL**: `{{base_url}}/api/auth/verify-otp`
 - **Body (JSON)**:
@@ -85,7 +84,7 @@
 
 ---
 
-### السيناريو 1.4: تحديد نوع الحساب كـ صاحب محل (Shop Owner Setup)
+### السيناريو 1.4: تحديد نوع الحساب كـ صاحب محل (Select User Type)
 - **Method**: `POST`
 - **URL**: `{{base_url}}/api/auth/select-user-type`
 - **Headers**: `Authorization: Bearer {{access_token}}`
@@ -102,20 +101,7 @@
 
 ---
 
-### السيناريو 1.5 & 1.6: إنشاء حساب ثانٍ كـ عميل عادي (Customer) لاختبار العزل والأمان
-- **Step 1.5**: `POST /api/auth/register` بإيميل `customer@mizan.app` والاسم `أحمد محمود`.
-- **Step 1.6**: `POST /api/auth/verify-otp` ويحفظ الاسكريبت التوكن في `customer_access_token`.
-- **Step 1.7**: `POST /api/auth/select-user-type` بـ:
-```json
-{
-  "userType": "customer"
-}
-```
-- **Expected Status**: `200 OK`.
-
----
-
-### السيناريو 1.8: تجديد التوكن (Refresh Token)
+### السيناريو 1.5: تجديد التوكن (Refresh Token)
 - **Method**: `POST`
 - **URL**: `{{base_url}}/api/auth/refresh-token`
 - **Body (JSON)**:
@@ -128,7 +114,7 @@
 
 ---
 
-### السيناريو 1.9: تسجيل الخروج (Logout)
+### السيناريو 1.6: تسجيل الخروج (Logout)
 - **Method**: `POST`
 - **URL**: `{{base_url}}/api/auth/logout`
 - **Headers**: `Authorization: Bearer {{access_token}}`
@@ -139,19 +125,12 @@
 
 ## 3. القسم 2: الملف الشخصي (User Profile)
 
-### السيناريو 2.1: عرض ملف صاحب المحل
+### السيناريو 2.1: عرض ملف المستخدم الحالي (Get Profile)
 - **Method**: `GET`
 - **URL**: `{{base_url}}/api/users/me`
 - **Headers**: `Authorization: Bearer {{access_token}}`
 - **Expected Status**: `200 OK`
-- **Response Validation**: يحتوي على `userType = "shop_owner"`, `shopName`, `address`.
-
-### السيناريو 2.2: عرض ملف العميل
-- **Method**: `GET`
-- **URL**: `{{base_url}}/api/users/me`
-- **Headers**: `Authorization: Bearer {{customer_access_token}}`
-- **Expected Status**: `200 OK`
-- **Response Validation**: يحتوي على `userType = "customer"`, و `shopName = null`.
+- **Response Validation**: يحتوي على `userType`, `shopName`, `address`.
 
 ---
 
@@ -477,15 +456,10 @@
 | # | اسم الاختبار | Method & URL | Headers & Body | الكود المتوقع والسبب |
 |---|---|---|---|---|
 | **9.1** | طلب محمي بدون توكن | `GET /api/transactions` | بدون Header | `401 Unauthorized` |
-| **9.2** | توكن غير صالح | `GET /api/transactions` | `Bearer invalid_token_123` | `401 Unauthorized` |
-| **9.3** | كود OTP خاطئ | `POST /api/auth/verify-otp` | `{"email": "...", "code": "000000"}` | `400 Bad Request` ("كود التحقق غير صحيح") |
-| **9.4** | اسم طرف بأرقام | `POST /api/contacts` | `{"name": "محمد 123"}` | `400 Bad Request` ("يجب أن يحتوي الاسم على أحرف فقط") |
-| **9.5** | عدم تطابق مجموع الأقساط | `POST /api/transactions` | مبلغ 1000 وأقساط 300+400 | `400 Bad Request` ("مجموع مبالغ الأقساط يجب أن يساوي إجمالي العملية") |
-| **9.6** | ملف صوتي بصيغة ممنوعة | `POST /api/transactions/.../voice-note` | رفع ملف `.exe` أو `.pdf` | `400 Bad Request` ("صيغة الملف غير مدعومة") |
-| **9.7** | **عزل الأطراف (404)** | `GET /api/contacts/{{contact_id}}` | `Bearer {{customer_access_token}}` | `404 Not Found` (يمنع معرفة وجود الطرف لمستخدم آخر) |
-| **9.8** | **عزل العمليات (404)** | `GET /api/transactions/{{transaction_id}}` | `Bearer {{customer_access_token}}` | `404 Not Found` (لا يمكن للعميل رؤية عملية صاحب المحل) |
-| **9.9** | **عزل الصوتيات (404)** | `GET /api/transactions/{{transaction_id}}/voice-note` | `Bearer {{customer_access_token}}` | `404 Not Found` (الملفات الصوتية غير مكشوفة) |
-| **9.10**| **عزل التقارير (404)** | `GET /api/reports/{{report_id}}/download` | `Bearer {{customer_access_token}}` | `404 Not Found` (التقارير وسجلاتها معزولة بالكامل) |
+| **9.2** | كود OTP خاطئ | `POST /api/auth/verify-otp` | `{"email": "...", "code": "000000"}` | `400 Bad Request` ("كود التحقق غير صحيح") |
+| **9.3** | اسم طرف بأرقام | `POST /api/contacts` | `{"name": "محمد 123"}` | `400 Bad Request` ("يجب أن يحتوي الاسم على أحرف فقط") |
+| **9.4** | عدم تطابق مجموع الأقساط | `POST /api/transactions` | مبلغ 1000 وأقساط 300+400 | `400 Bad Request` ("مجموع مبالغ الأقساط يجب أن يساوي إجمالي العملية") |
+| **9.5** | إرسال قيمة رقمية لـ Enum | `POST /api/transactions` | `{"type": 0}` | `400 Bad Request` ("يجب إرسال النصوص فقط للـ Enums") |
 
 ---
 
