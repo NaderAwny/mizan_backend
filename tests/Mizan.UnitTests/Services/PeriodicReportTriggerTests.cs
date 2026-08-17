@@ -204,4 +204,100 @@ public class PeriodicReportTriggerTests
         Assert.Equal(1, reports[0].BatchNumber);
         Assert.Equal(2, reports[1].BatchNumber);
     }
+
+    [Fact]
+    public async Task CreateAsync_MultiUserIsolation_EachUserGetsTheirOwnReportEvery7Transactions()
+    {
+        // Arrange
+        string dbName = Guid.NewGuid().ToString();
+        using var db = CreateDb(dbName);
+        var uow = new UnitOfWork(db);
+        var pdfGen = new FakeReportPdfGenerator();
+        var emailSvc = new FakeEmailService();
+        var scopeFactory = CreateScopeFactory(dbName, emailSvc);
+        var options = Microsoft.Extensions.Options.Options.Create(new PeriodicReportsOptions { Enabled = true, TransactionThreshold = 7 });
+        var service = new TransactionService(uow, options, pdfGen, scopeFactory, NullLogger<TransactionService>.Instance);
+
+        // Create User 1 and User 2
+        int user1Id = 1;
+        int user2Id = 2;
+        var user1 = User.Create("user1@mizan.app", "أحمد", "علي", "shop_owner");
+        var user2 = User.Create("user2@mizan.app", "محمود", "حسن", "customer");
+        var contact1 = Contact.Create(user1Id, "عميل أول", null, null);
+        var contact2 = Contact.Create(user2Id, "عميل ثاني", null, null);
+
+        db.Set<User>().AddRange(user1, user2);
+        db.Set<Contact>().AddRange(contact1, contact2);
+        await db.SaveChangesAsync();
+
+        // User 1 creates 4 transactions
+        for (int i = 0; i < 4; i++)
+        {
+            await service.CreateAsync(user1Id, new CreateTransactionRequest
+            {
+                ContactId = contact1.Id,
+                Type = TransactionType.Sale,
+                Amount = 100,
+                TransactionDate = DateTime.UtcNow
+            });
+        }
+
+        // User 2 creates 6 transactions (Total in DB across app = 10 transactions)
+        for (int i = 0; i < 6; i++)
+        {
+            await service.CreateAsync(user2Id, new CreateTransactionRequest
+            {
+                ContactId = contact2.Id,
+                Type = TransactionType.Purchase,
+                Amount = 200,
+                TransactionDate = DateTime.UtcNow
+            });
+        }
+
+        // At this point: 10 transactions in DB across app, but neither user has reached 7 individually.
+        var initialReports = await db.Set<PeriodicReport>().ToListAsync();
+        Assert.Empty(initialReports);
+
+        // User 2 creates their 7th transaction -> Triggers report ONLY for User 2
+        await service.CreateAsync(user2Id, new CreateTransactionRequest
+        {
+            ContactId = contact2.Id,
+            Type = TransactionType.Purchase,
+            Amount = 200,
+            TransactionDate = DateTime.UtcNow
+        });
+
+        var user2Reports = await db.Set<PeriodicReport>().Where(r => r.OwnerUserId == user2Id).ToListAsync();
+        var user1Reports = await db.Set<PeriodicReport>().Where(r => r.OwnerUserId == user1Id).ToListAsync();
+
+        Assert.Single(user2Reports);
+        Assert.Empty(user1Reports);
+        Assert.Equal(user2Id, user2Reports[0].OwnerUserId);
+        Assert.Equal(1, user2Reports[0].BatchNumber);
+        Assert.Equal(7, user2Reports[0].TransactionCount);
+        Assert.Equal(1400m, user2Reports[0].TotalPurchasesAmount); // 7 * 200
+
+        // User 1 creates 3 more transactions (Reaching 7 for User 1)
+        for (int i = 0; i < 3; i++)
+        {
+            await service.CreateAsync(user1Id, new CreateTransactionRequest
+            {
+                ContactId = contact1.Id,
+                Type = TransactionType.Sale,
+                Amount = 100,
+                TransactionDate = DateTime.UtcNow
+            });
+        }
+
+        // Now both users have reached 7 transactions individually, each having their own Batch 1
+        user1Reports = await db.Set<PeriodicReport>().Where(r => r.OwnerUserId == user1Id).ToListAsync();
+        user2Reports = await db.Set<PeriodicReport>().Where(r => r.OwnerUserId == user2Id).ToListAsync();
+
+        Assert.Single(user1Reports);
+        Assert.Single(user2Reports);
+        Assert.Equal(user1Id, user1Reports[0].OwnerUserId);
+        Assert.Equal(1, user1Reports[0].BatchNumber);
+        Assert.Equal(700m, user1Reports[0].TotalSalesAmount); // 7 * 100
+        Assert.Equal(0m, user1Reports[0].TotalPurchasesAmount);
+    }
 }
