@@ -43,6 +43,16 @@ public class ReminderScannerTests
             Calls.Add(new ReminderCallRecord(toEmail, recipientName, contactName, amount, dueDate, daysUntilDue));
             return Task.FromResult(ShouldSucceed);
         }
+
+        public Task<bool> SendPeriodicReportEmailAsync(
+            string toEmail,
+            string recipientName,
+            int batchNumber,
+            byte[] pdfBytes,
+            CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(ShouldSucceed);
+        }
     }
 
     private static MizanDbContext CreateDb()

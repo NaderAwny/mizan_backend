@@ -18,6 +18,7 @@ public class UnitOfWork : IUnitOfWork
     private IInstallmentRepository? _installments;
     private INotificationRepository? _notifications;
     private IInstallmentReminderLogRepository? _installmentReminderLogs;
+    private IPeriodicReportRepository? _periodicReports;
 
     public UnitOfWork(MizanDbContext context)
     {
@@ -33,6 +34,7 @@ public class UnitOfWork : IUnitOfWork
     public IInstallmentRepository Installments => _installments ??= new InstallmentRepository(_context);
     public INotificationRepository Notifications => _notifications ??= new NotificationRepository(_context);
     public IInstallmentReminderLogRepository InstallmentReminderLogs => _installmentReminderLogs ??= new InstallmentReminderLogRepository(_context);
+    public IPeriodicReportRepository PeriodicReports => _periodicReports ??= new PeriodicReportRepository(_context);
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {

@@ -118,7 +118,21 @@ public class EmailServiceTests
         var result = await service.SendOtpEmailAsync("user@example.com", "654321");
 
         Assert.True(result);
-        Assert.Single(fakeClient.SentMessages);
+        var msg = Assert.Single(fakeClient.SentMessages);
+        Assert.Equal("no-reply@mizanapp.com", msg.From.Email);
+        Assert.Equal("Mizan", msg.From.Name);
+        Assert.NotNull(msg.ReplyTo);
+        Assert.Equal("no-reply@mizanapp.com", msg.ReplyTo.Email);
+        Assert.Equal("Mizan", msg.ReplyTo.Name);
+        Assert.NotNull(msg.Contents);
+        var plainContent = msg.Contents.FirstOrDefault(c => c.Type == "text/plain")?.Value;
+        var htmlContent = msg.Contents.FirstOrDefault(c => c.Type == "text/html")?.Value;
+        Assert.Contains("654321", plainContent);
+        Assert.Contains("الزقازيق، الشرقية، مصر", plainContent);
+        Assert.Contains("هذه رسالة تلقائية من تطبيق ميزان", plainContent);
+        Assert.Contains("654321", htmlContent);
+        Assert.Contains("الزقازيق، الشرقية، مصر", htmlContent);
+        Assert.Contains("هذه رسالة تلقائية من تطبيق ميزان", htmlContent);
     }
 
     [Fact]
@@ -160,7 +174,27 @@ public class EmailServiceTests
             2);
 
         Assert.True(result);
-        Assert.Single(fakeClient.SentMessages);
+        var msg = Assert.Single(fakeClient.SentMessages);
+        Assert.NotNull(msg.Personalizations);
+        Assert.Equal("تذكير: موعد استحقاق قسط بقيمة 1,200.00 — تطبيق ميزان", msg.Personalizations[0]?.Subject);
+        Assert.Equal("no-reply@mizanapp.com", msg.From.Email);
+        Assert.Equal("Mizan", msg.From.Name);
+        Assert.NotNull(msg.ReplyTo);
+        Assert.Equal("no-reply@mizanapp.com", msg.ReplyTo.Email);
+        Assert.Equal("Mizan", msg.ReplyTo.Name);
+        Assert.NotNull(msg.Contents);
+        var plainContent = msg.Contents.FirstOrDefault(c => c.Type == "text/plain")?.Value;
+        var htmlContent = msg.Contents.FirstOrDefault(c => c.Type == "text/html")?.Value;
+        Assert.Contains("1,200.00", plainContent);
+        Assert.Contains("علي", plainContent);
+        Assert.Contains("خالد", plainContent);
+        Assert.Contains("الزقازيق، الشرقية، مصر", plainContent);
+        Assert.Contains("هذه رسالة تلقائية من تطبيق ميزان", plainContent);
+        Assert.Contains("1,200.00", htmlContent);
+        Assert.Contains("علي", htmlContent);
+        Assert.Contains("خالد", htmlContent);
+        Assert.Contains("الزقازيق، الشرقية، مصر", htmlContent);
+        Assert.Contains("هذه رسالة تلقائية من تطبيق ميزان", htmlContent);
     }
 
     [Fact]

@@ -17,6 +17,10 @@ using Mizan.Infrastructure.Services.Email;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
+
 // 1. Controller & Validation Response Configuration
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -64,15 +68,17 @@ builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
 builder.Services.AddScoped<IInstallmentRepository, InstallmentRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<IInstallmentReminderLogRepository, InstallmentReminderLogRepository>();
+builder.Services.AddScoped<IPeriodicReportRepository, PeriodicReportRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-// 5. Dependency Injection - Application Services
 // 5. Dependency Injection - Application Services & Email Configuration
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IContactService, ContactService>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IPeriodicReportService, PeriodicReportService>();
+builder.Services.AddScoped<IReportPdfGenerator, Mizan.Infrastructure.Services.Reports.ReportPdfGenerator>();
 builder.Services.AddScoped<IReminderScanner, ReminderScanner>();
 builder.Services.AddSingleton<IJwtProvider, JwtProvider>();
 
@@ -94,7 +100,9 @@ builder.Services.AddScoped<SendGrid.ISendGridClient>(sp =>
 });
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.Configure<Mizan.Application.DTOs.Notifications.RemindersOptions>(builder.Configuration.GetSection(Mizan.Application.DTOs.Notifications.RemindersOptions.SectionName));
+builder.Services.Configure<Mizan.Application.DTOs.Reports.PeriodicReportsOptions>(builder.Configuration.GetSection(Mizan.Application.DTOs.Reports.PeriodicReportsOptions.SectionName));
 builder.Services.AddHostedService<Mizan.Infrastructure.BackgroundServices.ReminderCheckService>();
+builder.Services.AddHostedService<Mizan.Infrastructure.BackgroundServices.PeriodicReportEmailRetryService>();
 
 // 6. JWT Authentication & Strict Key Validation
 var jwtOptions = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? new JwtOptions();

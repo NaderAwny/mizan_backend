@@ -1,4 +1,8 @@
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Mizan.Application.DTOs.Reports;
 using Mizan.Application.DTOs.Transactions;
 using Mizan.Application.Interfaces;
 using Mizan.Core.Entities;
@@ -14,10 +18,23 @@ public class TransactionService : ITransactionService
     private const int MaxPageSize = 50;
 
     private readonly IUnitOfWork _unitOfWork;
+    private readonly PeriodicReportsOptions _periodicReportsOptions;
+    private readonly IReportPdfGenerator _reportPdfGenerator;
+    private readonly IServiceScopeFactory _scopeFactory;
+    private readonly ILogger<TransactionService> _logger;
 
-    public TransactionService(IUnitOfWork unitOfWork)
+    public TransactionService(
+        IUnitOfWork unitOfWork,
+        IOptions<PeriodicReportsOptions>? periodicReportsOptions = null,
+        IReportPdfGenerator? reportPdfGenerator = null,
+        IServiceScopeFactory? scopeFactory = null,
+        ILogger<TransactionService>? logger = null)
     {
         _unitOfWork = unitOfWork;
+        _periodicReportsOptions = periodicReportsOptions?.Value ?? new PeriodicReportsOptions();
+        _reportPdfGenerator = reportPdfGenerator!;
+        _scopeFactory = scopeFactory!;
+        _logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<TransactionService>.Instance;
     }
 
     public async Task<TransactionResponse> CreateAsync(
@@ -93,6 +110,17 @@ public class TransactionService : ITransactionService
         }
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // 5. Trigger Periodic Report check (Every 7th active transaction)
+        try
+        {
+            await TryGeneratePeriodicReportAsync(ownerUserId, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // Report generation failure must never fail the transaction creation HTTP response
+            _logger.LogError(ex, "Failed to evaluate or generate periodic report for owner {OwnerUserId}", ownerUserId);
+        }
 
         return MapToResponse(transaction, contact.Name);
     }
@@ -320,5 +348,144 @@ public class TransactionService : ITransactionService
             CreatedAt = transaction.CreatedAt,
             UpdatedAt = transaction.UpdatedAt
         };
+    }
+
+    private async Task TryGeneratePeriodicReportAsync(int ownerUserId, CancellationToken cancellationToken)
+    {
+        if (!_periodicReportsOptions.Enabled || _periodicReportsOptions.TransactionThreshold <= 0)
+            return;
+
+        int totalCount = await _unitOfWork.Transactions.GetActiveCountByOwnerAsync(ownerUserId, cancellationToken);
+        if (totalCount <= 0 || totalCount % _periodicReportsOptions.TransactionThreshold != 0)
+            return;
+
+        int batchNumber = totalCount / _periodicReportsOptions.TransactionThreshold;
+        var batchTransactions = await _unitOfWork.Transactions.GetRecentActiveByOwnerAsync(
+            ownerUserId, _periodicReportsOptions.TransactionThreshold, cancellationToken);
+
+        if (batchTransactions.Count == 0)
+            return;
+
+        decimal totalSales = batchTransactions
+            .Where(t => t.Type == TransactionType.Sale)
+            .Sum(t => t.Amount);
+
+        decimal totalPurchases = batchTransactions
+            .Where(t => t.Type == TransactionType.Purchase)
+            .Sum(t => t.Amount);
+
+        var user = await _unitOfWork.Users.GetByIdAsync(ownerUserId, cancellationToken);
+        string recipientName = $"{user?.FirstName} {user?.LastName}".Trim();
+        string recipientEmail = user?.Email ?? string.Empty;
+
+        var pdfModel = new PeriodicReportPdfModel
+        {
+            BatchNumber = batchNumber,
+            GeneratedAt = DateTime.UtcNow,
+            TransactionCount = batchTransactions.Count,
+            TotalSalesAmount = totalSales,
+            TotalPurchasesAmount = totalPurchases,
+            RecipientName = recipientName,
+            UserEmail = recipientEmail,
+            Transactions = batchTransactions
+                .OrderBy(t => t.CreatedAt)
+                .Select(t => new PeriodicReportPdfTransactionItem
+                {
+                    ContactName = t.Contact?.Name ?? string.Empty,
+                    Type = t.Type,
+                    Amount = t.Amount,
+                    TransactionDate = t.TransactionDate,
+                    IsInstallment = t.IsInstallment
+                })
+                .ToList()
+        };
+
+        // 1. Generate PDF in memory
+        byte[] pdfBytes = _reportPdfGenerator != null
+            ? _reportPdfGenerator.GenerateReportPdf(pdfModel)
+            : Array.Empty<byte>();
+
+        // 2. Save PDF file to non-web-exposed internal path
+        var folderPath = Path.Combine(Directory.GetCurrentDirectory(), "App_Data", "reports", ownerUserId.ToString());
+        Directory.CreateDirectory(folderPath);
+
+        var storedFileName = $"{Guid.NewGuid()}.pdf";
+        var fullPath = Path.Combine(folderPath, storedFileName);
+        await File.WriteAllBytesAsync(fullPath, pdfBytes, cancellationToken);
+
+        // 3. Save PeriodicReport row and Notification row in DB
+        PeriodicReport report;
+        try
+        {
+            report = PeriodicReport.Create(
+                ownerUserId,
+                batchNumber,
+                batchTransactions.Count,
+                totalSales,
+                totalPurchases,
+                fullPath);
+
+            await _unitOfWork.PeriodicReports.AddAsync(report, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+            var notification = Notification.CreatePeriodicReportReady(
+                ownerUserId,
+                report.Id,
+                batchNumber,
+                totalSales,
+                totalPurchases,
+                batchTransactions.Count);
+
+            await _unitOfWork.Notifications.AddAsync(notification, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            // Concurrency safety: If two concurrent requests landed on the 7th transaction,
+            // the unique index on (OwnerUserId, BatchNumber) prevents duplicate reports.
+            _logger.LogInformation(ex, "Periodic report for batch {BatchNumber} already created by concurrent request or failed for owner {OwnerUserId}. Skipping.", batchNumber, ownerUserId);
+            return;
+        }
+
+        // 4. Architectural Decision: True Fire-and-Forget Background Email Dispatch using IServiceScopeFactory
+        // We dispatch the email sending in an isolated background Task.Run to ensure POST /api/transactions
+        // returns immediately without waiting for SendGrid HTTP network latency.
+        // A new DI scope is created via IServiceScopeFactory so no disposed request-scoped instances are accessed.
+        // If email sending fails or the server shuts down, PeriodicReportEmailRetryService will automatically
+        // pick up any PeriodicReport with EmailSent == false on its next run.
+        if (_scopeFactory != null && !string.IsNullOrWhiteSpace(recipientEmail))
+        {
+            int reportId = report.Id;
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    using var scope = _scopeFactory.CreateScope();
+                    var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
+                    var backgroundUow = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+
+                    bool sent = await emailService.SendPeriodicReportEmailAsync(
+                        recipientEmail,
+                        recipientName,
+                        batchNumber,
+                        pdfBytes);
+
+                    if (sent)
+                    {
+                        var savedReport = await backgroundUow.PeriodicReports.GetByIdAsync(reportId, ownerUserId);
+                        if (savedReport != null)
+                        {
+                            savedReport.MarkEmailSent();
+                            backgroundUow.PeriodicReports.Update(savedReport);
+                            await backgroundUow.SaveChangesAsync();
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to send periodic report email in background task for ReportId {ReportId}", reportId);
+                }
+            });
+        }
     }
 }

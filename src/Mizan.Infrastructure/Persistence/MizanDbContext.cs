@@ -18,6 +18,7 @@ public class MizanDbContext : DbContext
     public DbSet<Installment> Installments => Set<Installment>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<InstallmentReminderLog> InstallmentReminderLogs => Set<InstallmentReminderLog>();
+    public DbSet<PeriodicReport> PeriodicReports => Set<PeriodicReport>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Mizan.Application.Interfaces;
 using Mizan.Infrastructure.Persistence;
 
@@ -15,6 +16,12 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
+
+        builder.ConfigureLogging(logging =>
+        {
+            logging.ClearProviders();
+            logging.AddConsole();
+        });
 
         builder.ConfigureServices(services =>
         {
@@ -52,6 +59,17 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
             decimal amount,
             DateTime dueDate,
             int daysUntilDue,
+            CancellationToken cancellationToken = default)
+        {
+            LastRecipientEmail = toEmail;
+            return Task.FromResult(true);
+        }
+
+        public Task<bool> SendPeriodicReportEmailAsync(
+            string toEmail,
+            string recipientName,
+            int batchNumber,
+            byte[] pdfBytes,
             CancellationToken cancellationToken = default)
         {
             LastRecipientEmail = toEmail;

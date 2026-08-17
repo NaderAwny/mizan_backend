@@ -17,6 +17,10 @@ public interface ITransactionRepository
         DateTime? dateTo = null,
         CancellationToken cancellationToken = default);
 
+    Task<int> GetActiveCountByOwnerAsync(int ownerUserId, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<Transaction>> GetRecentActiveByOwnerAsync(int ownerUserId, int count, CancellationToken cancellationToken = default);
+
     Task AddAsync(Transaction transaction, CancellationToken cancellationToken = default);
 
     void Update(Transaction transaction);

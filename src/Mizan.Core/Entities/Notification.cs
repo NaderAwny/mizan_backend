@@ -12,6 +12,7 @@ public class Notification
     public string Message { get; private set; } = string.Empty;
     public int? TransactionId { get; private set; }
     public int? InstallmentId { get; private set; }
+    public int? PeriodicReportId { get; private set; }
     public bool IsRead { get; private set; }
     public DateTime CreatedAt { get; private set; }
 
@@ -19,6 +20,7 @@ public class Notification
     public User? Owner { get; private set; }
     public Transaction? Transaction { get; private set; }
     public Installment? Installment { get; private set; }
+    public PeriodicReport? PeriodicReport { get; private set; }
 
     private Notification() { } // Required for EF Core
 
@@ -59,6 +61,41 @@ public class Notification
             Message = message,
             TransactionId = transactionId,
             InstallmentId = installmentId,
+            PeriodicReportId = null,
+            IsRead = false,
+            CreatedAt = DateTime.UtcNow
+        };
+    }
+
+    public static Notification CreatePeriodicReportReady(
+        int ownerUserId,
+        int periodicReportId,
+        int batchNumber,
+        decimal totalSales,
+        decimal totalPurchases,
+        int transactionCount)
+    {
+        if (ownerUserId <= 0)
+            throw new DomainException("معرف المستخدم غير صالح");
+
+        if (periodicReportId <= 0)
+            throw new DomainException("معرف التقرير الدوري غير صالح");
+
+        string formattedSales = totalSales.ToString("G29");
+        string formattedPurchases = totalPurchases.ToString("G29");
+
+        string title = $"التقرير الدوري #{batchNumber} جاهز";
+        string message = $"تم إصدار التقرير الدوري للدفعة #{batchNumber} ({transactionCount} عمليات: مبيعات {formattedSales}، مشتريات {formattedPurchases}). يمكنك تحميل التقرير ومراجعته الآن.";
+
+        return new Notification
+        {
+            OwnerUserId = ownerUserId,
+            Type = NotificationType.PeriodicReportReady,
+            Title = title,
+            Message = message,
+            TransactionId = null,
+            InstallmentId = null,
+            PeriodicReportId = periodicReportId,
             IsRead = false,
             CreatedAt = DateTime.UtcNow
         };

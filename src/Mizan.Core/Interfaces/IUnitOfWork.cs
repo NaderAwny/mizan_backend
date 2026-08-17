@@ -11,6 +11,7 @@ public interface IUnitOfWork : IDisposable
     IInstallmentRepository Installments { get; }
     INotificationRepository Notifications { get; }
     IInstallmentReminderLogRepository InstallmentReminderLogs { get; }
+    IPeriodicReportRepository PeriodicReports { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     Task BeginTransactionAsync(CancellationToken cancellationToken = default);

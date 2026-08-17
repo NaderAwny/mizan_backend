@@ -41,6 +41,10 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
             .HasColumnName("installment_id")
             .IsRequired(false);
 
+        builder.Property(n => n.PeriodicReportId)
+            .HasColumnName("periodic_report_id")
+            .IsRequired(false);
+
         builder.Property(n => n.IsRead)
             .HasColumnName("is_read")
             .HasDefaultValue(false)
@@ -63,6 +67,11 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
         builder.HasOne(n => n.Installment)
             .WithMany()
             .HasForeignKey(n => n.InstallmentId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        builder.HasOne(n => n.PeriodicReport)
+            .WithMany()
+            .HasForeignKey(n => n.PeriodicReportId)
             .OnDelete(DeleteBehavior.NoAction);
 
         builder.HasIndex(n => new { n.OwnerUserId, n.CreatedAt });

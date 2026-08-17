@@ -2,15 +2,15 @@
   "info": {
     "_postman_id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
     "name": "Mizan API — ميزان (Official Collection)",
-    "description": "🚀 مجموعة طلبات API الرسمية الكاملة لتطبيق ميزان — Mizan\n\n📌 الميزات المدعومة:\n1. تسجيل مستخدم جديد بالبريد الإلكتروني والـ OTP الحقيقي.\n2. تسجيل الدخول بالبريد الإلكتروني واستلام كود الـ OTP على صندوق الوارد.\n3. التحقق من الكود وإصدار JWT Token صالح لمدة 7 أيام + Refresh Token.\n4. حفظ التوكن تلقائياً في البيئة (Environment) واستخدامه في جميع الطلبات المحمية.\n5. تحديد نوع الحساب (عميل / صاحب محل مع بيانات المحل).\n6. عرض الملف الشخصي للمستخدم.\n7. تجديد التوكن وتسجيل الخروج.",
+    "description": "🚀 مجموعة طلبات API الرسمية الكاملة لتطبيق ميزان — Mizan\n\n📌 الميزات والتغطية الكاملة:\n1. المصادقة والتحقق (Register, Send OTP, Verify OTP, Select Type Shop Owner / Customer, Refresh Token, Logout).\n2. إدارة الملف الشخصي (User Profile).\n3. إدارة الأطراف (Contacts) للعملاء والموردين مع البحث والتصفح والتعديل والحذف.\n4. العمليات اليدوية (Sales & Purchases) كاش وأقساط آلية ومخصصة.\n5. العمليات الصوتية (Voice Transcript & Audio File Upload/Stream).\n6. إدارة وتسديد الأقساط (Installments & Pay).\n7. التقارير الدورية (Periodic Reports - كل 7 عمليات) وتحميل ملف PDF مع دعم كامل للعربية.\n8. الإشعارات والتنبيهات (Notifications & Read All).\n9. حالات الأمان والتحقق السلبي (401, 404 Owner-scoped isolation, 400 Validation).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
-      "name": "🔐 1. المصادقة والتحقق (Authentication & OTP)",
+      "name": "🔐 1. المصادقة والتحقق (Authentication & Accounts)",
       "item": [
         {
-          "name": "1 — تسجيل حساب جديد (Register)",
+          "name": "1.1 — تسجيل حساب جديد: صاحب محل (Register - Shop Owner)",
           "event": [
             {
               "listen": "test",
@@ -22,7 +22,7 @@
                   "        pm.expect(json.success).to.be.true;",
                   "        pm.expect(json.data.otpSent).to.be.true;",
                   "    });",
-                  "    console.log('✉️ تم إرسال كود الـ OTP إلى البريد الإلكتروني. تفقد صندوق الوارد وأدخل الكود في متغير البيئة otp_code أو مباشرة في الخطوة 3.');",
+                  "    console.log('✉️ تم إرسال كود الـ OTP إلى البريد الإلكتروني. تفقد صندوق الوارد.');",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -32,31 +32,22 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+              { "key": "Content-Type", "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"aatttaa478@gmail.com\",\n  \"firstName\": \"نادر\",\n  \"lastName\": \"عوني\"\n}"
+              "raw": "{\n  \"email\": \"owner@mizan.app\",\n  \"firstName\": \"نادر\",\n  \"lastName\": \"عوني\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/auth/register",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "auth",
-                "register"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "register"]
             },
-            "description": "تسجيل مستخدم جديد في التطبيق وإرسال كود الـ OTP المكون من 6 أرقام على بريده الإلكتروني مباشرة."
+            "description": "تسجيل مستخدم جديد كـ صاحب محل وإرسال كود الـ OTP المكون من 6 أرقام على بريده الإلكتروني."
           }
         },
         {
-          "name": "2 — طلب كود تسجيل الدخول (Send OTP)",
+          "name": "1.2 — طلب كود تسجيل الدخول (Send OTP)",
           "event": [
             {
               "listen": "test",
@@ -68,7 +59,6 @@
                   "        pm.expect(json.success).to.be.true;",
                   "        pm.expect(json.data.otpSent).to.be.true;",
                   "    });",
-                  "    console.log('✉️ تم إرسال كود التحقق إلى البريد الإلكتروني.');",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -78,31 +68,22 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+              { "key": "Content-Type", "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"aatttaa478@gmail.com\"\n}"
+              "raw": "{\n  \"email\": \"owner@mizan.app\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/auth/send-otp",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "auth",
-                "send-otp"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "send-otp"]
             },
-            "description": "طلب كود OTP جديد لتسجيل الدخول لمستخدم مسجل بالفعل."
+            "description": "طلب كود OTP جديد لتسجيل الدخول."
           }
         },
         {
-          "name": "3 — تأكيد الكود وتسجيل الدخول (Verify OTP)",
+          "name": "1.3 — تأكيد الكود وتسجيل الدخول (Verify OTP - Shop Owner)",
           "event": [
             {
               "listen": "test",
@@ -114,9 +95,7 @@
                   "        pm.environment.set('access_token', json.data.token);",
                   "        pm.environment.set('refresh_token', json.data.refreshToken);",
                   "        pm.environment.set('user_id', json.data.userId);",
-                  "        console.log('✅ تم حفظ التوكن تلقائياً:', json.data.token);",
-                  "        console.log('نوع الحساب:', json.data.userType);",
-                  "        console.log('هل هو مستخدم جديد؟:', json.data.isNewUser);",
+                  "        console.log('✅ تم حفظ access_token في البيئة بنجاح.');",
                   "    }",
                   "    pm.test('تسجيل الدخول ناجح وتم استلام التوكن', function() {",
                   "        pm.expect(json.success).to.be.true;",
@@ -131,77 +110,22 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+              { "key": "Content-Type", "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"aatttaa478@gmail.com\",\n  \"code\": \"{{otp_code}}\"\n}"
+              "raw": "{\n  \"email\": \"owner@mizan.app\",\n  \"code\": \"{{otp_code}}\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/auth/verify-otp",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "auth",
-                "verify-otp"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "verify-otp"]
             },
-            "description": "إدخال كود الـ OTP المكون من 6 أرقام للتحقق وإصدار الـ JWT Access Token والـ Refresh Token."
+            "description": "إدخال كود الـ OTP للتحقق وإصدار التوكن."
           }
         },
         {
-          "name": "4 — اختيار نوع الحساب: عميل (Select Type - Customer)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('تم تحديد نوع الحساب كعميل', function() {",
-                  "    pm.expect(pm.response.code).to.equal(200);",
-                  "    pm.expect(pm.response.json().success).to.be.true;",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"userType\": \"customer\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/auth/select-user-type",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "auth",
-                "select-user-type"
-              ]
-            },
-            "description": "تحديد نوع حساب المستخدم كـ عميل (Customer).\n🔒 يتطلب Bearer Token (يتم تمريره تلقائياً من الخطوة 3)."
-          }
-        },
-        {
-          "name": "4b — اختيار نوع الحساب: صاحب محل (Select Type - Shop Owner)",
+          "name": "1.4 — اختيار نوع الحساب: صاحب محل (Select Type - Shop Owner)",
           "event": [
             {
               "listen": "test",
@@ -219,35 +143,128 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              }
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userType\": \"shop_owner\",\n  \"shopName\": \"محل ميزان للإلكترونيات\",\n  \"address\": \"القاهرة - مدينة نصر\"\n}"
+              "raw": "{\n  \"userType\": \"shop_owner\",\n  \"shopName\": \"محل ميزان للمواد الغذائية والكماليات\",\n  \"address\": \"القاهرة - مدينة نصر\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/auth/select-user-type",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "auth",
-                "select-user-type"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "select-user-type"]
             },
-            "description": "تحديد نوع الحساب كـ صاحب محل (Shop Owner) مع حفظ اسم المحل وعنوانه.\n🔒 يتطلب Bearer Token."
+            "description": "تحديد نوع الحساب كـ صاحب محل مع إدخال اسم المحل وعنوانه."
           }
         },
         {
-          "name": "5 — تجديد التوكن (Refresh Token)",
+          "name": "1.5 — تسجيل مستخدم ثانٍ: عميل عادي (Register - Customer)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('تم إرسال كود التحقق للعميل', function() {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"customer@mizan.app\",\n  \"firstName\": \"أحمد\",\n  \"lastName\": \"محمود\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "register"]
+            },
+            "description": "تسجيل مستخدم ثانٍ مستقل لاختبار الصلاحيات وعزل البيانات بين المستخدمين."
+          }
+        },
+        {
+          "name": "1.6 — تأكيد كود العميل وحفظ التوكن (Verify OTP - Customer)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    if (json.data && json.data.token) {",
+                  "        pm.environment.set('customer_access_token', json.data.token);",
+                  "        console.log('✅ تم حفظ customer_access_token في البيئة بنجاح.');",
+                  "    }",
+                  "    pm.test('تسجيل دخول العميل ناجح', function() {",
+                  "        pm.expect(json.success).to.be.true;",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"customer@mizan.app\",\n  \"code\": \"{{otp_code}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/verify-otp",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "verify-otp"]
+            },
+            "description": "التحقق من كود الـ OTP للعميل وحفظ التوكن في متغير customer_access_token."
+          }
+        },
+        {
+          "name": "1.7 — اختيار نوع الحساب: عميل (Select Type - Customer)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('تم تحديد نوع الحساب كعميل', function() {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "    pm.expect(pm.response.json().success).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customer_access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userType\": \"customer\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/select-user-type",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "select-user-type"]
+            },
+            "description": "تحديد نوع حساب المستخدم الثاني كـ عميل عادي (Customer)."
+          }
+        },
+        {
+          "name": "1.8 — تجديد التوكن (Refresh Token)",
           "event": [
             {
               "listen": "test",
@@ -258,7 +275,7 @@
                   "    if (json.data && json.data.token) {",
                   "        pm.environment.set('access_token', json.data.token);",
                   "        pm.environment.set('refresh_token', json.data.refreshToken);",
-                  "        console.log('✅ تم تجديد التوكن وحفظه في البيئة.');",
+                  "        console.log('✅ تم تجديد التوكن بنجاح.');",
                   "    }",
                   "    pm.test('تم تجديد التوكن بنجاح', function() {",
                   "        pm.expect(json.success).to.be.true;",
@@ -272,10 +289,7 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+              { "key": "Content-Type", "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
@@ -283,33 +297,22 @@
             },
             "url": {
               "raw": "{{base_url}}/api/auth/refresh-token",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "auth",
-                "refresh-token"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "refresh-token"]
             },
-            "description": "تجديد صلاحية الـ Access Token باستخدام الـ Refresh Token عند انتهائه."
+            "description": "تجديد صلاحية الـ Access Token باستخدام الـ Refresh Token."
           }
         },
         {
-          "name": "6 — تسجيل الخروج (Logout)",
+          "name": "1.9 — تسجيل الخروج (Logout)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "if (pm.response.code === 200) {",
-                  "    pm.environment.unset('access_token');",
-                  "    pm.environment.unset('refresh_token');",
-                  "    console.log('✅ تم تسجيل الخروج ومسح التوكن من البيئة.');",
-                  "    pm.test('تم تسجيل الخروج بنجاح', function() {",
-                  "        pm.expect(pm.response.json().success).to.be.true;",
-                  "    });",
-                  "}"
+                  "pm.test('تم تسجيل الخروج بنجاح', function() {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});"
                 ],
                 "type": "text/javascript"
               }
@@ -318,14 +321,8 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              }
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
             ],
             "body": {
               "mode": "raw",
@@ -333,35 +330,29 @@
             },
             "url": {
               "raw": "{{base_url}}/api/auth/logout",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "auth",
-                "logout"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "logout"]
             },
-            "description": "تسجيل الخروج وإلغاء صلاحية الـ Refresh Token من السيرفر.\n🔒 يتطلب Bearer Token."
+            "description": "تسجيل الخروج وإلغاء صلاحية الـ Refresh Token."
           }
         }
       ]
     },
     {
-      "name": "👤 2. إدارة المستخدم (User Profile)",
+      "name": "👤 2. الملف الشخصي (User Profile)",
       "item": [
         {
-          "name": "عرض الملف الشخصي الحالي (Get Profile)",
+          "name": "2.1 — عرض الملف الشخصي لصاحب المحل (Get Profile - Shop Owner)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('تم جلب بيانات الملف الشخصي بنجاح', function() {",
+                  "pm.test('بيانات صاحب المحل صحيحة', function() {",
                   "    pm.expect(pm.response.code).to.equal(200);",
                   "    var json = pm.response.json();",
-                  "    pm.expect(json.success).to.be.true;",
-                  "    pm.expect(json.data.id).to.be.a('number');",
+                  "    pm.expect(json.data.userType).to.equal('shop_owner');",
+                  "    pm.expect(json.data.shopName).to.not.be.empty;",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -371,32 +362,53 @@
           "request": {
             "method": "GET",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              }
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
             ],
             "url": {
               "raw": "{{base_url}}/api/users/me",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "users",
-                "me"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "me"]
             },
-            "description": "جلب بيانات المستخدم المسجل حالياً (الاسم، البريد، نوع الحساب، بيانات المحل إن وجدت).\n🔒 يتطلب Bearer Token (يتم تمريره تلقائياً)."
+            "description": "استعراض بيانات حساب صاحب المحل."
+          }
+        },
+        {
+          "name": "2.2 — عرض الملف الشخصي للعميل (Get Profile - Customer)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('بيانات العميل صحيحة', function() {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.data.userType).to.equal('customer');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{customer_access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users/me",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "me"]
+            },
+            "description": "استعراض بيانات حساب العميل العادي."
           }
         }
       ]
     },
     {
-      "name": "📋 3. إدارة الأطراف (Contacts)",
+      "name": "👥 3. إدارة الأطراف (Contacts Management)",
       "item": [
         {
-          "name": "1 — إضافة طرف جديد (Create Contact)",
+          "name": "3.1 — إضافة طرف: عميل (Create Contact - Customer)",
           "event": [
             {
               "listen": "test",
@@ -405,11 +417,10 @@
                   "if (pm.response.code === 201) {",
                   "    var json = pm.response.json();",
                   "    pm.environment.set('contact_id', json.data.id);",
-                  "    pm.test('تم إنشاء الطرف بنجاح', function() {",
-                  "        pm.expect(json.success).to.be.true;",
-                  "        pm.expect(json.data.id).to.be.a('string');",
-                  "    });",
                   "    console.log('✅ تم حفظ contact_id:', json.data.id);",
+                  "    pm.test('تم إنشاء العميل بنجاح', function() {",
+                  "        pm.expect(json.success).to.be.true;",
+                  "    });",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -424,18 +435,56 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"محمد علي\",\n  \"phoneNumber\": \"01012345678\",\n  \"notes\": \"عميل مميز\"\n}"
+              "raw": "{\n  \"name\": \"محمد إبراهيم حسنين\",\n  \"phoneNumber\": \"01012345678\",\n  \"notes\": \"عميل منتظم في السداد\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/contacts",
               "host": ["{{base_url}}"],
               "path": ["api", "contacts"]
             },
-            "description": "إضافة طرف جديد (عميل أو مورد).\n🔒 يتطلب Bearer Token."
+            "description": "إضافة طرف جديد كـ عميل."
           }
         },
         {
-          "name": "2 — قائمة الأطراف (List Contacts)",
+          "name": "3.2 — إضافة طرف: مورد (Create Contact - Supplier)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var json = pm.response.json();",
+                  "    pm.environment.set('contact_supplier_id', json.data.id);",
+                  "    console.log('✅ تم حفظ contact_supplier_id:', json.data.id);",
+                  "    pm.test('تم إنشاء المورد بنجاح', function() {",
+                  "        pm.expect(json.success).to.be.true;",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"شركة النور للتوريدات الغذائية\",\n  \"phoneNumber\": \"01123456789\",\n  \"notes\": \"مورد الألبان والعصائر\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/contacts",
+              "host": ["{{base_url}}"],
+              "path": ["api", "contacts"]
+            },
+            "description": "إضافة طرف جديد كـ مورد بضائع."
+          }
+        },
+        {
+          "name": "3.3 — قائمة الأطراف مع البحث والتصفح (List Contacts)",
           "event": [
             {
               "listen": "test",
@@ -443,7 +492,8 @@
                 "exec": [
                   "pm.test('تم جلب قائمة الأطراف بنجاح', function() {",
                   "    pm.expect(pm.response.code).to.equal(200);",
-                  "    pm.expect(pm.response.json().success).to.be.true;",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.data.items).to.be.an('array');",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -456,34 +506,20 @@
               { "key": "Authorization", "value": "Bearer {{access_token}}" }
             ],
             "url": {
-              "raw": "{{base_url}}/api/contacts?page=1&pageSize=20&search=",
+              "raw": "{{base_url}}/api/contacts?page=1&pageSize=20&search=محمد",
               "host": ["{{base_url}}"],
               "path": ["api", "contacts"],
               "query": [
                 { "key": "page", "value": "1" },
                 { "key": "pageSize", "value": "20" },
-                { "key": "search", "value": "", "disabled": true }
+                { "key": "search", "value": "محمد" }
               ]
             },
-            "description": "جلب قائمة الأطراف مع دعم البحث والتصفح.\n🔒 يتطلب Bearer Token."
+            "description": "استعراض الأطراف مع دعم الفلترة بالاسم."
           }
         },
         {
-          "name": "3 — طرف بالمعرف (Get Contact by ID)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('تم جلب بيانات الطرف بنجاح', function() {",
-                  "    pm.expect(pm.response.code).to.equal(200);",
-                  "    pm.expect(pm.response.json().success).to.be.true;",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
+          "name": "3.4 — طرف محدد بالمعرف (Get Contact By ID)",
           "request": {
             "method": "GET",
             "header": [
@@ -494,25 +530,11 @@
               "host": ["{{base_url}}"],
               "path": ["api", "contacts", "{{contact_id}}"]
             },
-            "description": "جلب بيانات طرف واحد بمعرفه.\n🔒 يتطلب Bearer Token. يعيد 404 إذا لم يكن الطرف موجوداً أو لا يملكه المستخدم."
+            "description": "جلب بيانات طرف محدد."
           }
         },
         {
-          "name": "4 — تعديل طرف (Update Contact)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('تم تعديل الطرف بنجاح', function() {",
-                  "    pm.expect(pm.response.code).to.equal(200);",
-                  "    pm.expect(pm.response.json().success).to.be.true;",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
+          "name": "3.5 — تعديل طرف (Update Contact)",
           "request": {
             "method": "PUT",
             "header": [
@@ -521,31 +543,18 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"محمد علي — معدّل\",\n  \"phoneNumber\": \"01098765432\",\n  \"notes\": \"ملاحظة محدّثة\"\n}"
+              "raw": "{\n  \"name\": \"محمد إبراهيم حسنين المعدل\",\n  \"phoneNumber\": \"01099998888\",\n  \"notes\": \"تم تحديث الهاتف\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/contacts/{{contact_id}}",
               "host": ["{{base_url}}"],
               "path": ["api", "contacts", "{{contact_id}}"]
             },
-            "description": "تعديل بيانات طرف موجود.\n🔒 يتطلب Bearer Token."
+            "description": "تعديل اسم وهاتف وملاحظات الطرف."
           }
         },
         {
-          "name": "5 — حذف طرف (Deactivate Contact)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('تم حذف الطرف بنجاح', function() {",
-                  "    pm.expect(pm.response.code).to.equal(204);",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
+          "name": "3.6 — حذف طرف ناعم (Soft Delete Contact)",
           "request": {
             "method": "DELETE",
             "header": [
@@ -556,16 +565,16 @@
               "host": ["{{base_url}}"],
               "path": ["api", "contacts", "{{contact_id}}"]
             },
-            "description": "حذف ناعم (soft delete) للطرف — لا يُحذف من قاعدة البيانات نهائياً.\n🔒 يتطلب Bearer Token. يعيد 204 بدون محتوى."
+            "description": "حذف الطرف بشكل ناعم (204 No Content)."
           }
         }
       ]
     },
     {
-      "name": "💸 3. العمليات والأقساط (Transactions & Installments)",
+      "name": "💸 4. العمليات — إدخال يدوي (Manual Transactions)",
       "item": [
         {
-          "name": "1 — إنشاء عملية بيع آجل بأقساط تلقائية (Create Transaction - Automatic)",
+          "name": "4.1 — مبيعات كاش فورية (Manual Sale - Cash)",
           "event": [
             {
               "listen": "test",
@@ -573,17 +582,13 @@
                 "exec": [
                   "if (pm.response.code === 201) {",
                   "    var json = pm.response.json();",
-                  "    pm.test('تم إنشاء العملية بنجاح', function() {",
+                  "    pm.environment.set('transaction_id', json.data.id);",
+                  "    console.log('📌 تم حفظ transaction_id (كاش مبيعات):', json.data.id);",
+                  "    pm.test('تم إنشاء عملية البيع الكاش بنجاح', function() {",
                   "        pm.expect(json.success).to.be.true;",
+                  "        pm.expect(json.data.type).to.equal(0);",
+                  "        pm.expect(json.data.isInstallment).to.be.false;",
                   "    });",
-                  "    if (json.data && json.data.id) {",
-                  "        pm.environment.set('transaction_id', json.data.id);",
-                  "        console.log('📌 تم حفظ transaction_id:', json.data.id);",
-                  "    }",
-                  "    if (json.data && json.data.installments && json.data.installments.length > 0) {",
-                  "        pm.environment.set('installment_id', json.data.installments[0].id);",
-                  "        console.log('📌 تم حفظ installment_id:', json.data.installments[0].id);",
-                  "    }",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -598,18 +603,36 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"contactId\": \"{{contact_id}}\",\n  \"type\": 0,\n  \"amount\": 1500,\n  \"transactionDate\": \"2026-08-14T00:00:00Z\",\n  \"noteType\": 1,\n  \"noteText\": \"بيع بضاعة بالأقساط\",\n  \"isInstallment\": true,\n  \"installmentPlanMode\": 0,\n  \"installmentCount\": 3,\n  \"firstInstallmentDate\": \"2026-08-21T00:00:00Z\",\n  \"frequency\": 1\n}"
+              "raw": "{\n  \"contactId\": \"{{contact_id}}\",\n  \"type\": 0,\n  \"amount\": 1500.00,\n  \"transactionDate\": \"2026-08-17T10:00:00Z\",\n  \"noteType\": 0,\n  \"isInstallment\": false\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/transactions",
               "host": ["{{base_url}}"],
               "path": ["api", "transactions"]
             },
-            "description": "إنشاء عملية جديدة بين المستخدم والطرف بأقساط تلقائية.\n🔒 يتطلب Bearer Token."
+            "description": "تسجيل عملية بيع نقدي فوري بدون أقساط وبدون ملاحظة."
           }
         },
         {
-          "name": "2 — إنشاء عملية بأقساط مخصصة (Create Transaction - Custom)",
+          "name": "4.2 — مشتريات كاش فورية (Manual Purchase - Cash)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var json = pm.response.json();",
+                  "    pm.environment.set('transaction_id', json.data.id);",
+                  "    pm.test('تم إنشاء عملية الشراء الكاش بنجاح', function() {",
+                  "        pm.expect(json.success).to.be.true;",
+                  "        pm.expect(json.data.type).to.equal(1);",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
@@ -618,18 +641,99 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"contactId\": \"{{contact_id}}\",\n  \"type\": 0,\n  \"amount\": 1000,\n  \"transactionDate\": \"2026-08-14T00:00:00Z\",\n  \"noteType\": 0,\n  \"isInstallment\": true,\n  \"installmentPlanMode\": 1,\n  \"customInstallments\": [\n    { \"amount\": 400, \"dueDate\": \"2026-08-21T00:00:00Z\" },\n    { \"amount\": 600, \"dueDate\": \"2026-09-01T00:00:00Z\" }\n  ]\n}"
+              "raw": "{\n  \"contactId\": \"{{contact_supplier_id}}\",\n  \"type\": 1,\n  \"amount\": 800.00,\n  \"transactionDate\": \"2026-08-17T11:00:00Z\",\n  \"noteType\": 1,\n  \"noteText\": \"شراء بضاعة ألبان كاش\",\n  \"isInstallment\": false\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/transactions",
               "host": ["{{base_url}}"],
               "path": ["api", "transactions"]
             },
-            "description": "إنشاء عملية بأقساط مخصصة المبالغ والمواعيد (يجب أن تتطابق المبالغ بالضبط مع إجمالي العملية).\n🔒 يتطلب Bearer Token."
+            "description": "تسجيل عملية شراء نقدي مع إضافة ملاحظة نصية."
           }
         },
         {
-          "name": "3 — قائمة العمليات مع التصفح والفلترة (Get Paged Transactions)",
+          "name": "4.3 — مبيعات آجل بأقساط آلية متساوية (Sale - Auto Installments)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var json = pm.response.json();",
+                  "    pm.environment.set('transaction_id', json.data.id);",
+                  "    if (json.data.installments && json.data.installments.length > 0) {",
+                  "        pm.environment.set('installment_id', json.data.installments[0].id);",
+                  "        console.log('📌 تم حفظ installment_id:', json.data.installments[0].id);",
+                  "    }",
+                  "    pm.test('تم إنشاء عملية البيع بالأقساط الآلية', function() {",
+                  "        pm.expect(json.success).to.be.true;",
+                  "        pm.expect(json.data.installments.length).to.equal(3);",
+                  "        pm.expect(json.data.installments[0].amount).to.equal(1000);",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contactId\": \"{{contact_id}}\",\n  \"type\": 0,\n  \"amount\": 3000.00,\n  \"transactionDate\": \"2026-08-17T12:00:00Z\",\n  \"noteType\": 1,\n  \"noteText\": \"بيع شاشة تلفزيون بالأقساط\",\n  \"isInstallment\": true,\n  \"installmentPlanMode\": 0,\n  \"installmentCount\": 3,\n  \"firstInstallmentDate\": \"2026-08-24T00:00:00Z\",\n  \"frequency\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/transactions",
+              "host": ["{{base_url}}"],
+              "path": ["api", "transactions"]
+            },
+            "description": "تسجيل عملية بيع آجل بأقساط آلية (3 أقساط كل أسبوع)."
+          }
+        },
+        {
+          "name": "4.4 — مشتريات آجل بأقساط مخصصة (Purchase - Custom Installments)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var json = pm.response.json();",
+                  "    pm.environment.set('transaction_id', json.data.id);",
+                  "    pm.test('تم إنشاء عملية الشراء بأقساط مخصصة', function() {",
+                  "        pm.expect(json.success).to.be.true;",
+                  "        pm.expect(json.data.installments.length).to.equal(2);",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contactId\": \"{{contact_supplier_id}}\",\n  \"type\": 1,\n  \"amount\": 5000.00,\n  \"transactionDate\": \"2026-08-17T13:00:00Z\",\n  \"noteType\": 1,\n  \"noteText\": \"توريد أجهزة كهربائية على دفعتين\",\n  \"isInstallment\": true,\n  \"installmentPlanMode\": 1,\n  \"customInstallments\": [\n    {\n      \"amount\": 2000.00,\n      \"dueDate\": \"2026-08-25T00:00:00Z\"\n    },\n    {\n      \"amount\": 3000.00,\n      \"dueDate\": \"2026-09-10T00:00:00Z\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/transactions",
+              "host": ["{{base_url}}"],
+              "path": ["api", "transactions"]
+            },
+            "description": "تسجيل عملية شراء بجدول أقساط مخصص المواعيد والمبالغ."
+          }
+        },
+        {
+          "name": "4.5 — قائمة العمليات مع الفلترة والتصفح (List Transactions)",
           "request": {
             "method": "GET",
             "header": [
@@ -645,26 +749,68 @@
                 { "key": "type", "value": "0" }
               ]
             },
-            "description": "قائمة العمليات التابعة للمستخدم المسجل مع إمكانية التصفية بحسب الطرف، النوع، أو التاريخ.\n🔒 يتطلب Bearer Token."
+            "description": "استعراض قائمة العمليات مع إمكانية الفلترة بحسب النوع أو الطرف."
           }
-        },
+        }
+      ]
+    },
+    {
+      "name": "🎙️ 5. العمليات — إدخال صوتي وملاحظات صوتية (Voice Note Transactions)",
+      "item": [
         {
-          "name": "4 — تفاصيل عملية بالمعرف (Get Transaction By ID)",
+          "name": "5.1 — إنشاء عملية مستندة لتفريغ صوتي (Create with Voice Transcript)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var json = pm.response.json();",
+                  "    pm.environment.set('transaction_id', json.data.id);",
+                  "    pm.test('تم إنشاء العملية بنص التفريغ الصوتي', function() {",
+                  "        pm.expect(json.success).to.be.true;",
+                  "        pm.expect(json.data.noteType).to.equal(2);",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
-            "method": "GET",
+            "method": "POST",
             "header": [
+              { "key": "Content-Type", "value": "application/json" },
               { "key": "Authorization", "value": "Bearer {{access_token}}" }
             ],
-            "url": {
-              "raw": "{{base_url}}/api/transactions/{{transaction_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "transactions", "{{transaction_id}}"]
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contactId\": \"{{contact_id}}\",\n  \"type\": 0,\n  \"amount\": 1200.00,\n  \"transactionDate\": \"2026-08-17T14:00:00Z\",\n  \"noteType\": 2,\n  \"voiceNoteTranscript\": \"تم بيع كرتونة زيت وسكر للحاج محمد على الحساب\",\n  \"isInstallment\": false\n}"
             },
-            "description": "جلب بيانات عملية محددة مع أقساطها.\n🔒 يتطلب Bearer Token."
+            "url": {
+              "raw": "{{base_url}}/api/transactions",
+              "host": ["{{base_url}}"],
+              "path": ["api", "transactions"]
+            },
+            "description": "إنشاء عملية مبيعات تحتوي على نص التفريغ الصوتي (noteType = 2)."
           }
         },
         {
-          "name": "5 — إرفاق ملاحظة صوتية (Attach Voice Note)",
+          "name": "5.2 — رفع ملف صوتي للعملية (Upload Voice Note Audio File)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('تم رفع الملف الصوتي بنجاح', function() {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "    pm.expect(pm.response.json().success).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
@@ -673,7 +819,11 @@
             "body": {
               "mode": "formdata",
               "formdata": [
-                { "key": "file", "type": "file", "src": [] }
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                }
               ]
             },
             "url": {
@@ -681,11 +831,24 @@
               "host": ["{{base_url}}"],
               "path": ["api", "transactions", "{{transaction_id}}", "voice-note"]
             },
-            "description": "إرفاق ملف صوتي كملاحظة للعملية (الحد الأقصى 10MB).\n🔒 يتطلب Bearer Token."
+            "description": "رفع ملف صوتي كملاحظة للعملية (mp3/m4a/wav بحد أقصى 10MB)."
           }
         },
         {
-          "name": "6 — الاستماع للملاحظة الصوتية (Stream Voice Note)",
+          "name": "5.3 — الاستماع للتسجيل الصوتي المحمي (Stream Voice Note Audio)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('تم تحميل/بث الصوت بنجاح', function() {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "GET",
             "header": [
@@ -696,11 +859,61 @@
               "host": ["{{base_url}}"],
               "path": ["api", "transactions", "{{transaction_id}}", "voice-note"]
             },
-            "description": "بث الملف الصوتي المحمي الخاص بالملاحظة الصوتية.\n🔒 يتطلب Bearer Token."
+            "description": "بث أو تنزيل الملف الصوتي الخاص بالعملية بشكل آمن."
+          }
+        }
+      ]
+    },
+    {
+      "name": "📅 6. إدارة وتسديد الأقساط (Installments & Payments)",
+      "item": [
+        {
+          "name": "6.1 — استعراض قائمة أقساط عملية (Get Installments)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('تم جلب قائمة الأقساط', function() {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.data).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/transactions/{{transaction_id}}/installments",
+              "host": ["{{base_url}}"],
+              "path": ["api", "transactions", "{{transaction_id}}", "installments"]
+            },
+            "description": "استعراض الأقساط المستحقة لعملية محددة."
           }
         },
         {
-          "name": "7 — تسديد قسط (Pay Installment)",
+          "name": "6.2 — تسديد قسط محدد (Pay Installment)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('تم تسديد القسط وتحديث حالته', function() {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.data.isPaid).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
@@ -711,31 +924,138 @@
               "host": ["{{base_url}}"],
               "path": ["api", "transactions", "{{transaction_id}}", "installments", "{{installment_id}}", "pay"]
             },
-            "description": "تسجيل قسط كـ مدفوع وتحديث الإجماليات.\n🔒 يتطلب Bearer Token."
-          }
-        },
-        {
-          "name": "8 — حذف عملية ناعم (Deactivate Transaction)",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/transactions/{{transaction_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "transactions", "{{transaction_id}}"]
-            },
-            "description": "حذف ناعم للعملية وإلغاء أقساطها المعلقة.\n🔒 يتطلب Bearer Token."
+            "description": "تسجيل القسط كمدفوع (isPaid = true) وحفظ تاريخ السداد."
           }
         }
       ]
     },
     {
-      "name": "🔔 5. التذكيرات والإشعارات (Notifications & Reminders)",
+      "name": "📊 7. التقارير الدورية (Periodic Reports - كل 7 عمليات)",
       "item": [
         {
-          "name": "1 — قائمة الإشعارات (Get Notifications)",
+          "name": "7.1 — قائمة التقارير الدورية (List Periodic Reports)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    pm.test('تم جلب قائمة التقارير بنجاح', function() {",
+                  "        pm.expect(json.success).to.be.true;",
+                  "    });",
+                  "    if (json.data && json.data.items && json.data.items.length > 0) {",
+                  "        pm.environment.set('report_id', json.data.items[0].id);",
+                  "        console.log('📌 تم حفظ report_id:', json.data.items[0].id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/reports?page=1&pageSize=20",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reports"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "pageSize", "value": "20" }
+              ]
+            },
+            "description": "استعراض جميع التقارير الدورية التي تولدت تلقائياً للمستخدم."
+          }
+        },
+        {
+          "name": "7.2 — تفاصيل تقرير دوري محدد (Get Report By ID)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('تم جلب تفاصيل التقرير بنجاح', function() {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.data.transactionCount).to.equal(7);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/reports/{{report_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reports", "{{report_id}}"]
+            },
+            "description": "جلب إجماليات وبيانات التقرير الدوري بالمعرف."
+          }
+        },
+        {
+          "name": "7.3 — تحميل ومعاينة ملف الـ PDF للتقرير (Download Report PDF)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('تم تحميل ملف الـ PDF بنجاح', function() {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/pdf');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/reports/{{report_id}}/download",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reports", "{{report_id}}", "download"]
+            },
+            "description": "تنزيل أو استعراض ملف الـ PDF المولد بجداول منسقة باللغة العربية عبر QuestPDF."
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔔 8. الإشعارات والتنبيهات (Notifications & Alerts)",
+      "item": [
+        {
+          "name": "8.1 — قائمة الإشعارات (Get Notifications)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    if (json.data && json.data.items && json.data.items.length > 0) {",
+                  "        pm.environment.set('notification_id', json.data.items[0].id);",
+                  "    }",
+                  "    pm.test('تم جلب قائمة الإشعارات', function() {",
+                  "        pm.expect(json.success).to.be.true;",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "GET",
             "header": [
@@ -751,11 +1071,11 @@
                 { "key": "unreadOnly", "value": "false" }
               ]
             },
-            "description": "جلب قائمة الإشعارات والتذكيرات الخاصة بالمستخدم مع التصفح والفلترة.\n🔒 يتطلب Bearer Token."
+            "description": "استعراض الإشعارات (إشعار جاهزية التقرير، تذكير الأقساط، وغيرها)."
           }
         },
         {
-          "name": "2 — عدد الإشعارات غير المقروءة (Get Unread Count)",
+          "name": "8.2 — عدد الإشعارات غير المقروءة (Unread Count)",
           "request": {
             "method": "GET",
             "header": [
@@ -766,26 +1086,26 @@
               "host": ["{{base_url}}"],
               "path": ["api", "notifications", "unread-count"]
             },
-            "description": "استرجاع عدد الإشعارات غير المقروءة لعرضها في شارة التنبيهات.\n🔒 يتطلب Bearer Token."
+            "description": "استرجاع عدد الإشعارات غير المقروءة."
           }
         },
         {
-          "name": "3 — تمييز إشعار كمقروء (Mark Notification Read)",
+          "name": "8.3 — تمييز إشعار كمقروء (Mark Read)",
           "request": {
             "method": "POST",
             "header": [
               { "key": "Authorization", "value": "Bearer {{access_token}}" }
             ],
             "url": {
-              "raw": "{{base_url}}/api/notifications/1/read",
+              "raw": "{{base_url}}/api/notifications/{{notification_id}}/read",
               "host": ["{{base_url}}"],
-              "path": ["api", "notifications", "1", "read"]
+              "path": ["api", "notifications", "{{notification_id}}", "read"]
             },
-            "description": "تمييز إشعار معين كمقروء (يعيد 204 NoContent).\n🔒 يتطلب Bearer Token."
+            "description": "تمييز إشعار محدد كمقروء (204 No Content)."
           }
         },
         {
-          "name": "4 — تمييز كل الإشعارات كمقروءة (Mark All Read)",
+          "name": "8.4 — تمييز جميع الإشعارات كمقروءة (Mark All Read)",
           "request": {
             "method": "POST",
             "header": [
@@ -796,7 +1116,248 @@
               "host": ["{{base_url}}"],
               "path": ["api", "notifications", "read-all"]
             },
-            "description": "تمييز جميع إشعارات المستخدم الحالي كمقروءة بطلب واحد (يعيد 204 NoContent).\n🔒 يتطلب Bearer Token."
+            "description": "تمييز جميع إشعارات المستخدم كمقروءة بطلب واحد (204 No Content)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "🛡️ 9. حالات الأمان والتحقق السلبي (Security & Negative Tests)",
+      "item": [
+        {
+          "name": "9.1 — طلب محمي بدون توكن (401 Unauthorized)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('يرفض الطلب بدون توكن بـ 401', function() {",
+                  "    pm.expect(pm.response.code).to.equal(401);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/transactions",
+              "host": ["{{base_url}}"],
+              "path": ["api", "transactions"]
+            },
+            "description": "التأكد من منع الوصول للعمليات دون توكن (401 Unauthorized)."
+          }
+        },
+        {
+          "name": "9.2 — كود OTP غير صحيح (400 Bad Request)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('يرفض الكود الخاطئ بـ 400', function() {",
+                  "    pm.expect(pm.response.code).to.equal(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"owner@mizan.app\",\n  \"code\": \"000000\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/verify-otp",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "verify-otp"]
+            },
+            "description": "فحص التحقق من صحة كود الـ OTP الخاطئ."
+          }
+        },
+        {
+          "name": "9.3 — اسم طرف يحتوي على أرقام (400 Bad Request)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('يرفض اسم الطرف المحتوي على أرقام بـ 400', function() {",
+                  "    pm.expect(pm.response.code).to.equal(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"محمد 123\",\n  \"phoneNumber\": \"01012345678\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/contacts",
+              "host": ["{{base_url}}"],
+              "path": ["api", "contacts"]
+            },
+            "description": "التأكد من منع الأسماء غير الصالحة في قواعد النطاق."
+          }
+        },
+        {
+          "name": "9.4 — عدم تطابق مجموع الأقساط المخصصة مع المبلغ (400 Bad Request)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('يرفض عدم تطابق مجموع الأقساط بـ 400', function() {",
+                  "    pm.expect(pm.response.code).to.equal(400);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contactId\": \"{{contact_id}}\",\n  \"type\": 0,\n  \"amount\": 1000.00,\n  \"transactionDate\": \"2026-08-17T10:00:00Z\",\n  \"noteType\": 0,\n  \"isInstallment\": true,\n  \"installmentPlanMode\": 1,\n  \"customInstallments\": [\n    {\n      \"amount\": 300.00,\n      \"dueDate\": \"2026-08-25T00:00:00Z\"\n    },\n    {\n      \"amount\": 400.00,\n      \"dueDate\": \"2026-09-01T00:00:00Z\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/transactions",
+              "host": ["{{base_url}}"],
+              "path": ["api", "transactions"]
+            },
+            "description": "فحص رفض العملية عندما يكون مجموع الأقساط 700 والمبلغ الإجمالي 1000."
+          }
+        },
+        {
+          "name": "9.5 — عزل البيانات: محاولة مستخدم الوصول لطرف مستخدم آخر (404 Not Found)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('يعيد 404 عند محاولة الوصول لطرف مستخدم آخر', function() {",
+                  "    pm.expect(pm.response.code).to.equal(404);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{customer_access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/contacts/{{contact_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "contacts", "{{contact_id}}"]
+            },
+            "description": "التأكد من أن المستخدم العميل لا يمكنه الوصول لأطراف صاحب المحل ويعيد السيرفر 404 Not Found وليس 403 لمنع تسريب وجود البيانات."
+          }
+        },
+        {
+          "name": "9.6 — عزل البيانات: محاولة مستخدم الوصول لعملية مستخدم آخر (404 Not Found)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('يعيد 404 عند محاولة الوصول لعملية مستخدم آخر', function() {",
+                  "    pm.expect(pm.response.code).to.equal(404);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{customer_access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/transactions/{{transaction_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "transactions", "{{transaction_id}}"]
+            },
+            "description": "التأكد من عزل العمليات وإعادة 404 Not Found."
+          }
+        },
+        {
+          "name": "9.7 — عزل البيانات: محاولة مستخدم تحميل صوتية مستخدم آخر (404 Not Found)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('يعيد 404 عند محاولة الوصول لصوتية مستخدم آخر', function() {",
+                  "    pm.expect(pm.response.code).to.equal(404);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{customer_access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/transactions/{{transaction_id}}/voice-note",
+              "host": ["{{base_url}}"],
+              "path": ["api", "transactions", "{{transaction_id}}", "voice-note"]
+            },
+            "description": "التأكد من سرية التسجيلات الصوتية وحمايتها من التحميل غير المصرح به (404)."
+          }
+        },
+        {
+          "name": "9.8 — عزل البيانات: محاولة مستخدم تحميل تقرير مستخدم آخر (404 Not Found)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('يعيد 404 عند محاولة تحميل تقرير مستخدم آخر', function() {",
+                  "    pm.expect(pm.response.code).to.equal(404);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{customer_access_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/reports/{{report_id}}/download",
+              "host": ["{{base_url}}"],
+              "path": ["api", "reports", "{{report_id}}", "download"]
+            },
+            "description": "التأكد من عزل التقارير الدورية وملفات الـ PDF وعدم إمكانية تنزيلها بواسطة مستخدم آخر (404)."
           }
         }
       ]

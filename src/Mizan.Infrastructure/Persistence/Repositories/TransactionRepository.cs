@@ -72,6 +72,24 @@ public class TransactionRepository : ITransactionRepository
         return (items, totalCount);
     }
 
+    public async Task<int> GetActiveCountByOwnerAsync(int ownerUserId, CancellationToken cancellationToken = default)
+    {
+        return await _dbSet
+            .Where(t => t.OwnerUserId == ownerUserId && t.IsActive)
+            .CountAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<Transaction>> GetRecentActiveByOwnerAsync(int ownerUserId, int count, CancellationToken cancellationToken = default)
+    {
+        return await _dbSet
+            .Include(t => t.Contact)
+            .Include(t => t.Installments)
+            .Where(t => t.OwnerUserId == ownerUserId && t.IsActive)
+            .OrderByDescending(t => t.CreatedAt)
+            .Take(count)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task AddAsync(Transaction transaction, CancellationToken cancellationToken = default)
     {
         await _dbSet.AddAsync(transaction, cancellationToken);
