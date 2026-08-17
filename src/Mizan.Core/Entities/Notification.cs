@@ -5,14 +5,14 @@ namespace Mizan.Core.Entities;
 
 public class Notification
 {
-    public int Id { get; private set; }
-    public int OwnerUserId { get; private set; }
+    public Guid Id { get; private set; }
+    public Guid OwnerUserId { get; private set; }
     public NotificationType Type { get; private set; }
     public string Title { get; private set; } = string.Empty;
     public string Message { get; private set; } = string.Empty;
-    public int? TransactionId { get; private set; }
-    public int? InstallmentId { get; private set; }
-    public int? PeriodicReportId { get; private set; }
+    public Guid? TransactionId { get; private set; }
+    public Guid? InstallmentId { get; private set; }
+    public Guid? PeriodicReportId { get; private set; }
     public bool IsRead { get; private set; }
     public DateTime CreatedAt { get; private set; }
 
@@ -25,15 +25,15 @@ public class Notification
     private Notification() { } // Required for EF Core
 
     public static Notification CreateInstallmentReminder(
-        int ownerUserId,
-        int? transactionId,
-        int? installmentId,
+        Guid ownerUserId,
+        Guid? transactionId,
+        Guid? installmentId,
         string contactName,
         decimal amount,
         DateTime dueDate,
         int daysUntilDue)
     {
-        if (ownerUserId <= 0)
+        if (ownerUserId == Guid.Empty)
             throw new DomainException("معرف المستخدم غير صالح");
 
         string title;
@@ -55,6 +55,7 @@ public class Notification
 
         return new Notification
         {
+            Id = Guid.NewGuid(),
             OwnerUserId = ownerUserId,
             Type = NotificationType.InstallmentReminder,
             Title = title,
@@ -68,17 +69,17 @@ public class Notification
     }
 
     public static Notification CreatePeriodicReportReady(
-        int ownerUserId,
-        int periodicReportId,
+        Guid ownerUserId,
+        Guid periodicReportId,
         int batchNumber,
         decimal totalSales,
         decimal totalPurchases,
         int transactionCount)
     {
-        if (ownerUserId <= 0)
+        if (ownerUserId == Guid.Empty)
             throw new DomainException("معرف المستخدم غير صالح");
 
-        if (periodicReportId <= 0)
+        if (periodicReportId == Guid.Empty)
             throw new DomainException("معرف التقرير الدوري غير صالح");
 
         string formattedSales = totalSales.ToString("G29");
@@ -89,6 +90,7 @@ public class Notification
 
         return new Notification
         {
+            Id = Guid.NewGuid(),
             OwnerUserId = ownerUserId,
             Type = NotificationType.PeriodicReportReady,
             Title = title,

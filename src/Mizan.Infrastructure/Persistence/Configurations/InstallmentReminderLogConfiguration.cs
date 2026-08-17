@@ -13,7 +13,7 @@ public class InstallmentReminderLogConfiguration : IEntityTypeConfiguration<Inst
         builder.HasKey(l => l.Id);
         builder.Property(l => l.Id)
             .HasColumnName("id")
-            .UseIdentityColumn();
+            .ValueGeneratedNever();
 
         builder.Property(l => l.InstallmentId)
             .HasColumnName("installment_id")

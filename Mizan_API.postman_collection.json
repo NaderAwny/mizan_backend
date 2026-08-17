@@ -586,7 +586,7 @@
                   "    console.log('📌 تم حفظ transaction_id (كاش مبيعات):', json.data.id);",
                   "    pm.test('تم إنشاء عملية البيع الكاش بنجاح', function() {",
                   "        pm.expect(json.success).to.be.true;",
-                  "        pm.expect(json.data.type).to.equal(0);",
+                  "        pm.expect(json.data.type).to.equal('Sale');",
                   "        pm.expect(json.data.isInstallment).to.be.false;",
                   "    });",
                   "}"
@@ -603,7 +603,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"contactId\": \"{{contact_id}}\",\n  \"type\": 0,\n  \"amount\": 1500.00,\n  \"transactionDate\": \"2026-08-17T10:00:00Z\",\n  \"noteType\": 0,\n  \"isInstallment\": false\n}"
+              "raw": "{\n  \"contactId\": \"{{contact_id}}\",\n  \"type\": \"Sale\",\n  \"amount\": 1500.00,\n  \"transactionDate\": \"2026-08-17T10:00:00Z\",\n  \"noteType\": \"None\",\n  \"isInstallment\": false\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/transactions",
@@ -625,7 +625,7 @@
                   "    pm.environment.set('transaction_id', json.data.id);",
                   "    pm.test('تم إنشاء عملية الشراء الكاش بنجاح', function() {",
                   "        pm.expect(json.success).to.be.true;",
-                  "        pm.expect(json.data.type).to.equal(1);",
+                  "        pm.expect(json.data.type).to.equal('Purchase');",
                   "    });",
                   "}"
                 ],
@@ -641,7 +641,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"contactId\": \"{{contact_supplier_id}}\",\n  \"type\": 1,\n  \"amount\": 800.00,\n  \"transactionDate\": \"2026-08-17T11:00:00Z\",\n  \"noteType\": 1,\n  \"noteText\": \"شراء بضاعة ألبان كاش\",\n  \"isInstallment\": false\n}"
+              "raw": "{\n  \"contactId\": \"{{contact_supplier_id}}\",\n  \"type\": \"Purchase\",\n  \"amount\": 800.00,\n  \"transactionDate\": \"2026-08-17T11:00:00Z\",\n  \"noteType\": \"Text\",\n  \"noteText\": \"شراء بضاعة ألبان كاش\",\n  \"isInstallment\": false\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/transactions",
@@ -667,6 +667,8 @@
                   "    }",
                   "    pm.test('تم إنشاء عملية البيع بالأقساط الآلية', function() {",
                   "        pm.expect(json.success).to.be.true;",
+                  "        pm.expect(json.data.type).to.equal('Sale');",
+                  "        pm.expect(json.data.installmentPlanMode).to.equal('Automatic');",
                   "        pm.expect(json.data.installments.length).to.equal(3);",
                   "        pm.expect(json.data.installments[0].amount).to.equal(1000);",
                   "    });",
@@ -684,7 +686,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"contactId\": \"{{contact_id}}\",\n  \"type\": 0,\n  \"amount\": 3000.00,\n  \"transactionDate\": \"2026-08-17T12:00:00Z\",\n  \"noteType\": 1,\n  \"noteText\": \"بيع شاشة تلفزيون بالأقساط\",\n  \"isInstallment\": true,\n  \"installmentPlanMode\": 0,\n  \"installmentCount\": 3,\n  \"firstInstallmentDate\": \"2026-08-24T00:00:00Z\",\n  \"frequency\": 1\n}"
+              "raw": "{\n  \"contactId\": \"{{contact_id}}\",\n  \"type\": \"Sale\",\n  \"amount\": 3000.00,\n  \"transactionDate\": \"2026-08-17T12:00:00Z\",\n  \"noteType\": \"Text\",\n  \"noteText\": \"بيع شاشة تلفزيون بالأقساط\",\n  \"isInstallment\": true,\n  \"installmentPlanMode\": \"Automatic\",\n  \"installmentCount\": 3,\n  \"firstInstallmentDate\": \"2026-08-24T00:00:00Z\",\n  \"frequency\": \"Weekly\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/transactions",
@@ -706,6 +708,8 @@
                   "    pm.environment.set('transaction_id', json.data.id);",
                   "    pm.test('تم إنشاء عملية الشراء بأقساط مخصصة', function() {",
                   "        pm.expect(json.success).to.be.true;",
+                  "        pm.expect(json.data.type).to.equal('Purchase');",
+                  "        pm.expect(json.data.installmentPlanMode).to.equal('Custom');",
                   "        pm.expect(json.data.installments.length).to.equal(2);",
                   "    });",
                   "}"
@@ -722,7 +726,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"contactId\": \"{{contact_supplier_id}}\",\n  \"type\": 1,\n  \"amount\": 5000.00,\n  \"transactionDate\": \"2026-08-17T13:00:00Z\",\n  \"noteType\": 1,\n  \"noteText\": \"توريد أجهزة كهربائية على دفعتين\",\n  \"isInstallment\": true,\n  \"installmentPlanMode\": 1,\n  \"customInstallments\": [\n    {\n      \"amount\": 2000.00,\n      \"dueDate\": \"2026-08-25T00:00:00Z\"\n    },\n    {\n      \"amount\": 3000.00,\n      \"dueDate\": \"2026-09-10T00:00:00Z\"\n    }\n  ]\n}"
+              "raw": "{\n  \"contactId\": \"{{contact_supplier_id}}\",\n  \"type\": \"Purchase\",\n  \"amount\": 5000.00,\n  \"transactionDate\": \"2026-08-17T13:00:00Z\",\n  \"noteType\": \"Text\",\n  \"noteText\": \"توريد أجهزة كهربائية على دفعتين\",\n  \"isInstallment\": true,\n  \"installmentPlanMode\": \"Custom\",\n  \"customInstallments\": [\n    {\n      \"amount\": 2000.00,\n      \"dueDate\": \"2026-08-25T00:00:00Z\"\n    },\n    {\n      \"amount\": 3000.00,\n      \"dueDate\": \"2026-09-10T00:00:00Z\"\n    }\n  ]\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/transactions",
@@ -740,13 +744,13 @@
               { "key": "Authorization", "value": "Bearer {{access_token}}" }
             ],
             "url": {
-              "raw": "{{base_url}}/api/transactions?page=1&pageSize=20&type=0",
+              "raw": "{{base_url}}/api/transactions?page=1&pageSize=20&type=Sale",
               "host": ["{{base_url}}"],
               "path": ["api", "transactions"],
               "query": [
                 { "key": "page", "value": "1" },
                 { "key": "pageSize", "value": "20" },
-                { "key": "type", "value": "0" }
+                { "key": "type", "value": "Sale" }
               ]
             },
             "description": "استعراض قائمة العمليات مع إمكانية الفلترة بحسب النوع أو الطرف."
@@ -769,7 +773,7 @@
                   "    pm.environment.set('transaction_id', json.data.id);",
                   "    pm.test('تم إنشاء العملية بنص التفريغ الصوتي', function() {",
                   "        pm.expect(json.success).to.be.true;",
-                  "        pm.expect(json.data.noteType).to.equal(2);",
+                  "        pm.expect(json.data.noteType).to.equal('Text');",
                   "    });",
                   "}"
                 ],
@@ -785,14 +789,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"contactId\": \"{{contact_id}}\",\n  \"type\": 0,\n  \"amount\": 1200.00,\n  \"transactionDate\": \"2026-08-17T14:00:00Z\",\n  \"noteType\": 2,\n  \"voiceNoteTranscript\": \"تم بيع كرتونة زيت وسكر للحاج محمد على الحساب\",\n  \"isInstallment\": false\n}"
+              "raw": "{\n  \"contactId\": \"{{contact_id}}\",\n  \"type\": \"Sale\",\n  \"amount\": 1200.00,\n  \"transactionDate\": \"2026-08-17T14:00:00Z\",\n  \"noteType\": \"Text\",\n  \"noteText\": \"تم بيع كرتونة زيت وسكر للحاج محمد على الحساب\",\n  \"isInstallment\": false\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/transactions",
               "host": ["{{base_url}}"],
               "path": ["api", "transactions"]
             },
-            "description": "إنشاء عملية مبيعات تحتوي على نص التفريغ الصوتي (noteType = 2)."
+            "description": "إنشاء عملية مبيعات تحتوي على ملاحظة نصية (noteType = 'Text')."
           }
         },
         {
@@ -1238,7 +1242,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"contactId\": \"{{contact_id}}\",\n  \"type\": 0,\n  \"amount\": 1000.00,\n  \"transactionDate\": \"2026-08-17T10:00:00Z\",\n  \"noteType\": 0,\n  \"isInstallment\": true,\n  \"installmentPlanMode\": 1,\n  \"customInstallments\": [\n    {\n      \"amount\": 300.00,\n      \"dueDate\": \"2026-08-25T00:00:00Z\"\n    },\n    {\n      \"amount\": 400.00,\n      \"dueDate\": \"2026-09-01T00:00:00Z\"\n    }\n  ]\n}"
+              "raw": "{\n  \"contactId\": \"{{contact_id}}\",\n  \"type\": \"Sale\",\n  \"amount\": 1000.00,\n  \"transactionDate\": \"2026-08-17T10:00:00Z\",\n  \"noteType\": \"None\",\n  \"isInstallment\": true,\n  \"installmentPlanMode\": \"Custom\",\n  \"customInstallments\": [\n    {\n      \"amount\": 300.00,\n      \"dueDate\": \"2026-08-25T00:00:00Z\"\n    },\n    {\n      \"amount\": 400.00,\n      \"dueDate\": \"2026-09-01T00:00:00Z\"\n    }\n  ]\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/transactions",
@@ -1341,7 +1345,7 @@
                 "exec": [
                   "pm.test('يعيد 404 عند محاولة تحميل تقرير مستخدم آخر', function() {",
                   "    pm.expect(pm.response.code).to.equal(404);",
-                  "});"
+                  "  });"
                 ],
                 "type": "text/javascript"
               }
@@ -1358,6 +1362,39 @@
               "path": ["api", "reports", "{{report_id}}", "download"]
             },
             "description": "التأكد من عزل التقارير الدورية وملفات الـ PDF وعدم إمكانية تنزيلها بواسطة مستخدم آخر (404)."
+          }
+        },
+        {
+          "name": "9.9 — رفض إرسال رقم كـ Enum بـ 400 (400 Bad Request on Numeric Enum)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('يرفض إرسال رقم كـ Enum بـ 400 Bad Request', function() {",
+                  "    pm.expect(pm.response.code).to.equal(400);",
+                  "  });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contactId\": \"{{contact_id}}\",\n  \"type\": 0,\n  \"amount\": 500.00,\n  \"transactionDate\": \"2026-08-17T10:00:00Z\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/transactions",
+              "host": ["{{base_url}}"],
+              "path": ["api", "transactions"]
+            },
+            "description": "التأكد من أن السيرفر يرفض الأرقام للحقول من نوع Enum بـ 400 Bad Request ويقبل النصوص فقط."
           }
         }
       ]

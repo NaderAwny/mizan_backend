@@ -7,7 +7,8 @@ namespace Mizan.UnitTests.Core;
 
 public class TransactionTests
 {
-    private readonly int _contactId = 1;
+    private readonly Guid _ownerUserId = Guid.NewGuid();
+    private readonly Guid _contactId = Guid.NewGuid();
 
     // ── Amount Validation ─────────────────────────────────────────────────────
 
@@ -18,7 +19,7 @@ public class TransactionTests
     public void Create_WithZeroOrNegativeAmount_ShouldThrowDomainException(decimal amount)
     {
         var ex = Assert.Throws<DomainException>(() =>
-            Transaction.Create(1, _contactId, TransactionType.Sale, amount, DateTime.UtcNow));
+            Transaction.Create(_ownerUserId, _contactId, TransactionType.Sale, amount, DateTime.UtcNow));
 
         Assert.Contains("Amount must be greater than zero", ex.Message);
     }
@@ -27,7 +28,7 @@ public class TransactionTests
     public void Create_WithAmountExceedingMaximum_ShouldThrowDomainException()
     {
         var ex = Assert.Throws<DomainException>(() =>
-            Transaction.Create(1, _contactId, TransactionType.Sale, 1_000_000_000m, DateTime.UtcNow));
+            Transaction.Create(_ownerUserId, _contactId, TransactionType.Sale, 1_000_000_000m, DateTime.UtcNow));
 
         Assert.Contains("Amount exceeds maximum allowed value", ex.Message);
     }
@@ -35,7 +36,7 @@ public class TransactionTests
     [Fact]
     public void Create_WithValidAmount_ShouldSucceed()
     {
-        var transaction = Transaction.Create(1, _contactId, TransactionType.Sale, 1500.50m, DateTime.UtcNow);
+        var transaction = Transaction.Create(_ownerUserId, _contactId, TransactionType.Sale, 1500.50m, DateTime.UtcNow);
 
         Assert.Equal(1500.50m, transaction.Amount);
     }
@@ -48,7 +49,7 @@ public class TransactionTests
         var futureDate = DateTime.UtcNow.AddDays(2);
 
         var ex = Assert.Throws<DomainException>(() =>
-            Transaction.Create(1, _contactId, TransactionType.Sale, 500m, futureDate));
+            Transaction.Create(_ownerUserId, _contactId, TransactionType.Sale, 500m, futureDate));
 
         Assert.Contains("Transaction date cannot be in the future", ex.Message);
     }
@@ -57,7 +58,7 @@ public class TransactionTests
     public void Create_WithDateTodayOrPast_ShouldSucceed()
     {
         var pastDate = DateTime.UtcNow.AddDays(-10);
-        var transaction = Transaction.Create(1, _contactId, TransactionType.Sale, 500m, pastDate);
+        var transaction = Transaction.Create(_ownerUserId, _contactId, TransactionType.Sale, 500m, pastDate);
 
         Assert.Equal(pastDate, transaction.TransactionDate);
     }
@@ -68,7 +69,7 @@ public class TransactionTests
     public void Create_WithVoiceNoteType_ShouldThrowDomainException()
     {
         var ex = Assert.Throws<DomainException>(() =>
-            Transaction.Create(1, _contactId, TransactionType.Sale, 100m, DateTime.UtcNow, noteType: NoteType.Voice));
+            Transaction.Create(_ownerUserId, _contactId, TransactionType.Sale, 100m, DateTime.UtcNow, noteType: NoteType.Voice));
 
         Assert.Contains("Voice notes cannot be set during creation", ex.Message);
     }
@@ -80,7 +81,7 @@ public class TransactionTests
     public void Create_WithTextNoteTypeAndEmptyText_ShouldThrowDomainException(string? noteText)
     {
         var ex = Assert.Throws<DomainException>(() =>
-            Transaction.Create(1, _contactId, TransactionType.Sale, 100m, DateTime.UtcNow, noteType: NoteType.Text, noteText: noteText));
+            Transaction.Create(_ownerUserId, _contactId, TransactionType.Sale, 100m, DateTime.UtcNow, noteType: NoteType.Text, noteText: noteText));
 
         Assert.Contains("Note text is required when note type is Text", ex.Message);
     }
@@ -91,7 +92,7 @@ public class TransactionTests
         var longText = new string('A', 1001);
 
         var ex = Assert.Throws<DomainException>(() =>
-            Transaction.Create(1, _contactId, TransactionType.Sale, 100m, DateTime.UtcNow, noteType: NoteType.Text, noteText: longText));
+            Transaction.Create(_ownerUserId, _contactId, TransactionType.Sale, 100m, DateTime.UtcNow, noteType: NoteType.Text, noteText: longText));
 
         Assert.Contains("must not exceed 1000 characters", ex.Message);
     }
@@ -99,7 +100,7 @@ public class TransactionTests
     [Fact]
     public void Create_WithNoneNoteType_ShouldSetNoteTextToNull()
     {
-        var transaction = Transaction.Create(1, _contactId, TransactionType.Sale, 100m, DateTime.UtcNow, noteType: NoteType.None, noteText: "ignored");
+        var transaction = Transaction.Create(_ownerUserId, _contactId, TransactionType.Sale, 100m, DateTime.UtcNow, noteType: NoteType.None, noteText: "ignored");
 
         Assert.Equal(NoteType.None, transaction.NoteType);
         Assert.Null(transaction.NoteText);
@@ -111,7 +112,7 @@ public class TransactionTests
     [Fact]
     public void AttachVoiceNote_WhenTextNoteIsSet_ShouldThrowDomainException()
     {
-        var transaction = Transaction.Create(1, _contactId, TransactionType.Sale, 100m, DateTime.UtcNow, noteType: NoteType.Text, noteText: "Text note");
+        var transaction = Transaction.Create(_ownerUserId, _contactId, TransactionType.Sale, 100m, DateTime.UtcNow, noteType: NoteType.Text, noteText: "Text note");
 
         var ex = Assert.Throws<DomainException>(() => transaction.AttachVoiceNote("/path/to/voice.mp3"));
 
@@ -121,7 +122,7 @@ public class TransactionTests
     [Fact]
     public void AttachVoiceNote_WhenValid_ShouldSetVoiceNoteProperties()
     {
-        var transaction = Transaction.Create(1, _contactId, TransactionType.Sale, 100m, DateTime.UtcNow);
+        var transaction = Transaction.Create(_ownerUserId, _contactId, TransactionType.Sale, 100m, DateTime.UtcNow);
 
         transaction.AttachVoiceNote("App_Data/voice-notes/1/file.mp3");
 
@@ -136,7 +137,7 @@ public class TransactionTests
     public void Deactivate_ShouldSetIsActiveFalseAndVoidPendingInstallments()
     {
         var transaction = Transaction.Create(
-            1, _contactId, TransactionType.Sale, 1000m, DateTime.UtcNow,
+            _ownerUserId, _contactId, TransactionType.Sale, 1000m, DateTime.UtcNow,
             isInstallment: true, installmentPlanMode: InstallmentPlanMode.Automatic);
 
         var installments = Installment.GenerateAutomaticSchedule(

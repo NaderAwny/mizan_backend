@@ -15,8 +15,7 @@ namespace Mizan.Infrastructure.Migrations
                 name: "otp_codes",
                 columns: table => new
                 {
-                    id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                    id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     email = table.Column<string>(type: "nvarchar(254)", maxLength: 254, nullable: false),
                     code = table.Column<string>(type: "nvarchar(6)", maxLength: 6, nullable: false),
                     expires_at = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -33,8 +32,7 @@ namespace Mizan.Infrastructure.Migrations
                 name: "users",
                 columns: table => new
                 {
-                    id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                    id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     email = table.Column<string>(type: "nvarchar(254)", maxLength: 254, nullable: false),
                     first_name = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     last_name = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
@@ -52,9 +50,8 @@ namespace Mizan.Infrastructure.Migrations
                 name: "contacts",
                 columns: table => new
                 {
-                    id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    owner_user_id = table.Column<int>(type: "int", nullable: false),
+                    id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    owner_user_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     phone_number = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
                     notes = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
@@ -74,12 +71,36 @@ namespace Mizan.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "periodic_reports",
+                columns: table => new
+                {
+                    id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    owner_user_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    batch_number = table.Column<int>(type: "int", nullable: false),
+                    transaction_count = table.Column<int>(type: "int", nullable: false),
+                    total_sales_amount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    total_purchases_amount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    pdf_storage_path = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    email_sent = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
+                    generated_at = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_periodic_reports", x => x.id);
+                    table.ForeignKey(
+                        name: "FK_periodic_reports_users_owner_user_id",
+                        column: x => x.owner_user_id,
+                        principalTable: "users",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "refresh_tokens",
                 columns: table => new
                 {
-                    id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    user_id = table.Column<int>(type: "int", nullable: false),
+                    id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    user_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     token = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
                     expires_at = table.Column<DateTime>(type: "datetime2", nullable: false),
                     created_at = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -101,9 +122,8 @@ namespace Mizan.Infrastructure.Migrations
                 name: "shops",
                 columns: table => new
                 {
-                    id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    owner_id = table.Column<int>(type: "int", nullable: false),
+                    id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    owner_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     shop_name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     address = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false, defaultValue: ""),
                     created_at = table.Column<DateTime>(type: "datetime2", nullable: false)
@@ -123,10 +143,9 @@ namespace Mizan.Infrastructure.Migrations
                 name: "transactions",
                 columns: table => new
                 {
-                    id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    owner_user_id = table.Column<int>(type: "int", nullable: false),
-                    contact_id = table.Column<int>(type: "int", nullable: false),
+                    id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    owner_user_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    contact_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     type = table.Column<int>(type: "int", nullable: false),
                     amount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     transaction_date = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -160,9 +179,8 @@ namespace Mizan.Infrastructure.Migrations
                 name: "installments",
                 columns: table => new
                 {
-                    id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    transaction_id = table.Column<int>(type: "int", nullable: false),
+                    id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    transaction_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     installment_number = table.Column<int>(type: "int", nullable: false),
                     amount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     due_date = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -186,9 +204,8 @@ namespace Mizan.Infrastructure.Migrations
                 name: "installment_reminder_logs",
                 columns: table => new
                 {
-                    id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    installment_id = table.Column<int>(type: "int", nullable: false),
+                    id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    installment_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     days_before_due = table.Column<int>(type: "int", nullable: false),
                     sent_at = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
@@ -207,14 +224,14 @@ namespace Mizan.Infrastructure.Migrations
                 name: "notifications",
                 columns: table => new
                 {
-                    id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    owner_user_id = table.Column<int>(type: "int", nullable: false),
+                    id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    owner_user_id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     type = table.Column<int>(type: "int", nullable: false),
                     title = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: false),
                     message = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
-                    transaction_id = table.Column<int>(type: "int", nullable: true),
-                    installment_id = table.Column<int>(type: "int", nullable: true),
+                    transaction_id = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    installment_id = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    periodic_report_id = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     is_read = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
                     created_at = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
@@ -225,6 +242,11 @@ namespace Mizan.Infrastructure.Migrations
                         name: "FK_notifications_installments_installment_id",
                         column: x => x.installment_id,
                         principalTable: "installments",
+                        principalColumn: "id");
+                    table.ForeignKey(
+                        name: "FK_notifications_periodic_reports_periodic_report_id",
+                        column: x => x.periodic_report_id,
+                        principalTable: "periodic_reports",
                         principalColumn: "id");
                     table.ForeignKey(
                         name: "FK_notifications_transactions_transaction_id",
@@ -277,6 +299,11 @@ namespace Mizan.Infrastructure.Migrations
                 columns: new[] { "owner_user_id", "is_read" });
 
             migrationBuilder.CreateIndex(
+                name: "IX_notifications_periodic_report_id",
+                table: "notifications",
+                column: "periodic_report_id");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_notifications_transaction_id",
                 table: "notifications",
                 column: "transaction_id");
@@ -285,6 +312,22 @@ namespace Mizan.Infrastructure.Migrations
                 name: "IX_otp_codes_email",
                 table: "otp_codes",
                 column: "email");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_periodic_reports_email_sent",
+                table: "periodic_reports",
+                column: "email_sent");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_periodic_reports_owner_user_id_batch_number",
+                table: "periodic_reports",
+                columns: new[] { "owner_user_id", "batch_number" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_periodic_reports_owner_user_id_generated_at",
+                table: "periodic_reports",
+                columns: new[] { "owner_user_id", "generated_at" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_refresh_tokens_token",
@@ -340,6 +383,9 @@ namespace Mizan.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "installments");
+
+            migrationBuilder.DropTable(
+                name: "periodic_reports");
 
             migrationBuilder.DropTable(
                 name: "transactions");

@@ -5,18 +5,18 @@ namespace Mizan.Application.Interfaces;
 public interface IPeriodicReportService
 {
     Task<PagedPeriodicReportResponse> GetPagedAsync(
-        int ownerUserId,
+        Guid ownerUserId,
         int page,
         int pageSize,
         CancellationToken cancellationToken = default);
 
     Task<PeriodicReportResponse> GetByIdAsync(
-        int ownerUserId,
-        int reportId,
+        Guid ownerUserId,
+        Guid reportId,
         CancellationToken cancellationToken = default);
 
     Task<(FileStream Stream, string ContentType, string FileName)> GetPdfStreamAsync(
-        int ownerUserId,
-        int reportId,
+        Guid ownerUserId,
+        Guid reportId,
         CancellationToken cancellationToken = default);
 }

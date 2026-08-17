@@ -10,9 +10,9 @@ public class NotificationTests
     public void CreateInstallmentReminder_WhenDaysUntilDueGreaterThanZero_ProducesCorrectArabicText()
     {
         // Arrange
-        int ownerUserId = 10;
-        int transactionId = 101;
-        int installmentId = 501;
+        Guid ownerUserId = Guid.NewGuid();
+        Guid transactionId = Guid.NewGuid();
+        Guid installmentId = Guid.NewGuid();
         string contactName = "أحمد محمد";
         decimal amount = 1500.50m;
         var dueDate = DateTime.UtcNow.Date.AddDays(3);
@@ -38,9 +38,9 @@ public class NotificationTests
     public void CreateInstallmentReminder_WhenDaysUntilDueIsZero_ProducesDueTodayArabicText()
     {
         // Arrange
-        int ownerUserId = 12;
-        int transactionId = 102;
-        int installmentId = 502;
+        Guid ownerUserId = Guid.NewGuid();
+        Guid transactionId = Guid.NewGuid();
+        Guid installmentId = Guid.NewGuid();
         string contactName = "محمود علي";
         decimal amount = 2000m;
         var dueDate = DateTime.UtcNow.Date;
@@ -62,7 +62,7 @@ public class NotificationTests
     {
         // Arrange
         var notification = Notification.CreateInstallmentReminder(
-            1, 1, 1, "عميل", 100m, DateTime.UtcNow.Date, 1);
+            Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), "عميل", 100m, DateTime.UtcNow.Date, 1);
 
         // Act
         notification.MarkAsRead();

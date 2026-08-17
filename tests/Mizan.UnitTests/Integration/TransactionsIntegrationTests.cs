@@ -40,7 +40,11 @@ public class TransactionsWebApplicationFactory : Microsoft.AspNetCore.Mvc.Testin
 public class TransactionsIntegrationTests : IClassFixture<TransactionsWebApplicationFactory>
 {
     private readonly TransactionsWebApplicationFactory _factory;
-    private readonly JsonSerializerOptions _jsonOptions = new() { PropertyNameCaseInsensitive = true };
+    private readonly JsonSerializerOptions _jsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() }
+    };
 
     public TransactionsIntegrationTests(TransactionsWebApplicationFactory factory)
     {
@@ -65,7 +69,7 @@ public class TransactionsIntegrationTests : IClassFixture<TransactionsWebApplica
         // 1. Create a contact first
         var contactResp = await client.PostAsJsonAsync("/api/contacts", new CreateContactRequest { Name = "Customer One" });
         var contactJson = await contactResp.Content.ReadFromJsonAsync<JsonElement>(_jsonOptions);
-        var contactId = contactJson.GetProperty("data").GetProperty("id").GetInt32();
+        var contactId = Guid.Parse(contactJson.GetProperty("data").GetProperty("id").GetString()!);
 
         // 2. Create automatic installment transaction
         var createTxReq = new CreateTransactionRequest
@@ -83,19 +87,25 @@ public class TransactionsIntegrationTests : IClassFixture<TransactionsWebApplica
             Frequency = InstallmentFrequency.Weekly
         };
 
-        var txResp = await client.PostAsJsonAsync("/api/transactions", createTxReq);
+        var txResp = await client.PostAsJsonAsync("/api/transactions", createTxReq, _jsonOptions);
         Assert.Equal(HttpStatusCode.Created, txResp.StatusCode);
 
         var txJson = await txResp.Content.ReadFromJsonAsync<JsonElement>(_jsonOptions);
         var txData = txJson.GetProperty("data");
-        var txId = txData.GetProperty("id").GetInt32();
+        var txId = Guid.Parse(txData.GetProperty("id").GetString()!);
         Assert.Equal(1000m, txData.GetProperty("amount").GetDecimal());
         Assert.Equal(0m, txData.GetProperty("totalPaid").GetDecimal());
         Assert.Equal(1000m, txData.GetProperty("totalRemaining").GetDecimal());
+        
+        // Assert Enums are strings in response
+        Assert.Equal("Sale", txData.GetProperty("type").GetString());
+        Assert.Equal("Text", txData.GetProperty("noteType").GetString());
+        Assert.Equal("Automatic", txData.GetProperty("installmentPlanMode").GetString());
 
         var installments = txData.GetProperty("installments").EnumerateArray().ToList();
         Assert.Equal(2, installments.Count);
-        var firstInstId = installments[0].GetProperty("id").GetInt32();
+        var firstInstId = Guid.Parse(installments[0].GetProperty("id").GetString()!);
+        Assert.Equal("Pending", installments[0].GetProperty("status").GetString());
 
         // 3. Mark 1st installment paid
         var payResp = await client.PostAsync($"/api/transactions/{txId}/installments/{firstInstId}/pay", null);
@@ -112,6 +122,35 @@ public class TransactionsIntegrationTests : IClassFixture<TransactionsWebApplica
     }
 
     [Fact]
+    public async Task CreateTransaction_WithIntegerEnumInJson_ShouldReturn400BadRequest()
+    {
+        var client = _factory.CreateClient();
+        var token = await AuthenticateAsync(client, "tx.enum.rejection@mizan.app");
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        var contactResp = await client.PostAsJsonAsync("/api/contacts", new CreateContactRequest { Name = "Enum Test Contact" }, _jsonOptions);
+        var contactJson = await contactResp.Content.ReadFromJsonAsync<JsonElement>(_jsonOptions);
+        var contactId = Guid.Parse(contactJson.GetProperty("data").GetProperty("id").GetString()!);
+
+        // Raw JSON with integer enum: "type": 0 instead of "Sale"
+        var rawJsonWithIntegerEnum = $@"{{
+            ""contactId"": ""{contactId}"",
+            ""type"": 0,
+            ""amount"": 500,
+            ""transactionDate"": ""{DateTime.UtcNow:O}""
+        }}";
+
+        var content = new StringContent(rawJsonWithIntegerEnum, System.Text.Encoding.UTF8, "application/json");
+        var response = await client.PostAsync("/api/transactions", content);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        var responseJson = await response.Content.ReadFromJsonAsync<JsonElement>(_jsonOptions);
+        Assert.Equal(400, responseJson.GetProperty("statusCode").GetInt32());
+        Assert.False(string.IsNullOrWhiteSpace(responseJson.GetProperty("message").GetString()));
+    }
+
+    [Fact]
     public async Task UploadVoiceNote_WithDisallowedContentType_ShouldReturn400()
     {
         var client = _factory.CreateClient();
@@ -119,9 +158,9 @@ public class TransactionsIntegrationTests : IClassFixture<TransactionsWebApplica
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         // Create contact & transaction
-        var contactResp = await client.PostAsJsonAsync("/api/contacts", new CreateContactRequest { Name = "Customer Voice" });
+        var contactResp = await client.PostAsJsonAsync("/api/contacts", new CreateContactRequest { Name = "Customer Voice" }, _jsonOptions);
         var contactJson = await contactResp.Content.ReadFromJsonAsync<JsonElement>(_jsonOptions);
-        var contactId = contactJson.GetProperty("data").GetProperty("id").GetInt32();
+        var contactId = Guid.Parse(contactJson.GetProperty("data").GetProperty("id").GetString()!);
 
         var txResp = await client.PostAsJsonAsync("/api/transactions", new CreateTransactionRequest
         {
@@ -129,9 +168,9 @@ public class TransactionsIntegrationTests : IClassFixture<TransactionsWebApplica
             Type = TransactionType.Purchase,
             Amount = 250m,
             TransactionDate = DateTime.UtcNow
-        });
+        }, _jsonOptions);
         var txJson = await txResp.Content.ReadFromJsonAsync<JsonElement>(_jsonOptions);
-        var txId = txJson.GetProperty("data").GetProperty("id").GetInt32();
+        var txId = Guid.Parse(txJson.GetProperty("data").GetProperty("id").GetString()!);
 
         // Upload invalid content-type file (text/plain)
         using var content = new MultipartFormDataContent();
@@ -152,9 +191,9 @@ public class TransactionsIntegrationTests : IClassFixture<TransactionsWebApplica
         var tokenA = await AuthenticateAsync(clientA, "user.a.tx@mizan.app");
         clientA.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokenA);
 
-        var contactResp = await clientA.PostAsJsonAsync("/api/contacts", new CreateContactRequest { Name = "User A Contact" });
+        var contactResp = await clientA.PostAsJsonAsync("/api/contacts", new CreateContactRequest { Name = "User A Contact" }, _jsonOptions);
         var contactJson = await contactResp.Content.ReadFromJsonAsync<JsonElement>(_jsonOptions);
-        var contactId = contactJson.GetProperty("data").GetProperty("id").GetInt32();
+        var contactId = Guid.Parse(contactJson.GetProperty("data").GetProperty("id").GetString()!);
 
         var txResp = await clientA.PostAsJsonAsync("/api/transactions", new CreateTransactionRequest
         {
@@ -162,9 +201,9 @@ public class TransactionsIntegrationTests : IClassFixture<TransactionsWebApplica
             Type = TransactionType.Sale,
             Amount = 100m,
             TransactionDate = DateTime.UtcNow
-        });
+        }, _jsonOptions);
         var txJson = await txResp.Content.ReadFromJsonAsync<JsonElement>(_jsonOptions);
-        var txId = txJson.GetProperty("data").GetProperty("id").GetInt32();
+        var txId = Guid.Parse(txJson.GetProperty("data").GetProperty("id").GetString()!);
 
         // User B tries to access voice note endpoint for User A's transaction
         var clientB = _factory.CreateClient();

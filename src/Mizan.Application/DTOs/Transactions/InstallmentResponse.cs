@@ -4,7 +4,7 @@ namespace Mizan.Application.DTOs.Transactions;
 
 public class InstallmentResponse
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
     public int InstallmentNumber { get; set; }
     public decimal Amount { get; set; }
     public DateTime DueDate { get; set; }

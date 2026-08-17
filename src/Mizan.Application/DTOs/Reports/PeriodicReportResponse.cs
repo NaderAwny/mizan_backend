@@ -2,7 +2,7 @@ namespace Mizan.Application.DTOs.Reports;
 
 public class PeriodicReportResponse
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
     public int BatchNumber { get; set; }
     public int TransactionCount { get; set; }
     public decimal TotalSalesAmount { get; set; }

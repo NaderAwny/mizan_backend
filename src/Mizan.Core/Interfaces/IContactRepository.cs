@@ -4,10 +4,10 @@ namespace Mizan.Core.Interfaces;
 
 public interface IContactRepository
 {
-    Task<Contact?> GetByIdAsync(int id, int ownerUserId, CancellationToken cancellationToken = default);
+    Task<Contact?> GetByIdAsync(Guid id, Guid ownerUserId, CancellationToken cancellationToken = default);
 
     Task<(IReadOnlyList<Contact> Items, int TotalCount)> GetPagedByOwnerAsync(
-        int ownerUserId,
+        Guid ownerUserId,
         int page,
         int pageSize,
         string? searchTerm,

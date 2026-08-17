@@ -5,8 +5,8 @@ namespace Mizan.Core.Entities;
 
 public class Contact
 {
-    public int Id { get; private set; }
-    public int OwnerUserId { get; private set; }
+    public Guid Id { get; private set; }
+    public Guid OwnerUserId { get; private set; }
     public string Name { get; private set; } = string.Empty;
     public string? PhoneNumber { get; private set; }
     public string? Notes { get; private set; }
@@ -19,10 +19,11 @@ public class Contact
 
     private Contact() { } // Required for EF Core
 
-    public static Contact Create(int ownerUserId, string name, string? phoneNumber, string? notes)
+    public static Contact Create(Guid ownerUserId, string name, string? phoneNumber, string? notes)
     {
         var contact = new Contact
         {
+            Id = Guid.NewGuid(),
             OwnerUserId = ownerUserId,
             IsActive = true,
             CreatedAt = DateTime.UtcNow,

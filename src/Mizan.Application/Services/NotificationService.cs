@@ -19,7 +19,7 @@ public class NotificationService : INotificationService
     }
 
     public async Task<PagedNotificationResponse> GetPagedAsync(
-        int ownerUserId,
+        Guid ownerUserId,
         int page,
         int pageSize,
         bool unreadOnly,
@@ -43,13 +43,13 @@ public class NotificationService : INotificationService
         };
     }
 
-    public async Task<UnreadCountResponse> GetUnreadCountAsync(int ownerUserId, CancellationToken cancellationToken = default)
+    public async Task<UnreadCountResponse> GetUnreadCountAsync(Guid ownerUserId, CancellationToken cancellationToken = default)
     {
         var count = await _unitOfWork.Notifications.GetUnreadCountAsync(ownerUserId, cancellationToken);
         return new UnreadCountResponse { UnreadCount = count };
     }
 
-    public async Task MarkAsReadAsync(int ownerUserId, int notificationId, CancellationToken cancellationToken = default)
+    public async Task MarkAsReadAsync(Guid ownerUserId, Guid notificationId, CancellationToken cancellationToken = default)
     {
         var notification = await _unitOfWork.Notifications.GetByIdAsync(notificationId, ownerUserId, cancellationToken);
         if (notification == null)
@@ -61,7 +61,7 @@ public class NotificationService : INotificationService
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task MarkAllAsReadAsync(int ownerUserId, CancellationToken cancellationToken = default)
+    public async Task MarkAllAsReadAsync(Guid ownerUserId, CancellationToken cancellationToken = default)
     {
         await _unitOfWork.Notifications.MarkAllReadAsync(ownerUserId, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -75,6 +75,7 @@ public class NotificationService : INotificationService
         Message = notification.Message,
         TransactionId = notification.TransactionId,
         InstallmentId = notification.InstallmentId,
+        PeriodicReportId = notification.PeriodicReportId,
         IsRead = notification.IsRead,
         CreatedAt = notification.CreatedAt
     };

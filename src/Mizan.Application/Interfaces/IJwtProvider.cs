@@ -6,7 +6,7 @@ public interface IJwtProvider
 {
     string GenerateAccessToken(User user);
     string GenerateRefreshToken();
-    int? ValidateTokenAndGetUserId(string token);
+    Guid? ValidateTokenAndGetUserId(string token);
     int AccessTokenExpirationSeconds { get; }
     int RefreshTokenExpirationDays { get; }
 }

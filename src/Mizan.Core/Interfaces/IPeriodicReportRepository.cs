@@ -4,10 +4,10 @@ namespace Mizan.Core.Interfaces;
 
 public interface IPeriodicReportRepository
 {
-    Task<PeriodicReport?> GetByIdAsync(int id, int ownerUserId, CancellationToken cancellationToken = default);
+    Task<PeriodicReport?> GetByIdAsync(Guid id, Guid ownerUserId, CancellationToken cancellationToken = default);
 
     Task<(IReadOnlyList<PeriodicReport> Items, int TotalCount)> GetPagedByOwnerAsync(
-        int ownerUserId,
+        Guid ownerUserId,
         int page,
         int pageSize,
         CancellationToken cancellationToken = default);

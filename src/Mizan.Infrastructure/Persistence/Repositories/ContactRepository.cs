@@ -19,14 +19,14 @@ public class ContactRepository : IContactRepository
     /// Returns the contact only if it exists AND belongs to the specified owner.
     /// Returns null in all other cases — never exposes another user's contact.
     /// </summary>
-    public async Task<Contact?> GetByIdAsync(int id, int ownerUserId, CancellationToken cancellationToken = default)
+    public async Task<Contact?> GetByIdAsync(Guid id, Guid ownerUserId, CancellationToken cancellationToken = default)
     {
         return await _dbSet
             .FirstOrDefaultAsync(c => c.Id == id && c.OwnerUserId == ownerUserId, cancellationToken);
     }
 
     public async Task<(IReadOnlyList<Contact> Items, int TotalCount)> GetPagedByOwnerAsync(
-        int ownerUserId,
+        Guid ownerUserId,
         int page,
         int pageSize,
         string? searchTerm,

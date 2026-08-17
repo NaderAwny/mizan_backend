@@ -2,7 +2,7 @@ namespace Mizan.Application.DTOs.Contacts;
 
 public class ContactResponse
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? PhoneNumber { get; set; }
     public string? Notes { get; set; }

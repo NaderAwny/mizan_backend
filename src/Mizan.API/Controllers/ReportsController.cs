@@ -30,16 +30,16 @@ public class ReportsController : BaseController
     }
 
     /// <summary>GET /api/reports/{id} — تفاصيل تقرير دوري محدد</summary>
-    [HttpGet("{id:int}")]
-    public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken = default)
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken = default)
     {
         var response = await _reportService.GetByIdAsync(CurrentUserId, id, cancellationToken);
         return Success(response);
     }
 
     /// <summary>GET /api/reports/{id}/download — تحميل ملف الـ PDF للتقرير الدوري</summary>
-    [HttpGet("{id:int}/download")]
-    public async Task<IActionResult> DownloadPdf(int id, CancellationToken cancellationToken = default)
+    [HttpGet("{id:guid}/download")]
+    public async Task<IActionResult> DownloadPdf(Guid id, CancellationToken cancellationToken = default)
     {
         var (stream, contentType, fileName) = await _reportService.GetPdfStreamAsync(CurrentUserId, id, cancellationToken);
         return File(stream, contentType, fileName);

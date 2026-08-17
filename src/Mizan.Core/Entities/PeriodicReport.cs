@@ -4,8 +4,8 @@ namespace Mizan.Core.Entities;
 
 public class PeriodicReport
 {
-    public int Id { get; private set; }
-    public int OwnerUserId { get; private set; }
+    public Guid Id { get; private set; }
+    public Guid OwnerUserId { get; private set; }
     public int BatchNumber { get; private set; }
     public int TransactionCount { get; private set; }
     public decimal TotalSalesAmount { get; private set; }
@@ -20,14 +20,14 @@ public class PeriodicReport
     private PeriodicReport() { } // Required for EF Core
 
     public static PeriodicReport Create(
-        int ownerUserId,
+        Guid ownerUserId,
         int batchNumber,
         int transactionCount,
         decimal totalSales,
         decimal totalPurchases,
         string pdfStoragePath)
     {
-        if (ownerUserId <= 0)
+        if (ownerUserId == Guid.Empty)
             throw new DomainException("معرف المستخدم غير صالح");
 
         if (batchNumber <= 0)
@@ -47,6 +47,7 @@ public class PeriodicReport
 
         return new PeriodicReport
         {
+            Id = Guid.NewGuid(),
             OwnerUserId = ownerUserId,
             BatchNumber = batchNumber,
             TransactionCount = transactionCount,

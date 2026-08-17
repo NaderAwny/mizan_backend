@@ -7,7 +7,7 @@ namespace Mizan.UnitTests.Core;
 
 public class InstallmentTests
 {
-    private readonly int _txId = 1;
+    private readonly Guid _txId = Guid.NewGuid();
 
     // ── Automatic Schedule Generation ─────────────────────────────────────────
 

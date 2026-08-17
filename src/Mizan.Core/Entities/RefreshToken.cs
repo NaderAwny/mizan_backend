@@ -2,8 +2,8 @@ namespace Mizan.Core.Entities;
 
 public class RefreshToken
 {
-    public int Id { get; private set; }
-    public int UserId { get; private set; }
+    public Guid Id { get; private set; }
+    public Guid UserId { get; private set; }
     public string Token { get; private set; } = string.Empty;
     public DateTime ExpiresAt { get; private set; }
     public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
@@ -19,10 +19,11 @@ public class RefreshToken
 
     private RefreshToken() { }
 
-    public static RefreshToken Create(int userId, string token, DateTime expiresAt)
+    public static RefreshToken Create(Guid userId, string token, DateTime expiresAt)
     {
         return new RefreshToken
         {
+            Id = Guid.NewGuid(),
             UserId = userId,
             Token = token,
             ExpiresAt = expiresAt,

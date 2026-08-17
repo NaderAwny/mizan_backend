@@ -25,10 +25,11 @@ public class PeriodicReportServiceTests
         var uow = new UnitOfWork(db);
         var service = new PeriodicReportService(uow);
 
-        int ownerUserId = 1;
+        Guid ownerUserId = Guid.NewGuid();
+        Guid otherUser = Guid.NewGuid();
         var r1 = PeriodicReport.Create(ownerUserId, 1, 7, 800, 200, "path1.pdf");
         var r2 = PeriodicReport.Create(ownerUserId, 2, 7, 1000, 400, "path2.pdf");
-        var otherUserReport = PeriodicReport.Create(99, 1, 7, 300, 50, "path_other.pdf");
+        var otherUserReport = PeriodicReport.Create(otherUser, 1, 7, 300, 50, "path_other.pdf");
 
         db.Set<PeriodicReport>().AddRange(r1, r2, otherUserReport);
         await db.SaveChangesAsync();
@@ -52,7 +53,7 @@ public class PeriodicReportServiceTests
         var uow = new UnitOfWork(db);
         var service = new PeriodicReportService(uow);
 
-        int ownerUserId = 1;
+        Guid ownerUserId = Guid.NewGuid();
         var report = PeriodicReport.Create(ownerUserId, 1, 7, 500, 100, "path.pdf");
         db.Set<PeriodicReport>().Add(report);
         await db.SaveChangesAsync();
@@ -74,14 +75,16 @@ public class PeriodicReportServiceTests
         using var db = CreateDb();
         var uow = new UnitOfWork(db);
         var service = new PeriodicReportService(uow);
+        Guid user1 = Guid.NewGuid();
+        Guid user2 = Guid.NewGuid();
 
-        var report = PeriodicReport.Create(2, 1, 7, 500, 100, "path.pdf");
+        var report = PeriodicReport.Create(user2, 1, 7, 500, 100, "path.pdf");
         db.Set<PeriodicReport>().Add(report);
         await db.SaveChangesAsync();
 
         // Act & Assert (User 1 tries to access User 2's report)
         await Assert.ThrowsAsync<NotFoundException>(() =>
-            service.GetByIdAsync(1, report.Id));
+            service.GetByIdAsync(user1, report.Id));
     }
 
     [Fact]
@@ -92,7 +95,7 @@ public class PeriodicReportServiceTests
         var uow = new UnitOfWork(db);
         var service = new PeriodicReportService(uow);
 
-        int ownerUserId = 1;
+        Guid ownerUserId = Guid.NewGuid();
         var report = PeriodicReport.Create(ownerUserId, 1, 7, 500, 100, "non_existent_file.pdf");
         db.Set<PeriodicReport>().Add(report);
         await db.SaveChangesAsync();
@@ -110,7 +113,7 @@ public class PeriodicReportServiceTests
         var uow = new UnitOfWork(db);
         var service = new PeriodicReportService(uow);
 
-        int ownerUserId = 1;
+        Guid ownerUserId = Guid.NewGuid();
         string tempFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.pdf");
         await File.WriteAllBytesAsync(tempFile, new byte[] { 1, 2, 3 });
 

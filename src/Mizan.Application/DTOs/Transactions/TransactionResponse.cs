@@ -4,8 +4,8 @@ namespace Mizan.Application.DTOs.Transactions;
 
 public class TransactionResponse
 {
-    public int Id { get; set; }
-    public int ContactId { get; set; }
+    public Guid Id { get; set; }
+    public Guid ContactId { get; set; }
     public string ContactName { get; set; } = string.Empty;
     public TransactionType Type { get; set; }
     public decimal Amount { get; set; }

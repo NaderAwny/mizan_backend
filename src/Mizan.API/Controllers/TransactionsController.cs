@@ -33,7 +33,7 @@ public class TransactionsController : BaseController
     public async Task<IActionResult> GetAll(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
-        [FromQuery] int? contactId = null,
+        [FromQuery] Guid? contactId = null,
         [FromQuery] TransactionType? type = null,
         [FromQuery] DateTime? dateFrom = null,
         [FromQuery] DateTime? dateTo = null,
@@ -45,40 +45,40 @@ public class TransactionsController : BaseController
     }
 
     /// <summary>GET /api/transactions/{id} — عملية بالمعرف</summary>
-    [HttpGet("{id:int}")]
-    public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken)
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
     {
         var response = await _transactionService.GetByIdAsync(CurrentUserId, id, cancellationToken);
         return Success(response);
     }
 
     /// <summary>DELETE /api/transactions/{id} — حذف ناعم للعملية وإلغاء أقساطها غير المدفوعة</summary>
-    [HttpDelete("{id:int}")]
-    public async Task<IActionResult> Deactivate(int id, CancellationToken cancellationToken)
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Deactivate(Guid id, CancellationToken cancellationToken)
     {
         await _transactionService.DeactivateAsync(CurrentUserId, id, cancellationToken);
         return NoContent();
     }
 
     /// <summary>POST /api/transactions/{id}/voice-note — إرفاق ملاحظة صوتية</summary>
-    [HttpPost("{id:int}/voice-note")]
-    public async Task<IActionResult> AttachVoiceNote(int id, IFormFile file, CancellationToken cancellationToken)
+    [HttpPost("{id:guid}/voice-note")]
+    public async Task<IActionResult> AttachVoiceNote(Guid id, IFormFile file, CancellationToken cancellationToken)
     {
         var response = await _transactionService.AttachVoiceNoteAsync(CurrentUserId, id, file, cancellationToken);
         return Success(response, "تم إرفاق الملاحظة الصوتية بنجاح");
     }
 
     /// <summary>GET /api/transactions/{id}/voice-note — الاستماع للملاحظة الصوتية (Stream)</summary>
-    [HttpGet("{id:int}/voice-note")]
-    public async Task<IActionResult> GetVoiceNote(int id, CancellationToken cancellationToken)
+    [HttpGet("{id:guid}/voice-note")]
+    public async Task<IActionResult> GetVoiceNote(Guid id, CancellationToken cancellationToken)
     {
         var (stream, contentType, fileName) = await _transactionService.GetVoiceNoteStreamAsync(CurrentUserId, id, cancellationToken);
         return File(stream, contentType, fileName, enableRangeProcessing: true);
     }
 
     /// <summary>POST /api/transactions/{id}/installments/{installmentId}/pay — تسجيل سداد قسط</summary>
-    [HttpPost("{id:int}/installments/{installmentId:int}/pay")]
-    public async Task<IActionResult> MarkInstallmentPaid(int id, int installmentId, CancellationToken cancellationToken)
+    [HttpPost("{id:guid}/installments/{installmentId:guid}/pay")]
+    public async Task<IActionResult> MarkInstallmentPaid(Guid id, Guid installmentId, CancellationToken cancellationToken)
     {
         var response = await _transactionService.MarkInstallmentPaidAsync(CurrentUserId, id, installmentId, cancellationToken);
         return Success(response, "تم تسجيل سداد القسط بنجاح");

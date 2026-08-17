@@ -12,7 +12,7 @@ using Mizan.Infrastructure.Persistence;
 namespace Mizan.Infrastructure.Migrations
 {
     [DbContext(typeof(MizanDbContext))]
-    [Migration("20260816004328_InitialCreate")]
+    [Migration("20260817195117_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -27,12 +27,9 @@ namespace Mizan.Infrastructure.Migrations
 
             modelBuilder.Entity("Mizan.Core.Entities.Contact", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier")
                         .HasColumnName("id");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2")
@@ -55,8 +52,8 @@ namespace Mizan.Infrastructure.Migrations
                         .HasColumnType("nvarchar(500)")
                         .HasColumnName("notes");
 
-                    b.Property<int>("OwnerUserId")
-                        .HasColumnType("int")
+                    b.Property<Guid>("OwnerUserId")
+                        .HasColumnType("uniqueidentifier")
                         .HasColumnName("owner_user_id");
 
                     b.Property<string>("PhoneNumber")
@@ -78,12 +75,9 @@ namespace Mizan.Infrastructure.Migrations
 
             modelBuilder.Entity("Mizan.Core.Entities.Installment", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier")
                         .HasColumnName("id");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("Amount")
                         .HasPrecision(18, 2)
@@ -110,8 +104,8 @@ namespace Mizan.Infrastructure.Migrations
                         .HasColumnType("int")
                         .HasColumnName("status");
 
-                    b.Property<int>("TransactionId")
-                        .HasColumnType("int")
+                    b.Property<Guid>("TransactionId")
+                        .HasColumnType("uniqueidentifier")
                         .HasColumnName("transaction_id");
 
                     b.Property<DateTime>("UpdatedAt")
@@ -130,19 +124,16 @@ namespace Mizan.Infrastructure.Migrations
 
             modelBuilder.Entity("Mizan.Core.Entities.InstallmentReminderLog", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier")
                         .HasColumnName("id");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("DaysBeforeDue")
                         .HasColumnType("int")
                         .HasColumnName("days_before_due");
 
-                    b.Property<int>("InstallmentId")
-                        .HasColumnType("int")
+                    b.Property<Guid>("InstallmentId")
+                        .HasColumnType("uniqueidentifier")
                         .HasColumnName("installment_id");
 
                     b.Property<DateTime>("SentAt")
@@ -159,19 +150,16 @@ namespace Mizan.Infrastructure.Migrations
 
             modelBuilder.Entity("Mizan.Core.Entities.Notification", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier")
                         .HasColumnName("id");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2")
                         .HasColumnName("created_at");
 
-                    b.Property<int?>("InstallmentId")
-                        .HasColumnType("int")
+                    b.Property<Guid?>("InstallmentId")
+                        .HasColumnType("uniqueidentifier")
                         .HasColumnName("installment_id");
 
                     b.Property<bool>("IsRead")
@@ -186,9 +174,13 @@ namespace Mizan.Infrastructure.Migrations
                         .HasColumnType("nvarchar(500)")
                         .HasColumnName("message");
 
-                    b.Property<int>("OwnerUserId")
-                        .HasColumnType("int")
+                    b.Property<Guid>("OwnerUserId")
+                        .HasColumnType("uniqueidentifier")
                         .HasColumnName("owner_user_id");
+
+                    b.Property<Guid?>("PeriodicReportId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("periodic_report_id");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -196,8 +188,8 @@ namespace Mizan.Infrastructure.Migrations
                         .HasColumnType("nvarchar(150)")
                         .HasColumnName("title");
 
-                    b.Property<int?>("TransactionId")
-                        .HasColumnType("int")
+                    b.Property<Guid?>("TransactionId")
+                        .HasColumnType("uniqueidentifier")
                         .HasColumnName("transaction_id");
 
                     b.Property<int>("Type")
@@ -207,6 +199,8 @@ namespace Mizan.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("InstallmentId");
+
+                    b.HasIndex("PeriodicReportId");
 
                     b.HasIndex("TransactionId");
 
@@ -219,12 +213,9 @@ namespace Mizan.Infrastructure.Migrations
 
             modelBuilder.Entity("Mizan.Core.Entities.OtpCode", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier")
                         .HasColumnName("id");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("AttemptsCount")
                         .ValueGeneratedOnAdd()
@@ -265,14 +256,65 @@ namespace Mizan.Infrastructure.Migrations
                     b.ToTable("otp_codes", (string)null);
                 });
 
-            modelBuilder.Entity("Mizan.Core.Entities.RefreshToken", b =>
+            modelBuilder.Entity("Mizan.Core.Entities.PeriodicReport", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<int>("BatchNumber")
+                        .HasColumnType("int")
+                        .HasColumnName("batch_number");
+
+                    b.Property<bool>("EmailSent")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false)
+                        .HasColumnName("email_sent");
+
+                    b.Property<DateTime>("GeneratedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("generated_at");
+
+                    b.Property<Guid>("OwnerUserId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("owner_user_id");
+
+                    b.Property<string>("PdfStoragePath")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("pdf_storage_path");
+
+                    b.Property<decimal>("TotalPurchasesAmount")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("total_purchases_amount");
+
+                    b.Property<decimal>("TotalSalesAmount")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("total_sales_amount");
+
+                    b.Property<int>("TransactionCount")
+                        .HasColumnType("int")
+                        .HasColumnName("transaction_count");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmailSent");
+
+                    b.HasIndex("OwnerUserId", "BatchNumber")
+                        .IsUnique();
+
+                    b.HasIndex("OwnerUserId", "GeneratedAt");
+
+                    b.ToTable("periodic_reports", (string)null);
+                });
+
+            modelBuilder.Entity("Mizan.Core.Entities.RefreshToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("id");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2")
@@ -297,8 +339,8 @@ namespace Mizan.Infrastructure.Migrations
                         .HasColumnType("nvarchar(256)")
                         .HasColumnName("token");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int")
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier")
                         .HasColumnName("user_id");
 
                     b.HasKey("Id");
@@ -313,12 +355,9 @@ namespace Mizan.Infrastructure.Migrations
 
             modelBuilder.Entity("Mizan.Core.Entities.Shop", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier")
                         .HasColumnName("id");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Address")
                         .IsRequired()
@@ -332,8 +371,8 @@ namespace Mizan.Infrastructure.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("created_at");
 
-                    b.Property<int>("OwnerId")
-                        .HasColumnType("int")
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uniqueidentifier")
                         .HasColumnName("owner_id");
 
                     b.Property<string>("ShopName")
@@ -352,20 +391,17 @@ namespace Mizan.Infrastructure.Migrations
 
             modelBuilder.Entity("Mizan.Core.Entities.Transaction", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier")
                         .HasColumnName("id");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("Amount")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)")
                         .HasColumnName("amount");
 
-                    b.Property<int>("ContactId")
-                        .HasColumnType("int")
+                    b.Property<Guid>("ContactId")
+                        .HasColumnType("uniqueidentifier")
                         .HasColumnName("contact_id");
 
                     b.Property<DateTime>("CreatedAt")
@@ -400,8 +436,8 @@ namespace Mizan.Infrastructure.Migrations
                         .HasColumnType("int")
                         .HasColumnName("note_type");
 
-                    b.Property<int>("OwnerUserId")
-                        .HasColumnType("int")
+                    b.Property<Guid>("OwnerUserId")
+                        .HasColumnType("uniqueidentifier")
                         .HasColumnName("owner_user_id");
 
                     b.Property<DateTime>("TransactionDate")
@@ -427,12 +463,9 @@ namespace Mizan.Infrastructure.Migrations
 
             modelBuilder.Entity("Mizan.Core.Entities.User", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier")
                         .HasColumnName("id");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2")
@@ -529,6 +562,11 @@ namespace Mizan.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Mizan.Core.Entities.PeriodicReport", "PeriodicReport")
+                        .WithMany()
+                        .HasForeignKey("PeriodicReportId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.HasOne("Mizan.Core.Entities.Transaction", "Transaction")
                         .WithMany()
                         .HasForeignKey("TransactionId")
@@ -538,7 +576,20 @@ namespace Mizan.Infrastructure.Migrations
 
                     b.Navigation("Owner");
 
+                    b.Navigation("PeriodicReport");
+
                     b.Navigation("Transaction");
+                });
+
+            modelBuilder.Entity("Mizan.Core.Entities.PeriodicReport", b =>
+                {
+                    b.HasOne("Mizan.Core.Entities.User", "Owner")
+                        .WithMany()
+                        .HasForeignKey("OwnerUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Owner");
                 });
 
             modelBuilder.Entity("Mizan.Core.Entities.RefreshToken", b =>

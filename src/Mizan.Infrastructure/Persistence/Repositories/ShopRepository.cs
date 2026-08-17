@@ -10,7 +10,7 @@ public class ShopRepository : BaseRepository<Shop>, IShopRepository
     {
     }
 
-    public async Task<Shop?> GetByOwnerIdAsync(int ownerId, CancellationToken cancellationToken = default)
+    public async Task<Shop?> GetByOwnerIdAsync(Guid ownerId, CancellationToken cancellationToken = default)
     {
         return await _dbSet.FirstOrDefaultAsync(s => s.OwnerId == ownerId, cancellationToken);
     }

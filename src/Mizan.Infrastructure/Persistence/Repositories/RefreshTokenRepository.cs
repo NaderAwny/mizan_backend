@@ -15,7 +15,7 @@ public class RefreshTokenRepository : BaseRepository<RefreshToken>, IRefreshToke
         return await _dbSet.FirstOrDefaultAsync(t => t.Token == token, cancellationToken);
     }
 
-    public async Task<IReadOnlyList<RefreshToken>> GetActiveTokensByUserIdAsync(int userId, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<RefreshToken>> GetActiveTokensByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         return await _dbSet
             .Where(t => t.UserId == userId && t.RevokedAt == null && t.ExpiresAt > DateTime.UtcNow)
@@ -23,7 +23,7 @@ public class RefreshTokenRepository : BaseRepository<RefreshToken>, IRefreshToke
             .ToListAsync(cancellationToken);
     }
 
-    public async Task RevokeAllUserTokensAsync(int userId, CancellationToken cancellationToken = default)
+    public async Task RevokeAllUserTokensAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         var activeTokens = await _dbSet
             .Where(t => t.UserId == userId && t.RevokedAt == null)

@@ -5,8 +5,8 @@ namespace Mizan.Core.Entities;
 
 public class Installment
 {
-    public int Id { get; private set; }
-    public int TransactionId { get; private set; }
+    public Guid Id { get; private set; }
+    public Guid TransactionId { get; private set; }
     public int InstallmentNumber { get; private set; }
     public decimal Amount { get; private set; }
     public DateTime DueDate { get; private set; }
@@ -20,13 +20,14 @@ public class Installment
 
     private Installment() { } // Required for EF Core
 
-    public static Installment CreateSingle(int transactionId, int installmentNumber, decimal amount, DateTime dueDate)
+    public static Installment CreateSingle(Guid transactionId, int installmentNumber, decimal amount, DateTime dueDate)
     {
         if (amount <= 0)
             throw new DomainException("Each installment amount must be greater than zero");
 
         return new Installment
         {
+            Id = Guid.NewGuid(),
             TransactionId = transactionId,
             InstallmentNumber = installmentNumber,
             Amount = amount,
@@ -38,7 +39,7 @@ public class Installment
     }
 
     public static List<Installment> GenerateAutomaticSchedule(
-        int transactionId,
+        Guid transactionId,
         decimal totalAmount,
         int installmentCount,
         DateTime firstDueDate,
@@ -67,6 +68,7 @@ public class Installment
 
             installments.Add(new Installment
             {
+                Id = Guid.NewGuid(),
                 TransactionId = transactionId,
                 InstallmentNumber = i,
                 Amount = itemAmount,
@@ -81,7 +83,7 @@ public class Installment
     }
 
     public static List<Installment> GenerateCustomSchedule(
-        int transactionId,
+        Guid transactionId,
         IReadOnlyList<(decimal Amount, DateTime DueDate)> customInstallments)
     {
         if (customInstallments == null || customInstallments.Count < 2)
@@ -98,6 +100,7 @@ public class Installment
 
             installments.Add(new Installment
             {
+                Id = Guid.NewGuid(),
                 TransactionId = transactionId,
                 InstallmentNumber = i + 1,
                 Amount = item.Amount,

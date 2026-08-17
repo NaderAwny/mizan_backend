@@ -17,7 +17,7 @@ public class AuthResponse
     public bool IsNewUser { get; set; }
 
     [JsonPropertyName("userId")]
-    public int UserId { get; set; }
+    public Guid UserId { get; set; }
 
     [JsonPropertyName("firstName")]
     public string FirstName { get; set; } = string.Empty;

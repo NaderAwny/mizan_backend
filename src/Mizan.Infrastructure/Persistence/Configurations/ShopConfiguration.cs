@@ -13,7 +13,7 @@ public class ShopConfiguration : IEntityTypeConfiguration<Shop>
         builder.HasKey(s => s.Id);
         builder.Property(s => s.Id)
             .HasColumnName("id")
-            .UseIdentityColumn();
+            .ValueGeneratedNever();
 
         builder.Property(s => s.OwnerId)
             .HasColumnName("owner_id")

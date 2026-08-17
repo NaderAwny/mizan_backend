@@ -6,7 +6,7 @@ namespace Mizan.Core.Entities;
 
 public class User
 {
-    public int Id { get; private set; }
+    public Guid Id { get; private set; }
     public string Email { get; private set; } = string.Empty;
     public string FirstName { get; private set; } = string.Empty;
     public string LastName { get; private set; } = string.Empty;
@@ -23,12 +23,15 @@ public class User
 
     public static User Create(string email, string firstName, string lastName, string userType = "customer")
     {
-        var user = new User();
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
+            CreatedAt = DateTime.UtcNow,
+            IsActive = true
+        };
         user.SetEmail(email);
         user.UpdateProfile(firstName, lastName);
         user.SetUserType(userType);
-        user.CreatedAt = DateTime.UtcNow;
-        user.IsActive = true;
         return user;
     }
 

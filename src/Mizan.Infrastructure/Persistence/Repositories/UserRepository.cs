@@ -18,7 +18,7 @@ public class UserRepository : BaseRepository<User>, IUserRepository
             .FirstOrDefaultAsync(u => u.Email == normalizedEmail, cancellationToken);
     }
 
-    public async Task<User?> GetWithShopAsync(int userId, CancellationToken cancellationToken = default)
+    public async Task<User?> GetWithShopAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         return await _dbSet
             .Include(u => u.Shop)

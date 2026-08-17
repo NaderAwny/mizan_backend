@@ -38,7 +38,7 @@ public class TransactionService : ITransactionService
     }
 
     public async Task<TransactionResponse> CreateAsync(
-        int ownerUserId,
+        Guid ownerUserId,
         CreateTransactionRequest request,
         CancellationToken cancellationToken = default)
     {
@@ -126,8 +126,8 @@ public class TransactionService : ITransactionService
     }
 
     public async Task<TransactionResponse> GetByIdAsync(
-        int ownerUserId,
-        int transactionId,
+        Guid ownerUserId,
+        Guid transactionId,
         CancellationToken cancellationToken = default)
     {
         var transaction = await GetOwnedTransactionOrThrowAsync(ownerUserId, transactionId, cancellationToken);
@@ -135,10 +135,10 @@ public class TransactionService : ITransactionService
     }
 
     public async Task<PagedTransactionResponse> GetPagedAsync(
-        int ownerUserId,
+        Guid ownerUserId,
         int page,
         int pageSize,
-        int? contactId = null,
+        Guid? contactId = null,
         TransactionType? type = null,
         DateTime? dateFrom = null,
         DateTime? dateTo = null,
@@ -163,8 +163,8 @@ public class TransactionService : ITransactionService
     }
 
     public async Task DeactivateAsync(
-        int ownerUserId,
-        int transactionId,
+        Guid ownerUserId,
+        Guid transactionId,
         CancellationToken cancellationToken = default)
     {
         var transaction = await GetOwnedTransactionOrThrowAsync(ownerUserId, transactionId, cancellationToken);
@@ -175,8 +175,8 @@ public class TransactionService : ITransactionService
     }
 
     public async Task<TransactionResponse> AttachVoiceNoteAsync(
-        int ownerUserId,
-        int transactionId,
+        Guid ownerUserId,
+        Guid transactionId,
         IFormFile audioFile,
         CancellationToken cancellationToken = default)
     {
@@ -227,8 +227,8 @@ public class TransactionService : ITransactionService
     }
 
     public async Task<(FileStream Stream, string ContentType, string FileName)> GetVoiceNoteStreamAsync(
-        int ownerUserId,
-        int transactionId,
+        Guid ownerUserId,
+        Guid transactionId,
         CancellationToken cancellationToken = default)
     {
         var transaction = await GetOwnedTransactionOrThrowAsync(ownerUserId, transactionId, cancellationToken);
@@ -256,9 +256,9 @@ public class TransactionService : ITransactionService
     }
 
     public async Task<TransactionResponse> MarkInstallmentPaidAsync(
-        int ownerUserId,
-        int transactionId,
-        int installmentId,
+        Guid ownerUserId,
+        Guid transactionId,
+        Guid installmentId,
         CancellationToken cancellationToken = default)
     {
         var transaction = await GetOwnedTransactionOrThrowAsync(ownerUserId, transactionId, cancellationToken);
@@ -281,8 +281,8 @@ public class TransactionService : ITransactionService
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private async Task<Transaction> GetOwnedTransactionOrThrowAsync(
-        int ownerUserId,
-        int transactionId,
+        Guid ownerUserId,
+        Guid transactionId,
         CancellationToken cancellationToken)
     {
         var transaction = await _unitOfWork.Transactions.GetByIdAsync(transactionId, ownerUserId, cancellationToken);
@@ -350,7 +350,7 @@ public class TransactionService : ITransactionService
         };
     }
 
-    private async Task TryGeneratePeriodicReportAsync(int ownerUserId, CancellationToken cancellationToken)
+    private async Task TryGeneratePeriodicReportAsync(Guid ownerUserId, CancellationToken cancellationToken)
     {
         if (!_periodicReportsOptions.Enabled || _periodicReportsOptions.TransactionThreshold <= 0)
             return;
@@ -455,7 +455,7 @@ public class TransactionService : ITransactionService
         // pick up any PeriodicReport with EmailSent == false on its next run.
         if (_scopeFactory != null && !string.IsNullOrWhiteSpace(recipientEmail))
         {
-            int reportId = report.Id;
+            Guid reportId = report.Id;
             _ = Task.Run(async () =>
             {
                 try

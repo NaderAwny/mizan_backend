@@ -7,12 +7,12 @@ namespace Mizan.API.Controllers;
 [Route("api/[controller]")]
 public abstract class BaseController : ControllerBase
 {
-    protected int CurrentUserId
+    protected Guid CurrentUserId
     {
         get
         {
             var claimValue = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(claimValue) || !int.TryParse(claimValue, out int userId))
+            if (string.IsNullOrEmpty(claimValue) || !Guid.TryParse(claimValue, out Guid userId))
             {
                 throw new Core.Exceptions.UnauthorizedException("تعذر استخراج معرف المستخدم من الرمز");
             }

@@ -13,7 +13,7 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
         builder.HasKey(n => n.Id);
         builder.Property(n => n.Id)
             .HasColumnName("id")
-            .UseIdentityColumn();
+            .ValueGeneratedNever();
 
         builder.Property(n => n.OwnerUserId)
             .HasColumnName("owner_user_id")

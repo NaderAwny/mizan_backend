@@ -4,5 +4,5 @@ namespace Mizan.Application.Interfaces;
 
 public interface IUserService
 {
-    Task<UserProfileResponse> GetUserProfileAsync(int userId, CancellationToken cancellationToken = default);
+    Task<UserProfileResponse> GetUserProfileAsync(Guid userId, CancellationToken cancellationToken = default);
 }

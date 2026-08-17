@@ -39,8 +39,8 @@ public class NotificationsController : BaseController
     }
 
     /// <summary>POST /api/notifications/{id}/read — تمييز إشعار كمقروء</summary>
-    [HttpPost("{id:int}/read")]
-    public async Task<IActionResult> MarkAsRead(int id, CancellationToken cancellationToken)
+    [HttpPost("{id:guid}/read")]
+    public async Task<IActionResult> MarkAsRead(Guid id, CancellationToken cancellationToken)
     {
         await _notificationService.MarkAsReadAsync(CurrentUserId, id, cancellationToken);
         return NoContent();

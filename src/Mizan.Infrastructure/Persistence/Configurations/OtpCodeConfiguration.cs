@@ -13,7 +13,7 @@ public class OtpCodeConfiguration : IEntityTypeConfiguration<OtpCode>
         builder.HasKey(o => o.Id);
         builder.Property(o => o.Id)
             .HasColumnName("id")
-            .UseIdentityColumn();
+            .ValueGeneratedNever();
 
         builder.Property(o => o.Email)
             .HasColumnName("email")

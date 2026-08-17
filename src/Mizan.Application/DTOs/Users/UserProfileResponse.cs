@@ -5,7 +5,7 @@ namespace Mizan.Application.DTOs.Users;
 public class UserProfileResponse
 {
     [JsonPropertyName("id")]
-    public int Id { get; set; }
+    public Guid Id { get; set; }
 
     [JsonPropertyName("firstName")]
     public string FirstName { get; set; } = string.Empty;
@@ -32,7 +32,7 @@ public class UserProfileResponse
 public class ShopDto
 {
     [JsonPropertyName("id")]
-    public int Id { get; set; }
+    public Guid Id { get; set; }
 
     [JsonPropertyName("shopName")]
     public string ShopName { get; set; } = string.Empty;

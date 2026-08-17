@@ -6,6 +6,8 @@ namespace Mizan.UnitTests.Core;
 
 public class ContactTests
 {
+    private static readonly Guid _ownerId = Guid.NewGuid();
+
     // ── Contact.Create — Valid cases ─────────────────────────────────────────
 
     [Theory]
@@ -16,12 +18,12 @@ public class ContactTests
     [InlineData("O'Brien", null, null)]
     public void Create_WithValidData_ShouldSucceed(string name, string? phone, string? notes)
     {
-        var contact = Contact.Create(1, name, phone, notes);
+        var contact = Contact.Create(_ownerId, name, phone, notes);
 
         Assert.Equal(name.Trim(), contact.Name);
-        Assert.Equal(1, contact.OwnerUserId);
+        Assert.Equal(_ownerId, contact.OwnerUserId);
         Assert.True(contact.IsActive);
-        Assert.Equal(0, contact.Id);
+        Assert.NotEqual(Guid.Empty, contact.Id);
     }
 
     // ── Name validation ───────────────────────────────────────────────────────
@@ -31,7 +33,7 @@ public class ContactTests
     [InlineData("   ")]
     public void Create_WithEmptyOrWhitespaceName_ShouldThrowDomainException(string name)
     {
-        var ex = Assert.Throws<DomainException>(() => Contact.Create(1, name, null, null));
+        var ex = Assert.Throws<DomainException>(() => Contact.Create(_ownerId, name, null, null));
         Assert.Contains("Contact name is required", ex.Message);
     }
 
@@ -39,7 +41,7 @@ public class ContactTests
     public void Create_WithNameExceeding100Characters_ShouldThrowDomainException()
     {
         var longName = new string('A', 101);
-        var ex = Assert.Throws<DomainException>(() => Contact.Create(1, longName, null, null));
+        var ex = Assert.Throws<DomainException>(() => Contact.Create(_ownerId, longName, null, null));
         Assert.Contains("must not exceed 100 characters", ex.Message);
     }
 
@@ -47,8 +49,9 @@ public class ContactTests
     public void Create_WithNameExactly100Characters_ShouldSucceed()
     {
         var name = new string('A', 100);
-        var contact = Contact.Create(1, name, null, null);
+        var contact = Contact.Create(_ownerId, name, null, null);
         Assert.Equal(name, contact.Name);
+        Assert.NotEqual(Guid.Empty, contact.Id);
     }
 
     [Theory]
@@ -57,7 +60,7 @@ public class ContactTests
     [InlineData("Name@#$%")]
     public void Create_WithInvalidCharactersInName_ShouldThrowDomainException(string name)
     {
-        Assert.Throws<DomainException>(() => Contact.Create(1, name, null, null));
+        Assert.Throws<DomainException>(() => Contact.Create(_ownerId, name, null, null));
     }
 
     // ── Phone validation ──────────────────────────────────────────────────────
@@ -69,8 +72,9 @@ public class ContactTests
     [InlineData("123456789012345")]      // 15 digits maximum
     public void Create_WithValidPhoneNumber_ShouldSucceed(string phone)
     {
-        var contact = Contact.Create(1, "Test", phone, null);
+        var contact = Contact.Create(_ownerId, "Test", phone, null);
         Assert.Equal(phone, contact.PhoneNumber);
+        Assert.NotEqual(Guid.Empty, contact.Id);
     }
 
     [Theory]
@@ -81,7 +85,7 @@ public class ContactTests
     [InlineData("++201012345678")]       // double plus
     public void Create_WithInvalidPhoneNumber_ShouldThrowDomainException(string phone)
     {
-        var ex = Assert.Throws<DomainException>(() => Contact.Create(1, "Test", phone, null));
+        var ex = Assert.Throws<DomainException>(() => Contact.Create(_ownerId, "Test", phone, null));
         Assert.Contains("Invalid phone number format", ex.Message);
     }
 
@@ -91,8 +95,9 @@ public class ContactTests
     [InlineData("   ")]
     public void Create_WithNullOrEmptyPhone_ShouldSetPhoneToNull(string? phone)
     {
-        var contact = Contact.Create(1, "Test", phone, null);
+        var contact = Contact.Create(_ownerId, "Test", phone, null);
         Assert.Null(contact.PhoneNumber);
+        Assert.NotEqual(Guid.Empty, contact.Id);
     }
 
     // ── Notes validation ──────────────────────────────────────────────────────
@@ -101,7 +106,7 @@ public class ContactTests
     public void Create_WithNotesExceeding500Characters_ShouldThrowDomainException()
     {
         var longNotes = new string('X', 501);
-        var ex = Assert.Throws<DomainException>(() => Contact.Create(1, "Test", null, longNotes));
+        var ex = Assert.Throws<DomainException>(() => Contact.Create(_ownerId, "Test", null, longNotes));
         Assert.Contains("must not exceed 500 characters", ex.Message);
     }
 
@@ -109,8 +114,9 @@ public class ContactTests
     public void Create_WithNotesExactly500Characters_ShouldSucceed()
     {
         var notes = new string('X', 500);
-        var contact = Contact.Create(1, "Test", null, notes);
+        var contact = Contact.Create(_ownerId, "Test", null, notes);
         Assert.Equal(notes, contact.Notes);
+        Assert.NotEqual(Guid.Empty, contact.Id);
     }
 
     [Theory]
@@ -119,8 +125,9 @@ public class ContactTests
     [InlineData("   ")]
     public void Create_WithNullOrEmptyNotes_ShouldSetNotesToNull(string? notes)
     {
-        var contact = Contact.Create(1, "Test", null, notes);
+        var contact = Contact.Create(_ownerId, "Test", null, notes);
         Assert.Null(contact.Notes);
+        Assert.NotEqual(Guid.Empty, contact.Id);
     }
 
     // ── Update ────────────────────────────────────────────────────────────────
@@ -128,7 +135,7 @@ public class ContactTests
     [Fact]
     public void Update_WithValidData_ShouldUpdateAllFields()
     {
-        var contact = Contact.Create(1, "Old Name", null, null);
+        var contact = Contact.Create(_ownerId, "Old Name", null, null);
         var originalCreatedAt = contact.CreatedAt;
 
         contact.Update("New Name", "+201012345678", "New notes");
@@ -143,7 +150,7 @@ public class ContactTests
     [Fact]
     public void Update_WithInvalidName_ShouldThrowDomainException()
     {
-        var contact = Contact.Create(1, "Valid Name", null, null);
+        var contact = Contact.Create(_ownerId, "Valid Name", null, null);
         Assert.Throws<DomainException>(() => contact.Update("", null, null));
     }
 
@@ -152,7 +159,7 @@ public class ContactTests
     [Fact]
     public void Deactivate_ShouldSetIsActiveToFalse()
     {
-        var contact = Contact.Create(1, "Test", null, null);
+        var contact = Contact.Create(_ownerId, "Test", null, null);
         contact.Deactivate();
         Assert.False(contact.IsActive);
     }
@@ -160,7 +167,7 @@ public class ContactTests
     [Fact]
     public void Activate_ShouldSetIsActiveToTrue()
     {
-        var contact = Contact.Create(1, "Test", null, null);
+        var contact = Contact.Create(_ownerId, "Test", null, null);
         contact.Deactivate();
         contact.Activate();
         Assert.True(contact.IsActive);
@@ -171,13 +178,14 @@ public class ContactTests
     [Fact]
     public void Create_DefaultValues_ShouldBeCorrect()
     {
+        var customOwner = Guid.NewGuid();
         var before = DateTime.UtcNow.AddSeconds(-1);
-        var contact = Contact.Create(42, "Test Contact", null, null);
+        var contact = Contact.Create(customOwner, "Test Contact", null, null);
         var after = DateTime.UtcNow.AddSeconds(1);
 
         Assert.True(contact.IsActive);
-        Assert.Equal(0, contact.Id);
-        Assert.Equal(42, contact.OwnerUserId);
+        Assert.NotEqual(Guid.Empty, contact.Id);
+        Assert.Equal(customOwner, contact.OwnerUserId);
         Assert.True(contact.CreatedAt >= before && contact.CreatedAt <= after);
         Assert.True(contact.UpdatedAt >= before && contact.UpdatedAt <= after);
     }

@@ -29,6 +29,8 @@ packages/
 *.exe
 *.old
 *.log
+*.mdf
+*.ldf
 
 ## Environment & Secrets
 appsettings.Development.json

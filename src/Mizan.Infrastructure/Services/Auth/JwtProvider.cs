@@ -58,7 +58,7 @@ public class JwtProvider : IJwtProvider
         return Convert.ToBase64String(randomBytes);
     }
 
-    public int? ValidateTokenAndGetUserId(string token)
+    public Guid? ValidateTokenAndGetUserId(string token)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
         var key = Encoding.UTF8.GetBytes(_options.SecretKey);
@@ -77,7 +77,7 @@ public class JwtProvider : IJwtProvider
             }, out _);
 
             var userIdClaim = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (int.TryParse(userIdClaim, out int userId))
+            if (Guid.TryParse(userIdClaim, out Guid userId))
             {
                 return userId;
             }

@@ -335,17 +335,17 @@
 - **Body (JSON)**:
 ```json
 {
-  "contactId": "{{contact_id}}",
+  "contactId": {{contact_id}},
   "type": 0,
   "amount": 1200.00,
   "transactionDate": "2026-08-17T14:00:00Z",
-  "noteType": 2,
-  "voiceNoteTranscript": "تم بيع كرتونة زيت وسكر للحاج محمد على الحساب",
+  "noteType": 1,
+  "noteText": "تم بيع كرتونة زيت وسكر للحاج محمد على الحساب",
   "isInstallment": false
 }
 ```
 - **Expected Status**: `201 Created`
-- **Validation**: `noteType = 2 (Voice)`, وحفظ نص الـ Transcript.
+- **Validation**: `noteType = 1 (Text)`, وحفظ نص الملاحظة.
 
 ---
 

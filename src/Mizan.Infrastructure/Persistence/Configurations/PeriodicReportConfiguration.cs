@@ -13,7 +13,7 @@ public class PeriodicReportConfiguration : IEntityTypeConfiguration<PeriodicRepo
         builder.HasKey(r => r.Id);
         builder.Property(r => r.Id)
             .HasColumnName("id")
-            .UseIdentityColumn();
+            .ValueGeneratedNever();
 
         builder.Property(r => r.OwnerUserId)
             .HasColumnName("owner_user_id")

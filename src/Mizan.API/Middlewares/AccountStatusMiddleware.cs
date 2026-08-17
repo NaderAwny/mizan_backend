@@ -21,7 +21,7 @@ public class AccountStatusMiddleware
         if (context.User.Identity?.IsAuthenticated == true)
         {
             var userIdClaim = context.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (int.TryParse(userIdClaim, out int userId))
+            if (Guid.TryParse(userIdClaim, out Guid userId))
             {
                 var cacheKey = $"user_active_status_{userId}";
 

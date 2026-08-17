@@ -5,11 +5,13 @@ namespace Mizan.UnitTests.Core;
 
 public class RefreshTokenTests
 {
+    private static readonly Guid _userId = Guid.NewGuid();
+
     [Fact]
     public void RefreshToken_ShouldBeActiveWhenCreated()
     {
         // Act
-        var token = RefreshToken.Create(1, "sample-token-string", DateTime.UtcNow.AddDays(30));
+        var token = RefreshToken.Create(_userId, "sample-token-string", DateTime.UtcNow.AddDays(30));
 
         // Assert
         Assert.True(token.IsActive);
@@ -21,7 +23,7 @@ public class RefreshTokenTests
     public void RefreshToken_Revoke_ShouldDeactivateToken()
     {
         // Arrange
-        var token = RefreshToken.Create(1, "sample-token-string", DateTime.UtcNow.AddDays(30));
+        var token = RefreshToken.Create(_userId, "sample-token-string", DateTime.UtcNow.AddDays(30));
 
         // Act
         token.Revoke("replacement-token");
@@ -36,7 +38,7 @@ public class RefreshTokenTests
     public void RefreshToken_WhenExpired_ShouldNotBeActive()
     {
         // Arrange
-        var token = RefreshToken.Create(1, "sample-token-string", DateTime.UtcNow.AddDays(-1));
+        var token = RefreshToken.Create(_userId, "sample-token-string", DateTime.UtcNow.AddDays(-1));
 
         // Assert
         Assert.False(token.IsActive);

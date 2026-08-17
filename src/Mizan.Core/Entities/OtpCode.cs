@@ -7,7 +7,7 @@ namespace Mizan.Core.Entities;
 
 public class OtpCode
 {
-    public int Id { get; private set; }
+    public Guid Id { get; private set; }
     public string Email { get; private set; } = string.Empty;
     public string Code { get; private set; } = string.Empty;
     public DateTime ExpiresAt { get; private set; }
@@ -45,6 +45,7 @@ public class OtpCode
 
         return new OtpCode
         {
+            Id = Guid.NewGuid(),
             Email = email,
             Code = code,
             ExpiresAt = DateTime.UtcNow.AddSeconds(expirySeconds),

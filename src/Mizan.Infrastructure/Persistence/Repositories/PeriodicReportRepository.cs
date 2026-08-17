@@ -15,14 +15,14 @@ public class PeriodicReportRepository : IPeriodicReportRepository
         _dbSet = context.Set<PeriodicReport>();
     }
 
-    public async Task<PeriodicReport?> GetByIdAsync(int id, int ownerUserId, CancellationToken cancellationToken = default)
+    public async Task<PeriodicReport?> GetByIdAsync(Guid id, Guid ownerUserId, CancellationToken cancellationToken = default)
     {
         return await _dbSet
             .FirstOrDefaultAsync(r => r.Id == id && r.OwnerUserId == ownerUserId, cancellationToken);
     }
 
     public async Task<(IReadOnlyList<PeriodicReport> Items, int TotalCount)> GetPagedByOwnerAsync(
-        int ownerUserId,
+        Guid ownerUserId,
         int page,
         int pageSize,
         CancellationToken cancellationToken = default)

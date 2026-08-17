@@ -13,7 +13,7 @@ public class InstallmentConfiguration : IEntityTypeConfiguration<Installment>
         builder.HasKey(i => i.Id);
         builder.Property(i => i.Id)
             .HasColumnName("id")
-            .UseIdentityColumn();
+            .ValueGeneratedNever();
 
         builder.Property(i => i.TransactionId)
             .HasColumnName("transaction_id")

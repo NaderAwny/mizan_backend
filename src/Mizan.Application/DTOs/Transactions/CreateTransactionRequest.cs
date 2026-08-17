@@ -6,7 +6,7 @@ namespace Mizan.Application.DTOs.Transactions;
 public class CreateTransactionRequest : IValidatableObject
 {
     [Required]
-    public int ContactId { get; set; }
+    public Guid ContactId { get; set; }
 
     [Required]
     public TransactionType Type { get; set; }

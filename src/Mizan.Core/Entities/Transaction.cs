@@ -5,9 +5,9 @@ namespace Mizan.Core.Entities;
 
 public class Transaction
 {
-    public int Id { get; private set; }
-    public int OwnerUserId { get; private set; }
-    public int ContactId { get; private set; }
+    public Guid Id { get; private set; }
+    public Guid OwnerUserId { get; private set; }
+    public Guid ContactId { get; private set; }
     public TransactionType Type { get; private set; }
     public decimal Amount { get; private set; }
     public DateTime TransactionDate { get; private set; }
@@ -28,8 +28,8 @@ public class Transaction
     private Transaction() { } // Required for EF Core
 
     public static Transaction Create(
-        int ownerUserId,
-        int contactId,
+        Guid ownerUserId,
+        Guid contactId,
         TransactionType type,
         decimal amount,
         DateTime transactionDate,
@@ -69,6 +69,7 @@ public class Transaction
 
         return new Transaction
         {
+            Id = Guid.NewGuid(),
             OwnerUserId = ownerUserId,
             ContactId = contactId,
             Type = type,

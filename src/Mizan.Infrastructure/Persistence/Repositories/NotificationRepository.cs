@@ -15,14 +15,14 @@ public class NotificationRepository : INotificationRepository
         _dbSet = context.Set<Notification>();
     }
 
-    public async Task<Notification?> GetByIdAsync(int id, int ownerUserId, CancellationToken cancellationToken = default)
+    public async Task<Notification?> GetByIdAsync(Guid id, Guid ownerUserId, CancellationToken cancellationToken = default)
     {
         return await _dbSet
             .FirstOrDefaultAsync(n => n.Id == id && n.OwnerUserId == ownerUserId, cancellationToken);
     }
 
     public async Task<(IReadOnlyList<Notification> Items, int TotalCount)> GetPagedByOwnerAsync(
-        int ownerUserId,
+        Guid ownerUserId,
         int page,
         int pageSize,
         bool unreadOnly,
@@ -47,7 +47,7 @@ public class NotificationRepository : INotificationRepository
         return (items, totalCount);
     }
 
-    public async Task<int> GetUnreadCountAsync(int ownerUserId, CancellationToken cancellationToken = default)
+    public async Task<int> GetUnreadCountAsync(Guid ownerUserId, CancellationToken cancellationToken = default)
     {
         return await _dbSet
             .CountAsync(n => n.OwnerUserId == ownerUserId && !n.IsRead, cancellationToken);
@@ -58,7 +58,7 @@ public class NotificationRepository : INotificationRepository
         await _dbSet.AddAsync(notification, cancellationToken);
     }
 
-    public async Task MarkAllReadAsync(int ownerUserId, CancellationToken cancellationToken = default)
+    public async Task MarkAllReadAsync(Guid ownerUserId, CancellationToken cancellationToken = default)
     {
         var unreadNotifications = await _dbSet
             .Where(n => n.OwnerUserId == ownerUserId && !n.IsRead)

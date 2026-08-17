@@ -16,7 +16,7 @@ public class TransactionRepository : ITransactionRepository
         _dbSet = context.Set<Transaction>();
     }
 
-    public async Task<Transaction?> GetByIdAsync(int id, int ownerUserId, CancellationToken cancellationToken = default)
+    public async Task<Transaction?> GetByIdAsync(Guid id, Guid ownerUserId, CancellationToken cancellationToken = default)
     {
         return await _dbSet
             .Include(t => t.Contact)
@@ -25,10 +25,10 @@ public class TransactionRepository : ITransactionRepository
     }
 
     public async Task<(IReadOnlyList<Transaction> Items, int TotalCount)> GetPagedByOwnerAsync(
-        int ownerUserId,
+        Guid ownerUserId,
         int page,
         int pageSize,
-        int? contactId = null,
+        Guid? contactId = null,
         TransactionType? type = null,
         DateTime? dateFrom = null,
         DateTime? dateTo = null,
@@ -72,14 +72,14 @@ public class TransactionRepository : ITransactionRepository
         return (items, totalCount);
     }
 
-    public async Task<int> GetActiveCountByOwnerAsync(int ownerUserId, CancellationToken cancellationToken = default)
+    public async Task<int> GetActiveCountByOwnerAsync(Guid ownerUserId, CancellationToken cancellationToken = default)
     {
         return await _dbSet
             .Where(t => t.OwnerUserId == ownerUserId && t.IsActive)
             .CountAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyList<Transaction>> GetRecentActiveByOwnerAsync(int ownerUserId, int count, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<Transaction>> GetRecentActiveByOwnerAsync(Guid ownerUserId, int count, CancellationToken cancellationToken = default)
     {
         return await _dbSet
             .Include(t => t.Contact)

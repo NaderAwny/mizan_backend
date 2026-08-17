@@ -13,7 +13,7 @@ public class ContactConfiguration : IEntityTypeConfiguration<Contact>
         builder.HasKey(c => c.Id);
         builder.Property(c => c.Id)
             .HasColumnName("id")
-            .UseIdentityColumn();
+            .ValueGeneratedNever();
 
         builder.Property(c => c.OwnerUserId)
             .HasColumnName("owner_user_id")

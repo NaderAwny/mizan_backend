@@ -37,15 +37,17 @@ public class ContactServiceTests
     public async Task GetById_ForAnotherUsersContact_ShouldReturnNotFound()
     {
         var (service, db) = CreateService();
+        var user1 = Guid.NewGuid();
+        var user2 = Guid.NewGuid();
 
         // Create contact belonging to user 1
-        var contact = Contact.Create(1, "UserOne Contact", null, null);
+        var contact = Contact.Create(user1, "UserOne Contact", null, null);
         db.Set<Contact>().Add(contact);
         await db.SaveChangesAsync();
 
         // User 2 tries to read user 1's contact — must NOT find it
         var ex = await Assert.ThrowsAsync<NotFoundException>(
-            () => service.GetByIdAsync(ownerUserId: 2, contactId: contact.Id));
+            () => service.GetByIdAsync(ownerUserId: user2, contactId: contact.Id));
 
         Assert.Contains("Contact not found", ex.Message);
     }
@@ -54,8 +56,10 @@ public class ContactServiceTests
     public async Task Update_ForAnotherUsersContact_ShouldReturnNotFound_NotForbidden()
     {
         var (service, db) = CreateService();
+        var user1 = Guid.NewGuid();
+        var user2 = Guid.NewGuid();
 
-        var contact = Contact.Create(1, "Original", null, null);
+        var contact = Contact.Create(user1, "Original", null, null);
         db.Set<Contact>().Add(contact);
         await db.SaveChangesAsync();
 
@@ -63,7 +67,7 @@ public class ContactServiceTests
 
         // Must throw NotFoundException — not Forbidden — so existence is not leaked
         var ex = await Assert.ThrowsAsync<NotFoundException>(
-            () => service.UpdateAsync(ownerUserId: 99, contactId: contact.Id, request));
+            () => service.UpdateAsync(ownerUserId: user2, contactId: contact.Id, request));
         Assert.Contains("Contact not found", ex.Message);
     }
 
@@ -71,13 +75,15 @@ public class ContactServiceTests
     public async Task Deactivate_ForAnotherUsersContact_ShouldReturnNotFound()
     {
         var (service, db) = CreateService();
+        var user1 = Guid.NewGuid();
+        var user2 = Guid.NewGuid();
 
-        var contact = Contact.Create(1, "Victim Contact", null, null);
+        var contact = Contact.Create(user1, "Victim Contact", null, null);
         db.Set<Contact>().Add(contact);
         await db.SaveChangesAsync();
 
         var ex = await Assert.ThrowsAsync<NotFoundException>(
-            () => service.DeactivateAsync(ownerUserId: 2, contactId: contact.Id));
+            () => service.DeactivateAsync(ownerUserId: user2, contactId: contact.Id));
         Assert.Contains("Contact not found", ex.Message);
     }
 
@@ -96,7 +102,7 @@ public class ContactServiceTests
         var (service, _) = CreateService();
 
         var result = await service.GetPagedAsync(
-            ownerUserId: 1,
+            ownerUserId: Guid.NewGuid(),
             page: requestedPage,
             pageSize: requestedSize,
             searchTerm: null);
@@ -111,7 +117,7 @@ public class ContactServiceTests
     public async Task GetPaged_WithSearchTerm_ShouldFilterByName()
     {
         var (service, db) = CreateService();
-        const int ownerId = 1;
+        var ownerId = Guid.NewGuid();
 
         db.Set<Contact>().AddRange(
             Contact.Create(ownerId, "Ahmed Ali", null, null),
@@ -133,14 +139,16 @@ public class ContactServiceTests
     public async Task GetPaged_SearchExcludesOtherUsersContacts()
     {
         var (service, db) = CreateService();
+        var user1 = Guid.NewGuid();
+        var user2 = Guid.NewGuid();
 
         // User 1 has a contact named "Ahmed"
-        db.Set<Contact>().Add(Contact.Create(1, "Ahmed Shared", null, null));
+        db.Set<Contact>().Add(Contact.Create(user1, "Ahmed Shared", null, null));
         // User 2 also has a contact named "Ahmed"
-        db.Set<Contact>().Add(Contact.Create(2, "Ahmed Other", null, null));
+        db.Set<Contact>().Add(Contact.Create(user2, "Ahmed Other", null, null));
         await db.SaveChangesAsync();
 
-        var result = await service.GetPagedAsync(ownerUserId: 1, 1, 10, "ahmed");
+        var result = await service.GetPagedAsync(ownerUserId: user1, 1, 10, "ahmed");
 
         // User 1 should only see their own contact
         Assert.Equal(1, result.TotalCount);
@@ -153,6 +161,7 @@ public class ContactServiceTests
     public async Task Create_WithValidRequest_ShouldReturnContactResponse()
     {
         var (service, _) = CreateService();
+        var ownerId = Guid.NewGuid();
 
         var request = new CreateContactRequest
         {
@@ -161,9 +170,9 @@ public class ContactServiceTests
             Notes = "Test notes"
         };
 
-        var response = await service.CreateAsync(ownerUserId: 5, request);
+        var response = await service.CreateAsync(ownerUserId: ownerId, request);
 
-        Assert.NotEqual(0, response.Id);
+        Assert.NotEqual(Guid.Empty, response.Id);
         Assert.Equal("Test Contact", response.Name);
         Assert.Equal("01012345678", response.PhoneNumber);
         Assert.Equal("Test notes", response.Notes);
@@ -176,7 +185,7 @@ public class ContactServiceTests
     public async Task Deactivate_OwnContact_ShouldSetIsActiveToFalse()
     {
         var (service, db) = CreateService();
-        const int ownerId = 1;
+        var ownerId = Guid.NewGuid();
 
         var contact = Contact.Create(ownerId, "To Deactivate", null, null);
         db.Set<Contact>().Add(contact);
@@ -201,7 +210,7 @@ public class ContactServiceTests
         int totalItems, int pageSize, int expectedPages)
     {
         var (service, db) = CreateService();
-        const int ownerId = 7;
+        var ownerId = Guid.NewGuid();
 
         // Arabic alphabet names to avoid digit-rejection by domain validation
         var namePool = new[]

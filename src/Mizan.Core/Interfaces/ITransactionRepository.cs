@@ -5,21 +5,21 @@ namespace Mizan.Core.Interfaces;
 
 public interface ITransactionRepository
 {
-    Task<Transaction?> GetByIdAsync(int id, int ownerUserId, CancellationToken cancellationToken = default);
+    Task<Transaction?> GetByIdAsync(Guid id, Guid ownerUserId, CancellationToken cancellationToken = default);
 
     Task<(IReadOnlyList<Transaction> Items, int TotalCount)> GetPagedByOwnerAsync(
-        int ownerUserId,
+        Guid ownerUserId,
         int page,
         int pageSize,
-        int? contactId = null,
+        Guid? contactId = null,
         TransactionType? type = null,
         DateTime? dateFrom = null,
         DateTime? dateTo = null,
         CancellationToken cancellationToken = default);
 
-    Task<int> GetActiveCountByOwnerAsync(int ownerUserId, CancellationToken cancellationToken = default);
+    Task<int> GetActiveCountByOwnerAsync(Guid ownerUserId, CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyList<Transaction>> GetRecentActiveByOwnerAsync(int ownerUserId, int count, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<Transaction>> GetRecentActiveByOwnerAsync(Guid ownerUserId, int count, CancellationToken cancellationToken = default);
 
     Task AddAsync(Transaction transaction, CancellationToken cancellationToken = default);
 

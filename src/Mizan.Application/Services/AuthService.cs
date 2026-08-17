@@ -134,7 +134,7 @@ public class AuthService : IAuthService
         };
     }
 
-    public async Task<AuthResponse> SelectUserTypeAsync(int userId, SelectUserTypeRequest request, CancellationToken cancellationToken = default)
+    public async Task<AuthResponse> SelectUserTypeAsync(Guid userId, SelectUserTypeRequest request, CancellationToken cancellationToken = default)
     {
         var user = await _unitOfWork.Users.GetByIdAsync(userId, cancellationToken);
         if (user == null)

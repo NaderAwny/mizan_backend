@@ -19,7 +19,7 @@ public class PeriodicReportService : IPeriodicReportService
     }
 
     public async Task<PagedPeriodicReportResponse> GetPagedAsync(
-        int ownerUserId,
+        Guid ownerUserId,
         int page,
         int pageSize,
         CancellationToken cancellationToken = default)
@@ -43,8 +43,8 @@ public class PeriodicReportService : IPeriodicReportService
     }
 
     public async Task<PeriodicReportResponse> GetByIdAsync(
-        int ownerUserId,
-        int reportId,
+        Guid ownerUserId,
+        Guid reportId,
         CancellationToken cancellationToken = default)
     {
         var report = await GetOwnedReportOrThrowAsync(ownerUserId, reportId, cancellationToken);
@@ -52,8 +52,8 @@ public class PeriodicReportService : IPeriodicReportService
     }
 
     public async Task<(FileStream Stream, string ContentType, string FileName)> GetPdfStreamAsync(
-        int ownerUserId,
-        int reportId,
+        Guid ownerUserId,
+        Guid reportId,
         CancellationToken cancellationToken = default)
     {
         var report = await GetOwnedReportOrThrowAsync(ownerUserId, reportId, cancellationToken);
@@ -70,8 +70,8 @@ public class PeriodicReportService : IPeriodicReportService
     }
 
     private async Task<PeriodicReport> GetOwnedReportOrThrowAsync(
-        int ownerUserId,
-        int reportId,
+        Guid ownerUserId,
+        Guid reportId,
         CancellationToken cancellationToken)
     {
         var report = await _unitOfWork.PeriodicReports.GetByIdAsync(reportId, ownerUserId, cancellationToken);

@@ -69,14 +69,13 @@ public class PeriodicReportEmailRetryServiceTests
         var emailService = new FakeEmailService { ShouldSucceed = true };
         var scopeFactory = CreateScopeFactory(dbName, emailService);
 
-        int ownerUserId = 1;
         string tempFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.pdf");
         await File.WriteAllBytesAsync(tempFile, new byte[] { 1, 2, 3, 4 });
 
         try
         {
             var user = User.Create("owner@test.com", "أحمد", "علي", "shop_owner");
-            var report = PeriodicReport.Create(ownerUserId, 1, 7, 500, 100, tempFile);
+            var report = PeriodicReport.Create(user.Id, 1, 7, 500, 100, tempFile);
 
             db.Set<User>().Add(user);
             db.Set<PeriodicReport>().Add(report);
@@ -126,7 +125,7 @@ public class PeriodicReportEmailRetryServiceTests
         var emailService = new FakeEmailService();
         var scopeFactory = CreateScopeFactory(dbName, emailService);
 
-        int ownerUserId = 1;
+        Guid ownerUserId = Guid.NewGuid();
         var report = PeriodicReport.Create(ownerUserId, 1, 7, 500, 100, "some_path.pdf");
         report.MarkEmailSent(); // already sent
         db.Set<PeriodicReport>().Add(report);

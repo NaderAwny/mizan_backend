@@ -14,7 +14,7 @@ public class UserService : IUserService
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<UserProfileResponse> GetUserProfileAsync(int userId, CancellationToken cancellationToken = default)
+    public async Task<UserProfileResponse> GetUserProfileAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         var user = await _unitOfWork.Users.GetWithShopAsync(userId, cancellationToken);
         if (user == null)

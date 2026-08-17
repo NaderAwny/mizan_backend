@@ -77,7 +77,7 @@ public class PeriodicReportTriggerTests
         var options = Microsoft.Extensions.Options.Options.Create(new PeriodicReportsOptions { Enabled = true, TransactionThreshold = 7 });
         var service = new TransactionService(uow, options, pdfGen, scopeFactory, NullLogger<TransactionService>.Instance);
 
-        int ownerUserId = 1;
+        Guid ownerUserId = Guid.NewGuid();
         var contact = Contact.Create(ownerUserId, "عميل تجريبي", null, null);
         db.Set<Contact>().Add(contact);
 
@@ -118,8 +118,8 @@ public class PeriodicReportTriggerTests
         var options = Microsoft.Extensions.Options.Options.Create(new PeriodicReportsOptions { Enabled = true, TransactionThreshold = 7 });
         var service = new TransactionService(uow, options, pdfGen, scopeFactory, NullLogger<TransactionService>.Instance);
 
-        int ownerUserId = 1;
         var user = User.Create("owner@test.com", "أحمد", "علي", "shop_owner");
+        Guid ownerUserId = user.Id;
         var contact = Contact.Create(ownerUserId, "عميل تجريبي", null, null);
         db.Set<User>().Add(user);
         db.Set<Contact>().Add(contact);
@@ -174,7 +174,7 @@ public class PeriodicReportTriggerTests
         var options = Microsoft.Extensions.Options.Options.Create(new PeriodicReportsOptions { Enabled = true, TransactionThreshold = 7 });
         var service = new TransactionService(uow, options, pdfGen, scopeFactory, NullLogger<TransactionService>.Instance);
 
-        int ownerUserId = 1;
+        Guid ownerUserId = Guid.NewGuid();
         var contact = Contact.Create(ownerUserId, "عميل تجريبي", null, null);
         db.Set<Contact>().Add(contact);
 
@@ -219,10 +219,10 @@ public class PeriodicReportTriggerTests
         var service = new TransactionService(uow, options, pdfGen, scopeFactory, NullLogger<TransactionService>.Instance);
 
         // Create User 1 and User 2
-        int user1Id = 1;
-        int user2Id = 2;
         var user1 = User.Create("user1@mizan.app", "أحمد", "علي", "shop_owner");
         var user2 = User.Create("user2@mizan.app", "محمود", "حسن", "customer");
+        Guid user1Id = user1.Id;
+        Guid user2Id = user2.Id;
         var contact1 = Contact.Create(user1Id, "عميل أول", null, null);
         var contact2 = Contact.Create(user2Id, "عميل ثاني", null, null);
 

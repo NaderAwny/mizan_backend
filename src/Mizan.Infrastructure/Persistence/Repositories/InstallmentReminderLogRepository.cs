@@ -15,7 +15,7 @@ public class InstallmentReminderLogRepository : IInstallmentReminderLogRepositor
         _dbSet = context.Set<InstallmentReminderLog>();
     }
 
-    public async Task<bool> ExistsAsync(int installmentId, int daysBeforeDue, CancellationToken cancellationToken = default)
+    public async Task<bool> ExistsAsync(Guid installmentId, int daysBeforeDue, CancellationToken cancellationToken = default)
     {
         return await _dbSet.AnyAsync(
             l => l.InstallmentId == installmentId && l.DaysBeforeDue == daysBeforeDue,

@@ -4,5 +4,5 @@ namespace Mizan.Core.Interfaces;
 
 public interface IShopRepository : IBaseRepository<Shop>
 {
-    Task<Shop?> GetByOwnerIdAsync(int ownerId, CancellationToken cancellationToken = default);
+    Task<Shop?> GetByOwnerIdAsync(Guid ownerId, CancellationToken cancellationToken = default);
 }
