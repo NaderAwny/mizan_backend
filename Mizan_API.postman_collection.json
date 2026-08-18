@@ -626,45 +626,7 @@
       "name": "🎙️ 5. العمليات — إدخال صوتي وملاحظات صوتية (Voice Note Transactions)",
       "item": [
         {
-          "name": "5.1 — إنشاء عملية مستندة لتفريغ صوتي (Create with Voice Transcript)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "if (pm.response.code === 201) {",
-                  "    var json = pm.response.json();",
-                  "    pm.environment.set('transaction_id', json.data.id);",
-                  "    pm.test('تم إنشاء العملية بنص التفريغ الصوتي', function() {",
-                  "        pm.expect(json.success).to.be.true;",
-                  "        pm.expect(json.data.noteType).to.equal('Text');",
-                  "    });",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"contactId\": \"{{contact_id}}\",\n  \"type\": \"Sale\",\n  \"amount\": 1200.00,\n  \"transactionDate\": \"2026-08-17T14:00:00Z\",\n  \"noteType\": \"Text\",\n  \"noteText\": \"تم بيع كرتونة زيت وسكر للحاج محمد على الحساب\",\n  \"isInstallment\": false\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/transactions",
-              "host": ["{{base_url}}"],
-              "path": ["api", "transactions"]
-            },
-            "description": "إنشاء عملية مبيعات تحتوي على ملاحظة نصية (noteType = 'Text')."
-          }
-        },
-        {
-          "name": "5.2 — رفع ملف صوتي للعملية (Upload Voice Note Audio File)",
+          "name": "5.1 — رفع ملف صوتي للعملية (Upload Voice Note Audio File)",
           "event": [
             {
               "listen": "test",
@@ -703,7 +665,7 @@
           }
         },
         {
-          "name": "5.3 — الاستماع للتسجيل الصوتي المحمي (Stream Voice Note Audio)",
+          "name": "5.2 — الاستماع للتسجيل الصوتي المحمي (Stream Voice Note Audio)",
           "event": [
             {
               "listen": "test",

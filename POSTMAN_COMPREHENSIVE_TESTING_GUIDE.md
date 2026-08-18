@@ -305,30 +305,9 @@
 
 ---
 
-## 6. القسم 5: العمليات — إدخال صوتي وملاحظات صوتية (Voice Notes)
+## 6. القسم 5: العمليات — الملاحظات الصوتية (Voice Notes)
 
-### السيناريو 5.1: إنشاء عملية بناءً على تفريغ صوتي (Create Transaction with Voice Transcript)
-- **Method**: `POST`
-- **URL**: `{{base_url}}/api/transactions`
-- **Headers**: `Authorization: Bearer {{access_token}}`
-- **Body (JSON)**:
-```json
-{
-  "contactId": {{contact_id}},
-  "type": 0,
-  "amount": 1200.00,
-  "transactionDate": "2026-08-17T14:00:00Z",
-  "noteType": 1,
-  "noteText": "تم بيع كرتونة زيت وسكر للحاج محمد على الحساب",
-  "isInstallment": false
-}
-```
-- **Expected Status**: `201 Created`
-- **Validation**: `noteType = 1 (Text)`, وحفظ نص الملاحظة.
-
----
-
-### السيناريو 5.2: رفع ملف صوتي للعملية (Upload Voice Note Audio File)
+### السيناريو 5.1: رفع ملف صوتي للعملية (Upload Voice Note Audio File)
 - **Method**: `POST`
 - **URL**: `{{base_url}}/api/transactions/{{transaction_id}}/voice-note`
 - **Headers**:
@@ -341,7 +320,7 @@
 
 ---
 
-### السيناريو 5.3: الاستماع / تحميل التسجيل الصوتي للعملية (Stream Voice Note)
+### السيناريو 5.2: الاستماع / تحميل التسجيل الصوتي للعملية (Stream Voice Note)
 - **Method**: `GET`
 - **URL**: `{{base_url}}/api/transactions/{{transaction_id}}/voice-note`
 - **Headers**: `Authorization: Bearer {{access_token}}`
