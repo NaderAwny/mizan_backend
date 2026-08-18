@@ -24,6 +24,36 @@ public class TransactionRepository : ITransactionRepository
             .FirstOrDefaultAsync(t => t.Id == id && t.OwnerUserId == ownerUserId, cancellationToken);
     }
 
+    public async Task<IReadOnlyList<Transaction>> GetByShopAndDateAsync(Guid shopId, DateTime date, CancellationToken cancellationToken = default)
+    {
+        var targetDate = date.Date;
+        var nextDate = targetDate.AddDays(1);
+
+        return await _dbSet
+            .Include(t => t.Contact)
+            .Include(t => t.Installments)
+            .Where(t => t.ShopId == shopId && t.IsActive && t.TransactionDate >= targetDate && t.TransactionDate < nextDate)
+            .OrderByDescending(t => t.TransactionDate)
+            .ThenByDescending(t => t.CreatedAt)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<Transaction>> GetByShopAndMonthAsync(Guid shopId, int year, int month, CancellationToken cancellationToken = default)
+    {
+        var startDate = new DateTime(year, month, 1);
+        var endDate = startDate.AddMonths(1);
+
+        return await _dbSet
+            .Include(t => t.Contact)
+            .Include(t => t.Installments)
+            .Where(t => t.ShopId == shopId && t.IsActive && t.TransactionDate >= startDate && t.TransactionDate < endDate)
+            .OrderByDescending(t => t.TransactionDate)
+            .ThenByDescending(t => t.CreatedAt)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<(IReadOnlyList<Transaction> Items, int TotalCount)> GetPagedByOwnerAsync(
         Guid ownerUserId,
         int page,

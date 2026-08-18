@@ -13,4 +13,10 @@ public class UpdateContactRequest
 
     [MaxLength(500, ErrorMessage = "الملاحظات يجب ألا تتجاوز 500 حرف")]
     public string? Notes { get; set; }
+
+    public bool? IsVip { get; set; }
+
+    [MaxLength(254, ErrorMessage = "البريد الإلكتروني يجب ألا يتجاوز 254 حرفاً")]
+    [EmailAddress(ErrorMessage = "صيغة البريد الإلكتروني غير صحيحة")]
+    public string? ContactEmail { get; set; }
 }

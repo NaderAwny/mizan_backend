@@ -25,6 +25,14 @@ public class ContactRepository : IContactRepository
             .FirstOrDefaultAsync(c => c.Id == id && c.OwnerUserId == ownerUserId, cancellationToken);
     }
 
+    public async Task<Contact?> GetByIdWithTransactionsAsync(Guid id, Guid ownerUserId, CancellationToken cancellationToken = default)
+    {
+        return await _dbSet
+            .Include(c => c.Transactions.Where(t => t.IsActive))
+                .ThenInclude(t => t.Installments)
+            .FirstOrDefaultAsync(c => c.Id == id && c.OwnerUserId == ownerUserId && c.IsActive, cancellationToken);
+    }
+
     public async Task<(IReadOnlyList<Contact> Items, int TotalCount)> GetPagedByOwnerAsync(
         Guid ownerUserId,
         int page,
@@ -33,7 +41,7 @@ public class ContactRepository : IContactRepository
         CancellationToken cancellationToken = default)
     {
         var query = _dbSet
-            .Where(c => c.OwnerUserId == ownerUserId);
+            .Where(c => c.OwnerUserId == ownerUserId && c.IsActive);
 
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
@@ -45,6 +53,27 @@ public class ContactRepository : IContactRepository
 
         var items = await query
             .OrderBy(c => c.Name)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+
+        return (items, totalCount);
+    }
+
+    public async Task<(IReadOnlyList<Contact> Items, int TotalCount)> GetVipPagedAsync(
+        Guid ownerUserId,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _dbSet
+            .Where(c => c.OwnerUserId == ownerUserId && c.IsVip && c.IsActive)
+            .OrderBy(c => c.Name);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var items = await query
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .AsNoTracking()

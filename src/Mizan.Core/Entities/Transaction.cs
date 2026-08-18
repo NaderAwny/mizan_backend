@@ -6,11 +6,16 @@ namespace Mizan.Core.Entities;
 public class Transaction
 {
     public Guid Id { get; private set; }
+    public Guid ShopId { get; private set; }
     public Guid OwnerUserId { get; private set; }
-    public Guid ContactId { get; private set; }
+    public Guid? ContactId { get; private set; }
+    public string PartyName { get; private set; } = string.Empty;
     public TransactionType Type { get; private set; }
+    public TransactionType OperationType => Type;
     public decimal Amount { get; private set; }
+    public PaymentMethod PaymentMethod { get; private set; } = PaymentMethod.Cash;
     public DateTime TransactionDate { get; private set; }
+    public DateTime OperationDate => TransactionDate;
     public bool IsInstallment { get; private set; }
     public InstallmentPlanMode? InstallmentPlanMode { get; private set; }
     public NoteType NoteType { get; private set; } = NoteType.None;
@@ -21,6 +26,7 @@ public class Transaction
     public DateTime UpdatedAt { get; private set; }
 
     // Navigation properties
+    public Shop? Shop { get; private set; }
     public User? Owner { get; private set; }
     public Contact? Contact { get; private set; }
     public ICollection<Installment> Installments { get; private set; } = new List<Installment>();
@@ -29,14 +35,17 @@ public class Transaction
 
     public static Transaction Create(
         Guid ownerUserId,
-        Guid contactId,
+        Guid? contactId,
         TransactionType type,
         decimal amount,
         DateTime transactionDate,
         NoteType noteType = NoteType.None,
         string? noteText = null,
         bool isInstallment = false,
-        InstallmentPlanMode? installmentPlanMode = null)
+        InstallmentPlanMode? installmentPlanMode = null,
+        Guid? shopId = null,
+        string? partyName = null,
+        PaymentMethod paymentMethod = PaymentMethod.Cash)
     {
         if (amount <= 0)
             throw new DomainException("Amount must be greater than zero");
@@ -46,6 +55,17 @@ public class Transaction
 
         if (transactionDate.Date > DateTime.UtcNow.Date.AddDays(1))
             throw new DomainException("Transaction date cannot be in the future");
+
+        var effectiveShopId = shopId ?? ownerUserId;
+        if (effectiveShopId == Guid.Empty)
+            throw new DomainException("ShopId is required");
+
+        string effectivePartyName = partyName?.Trim() ?? string.Empty;
+        if (contactId == null && string.IsNullOrWhiteSpace(effectivePartyName))
+            throw new DomainException("Party name is required when contact is not specified");
+
+        if (effectivePartyName.Length > 200)
+            throw new DomainException("Party name must not exceed 200 characters");
 
         string? processedNoteText = null;
 
@@ -70,10 +90,13 @@ public class Transaction
         return new Transaction
         {
             Id = Guid.NewGuid(),
+            ShopId = effectiveShopId,
             OwnerUserId = ownerUserId,
             ContactId = contactId,
+            PartyName = effectivePartyName,
             Type = type,
             Amount = amount,
+            PaymentMethod = paymentMethod,
             TransactionDate = transactionDate,
             IsInstallment = isInstallment,
             InstallmentPlanMode = isInstallment ? installmentPlanMode : null,

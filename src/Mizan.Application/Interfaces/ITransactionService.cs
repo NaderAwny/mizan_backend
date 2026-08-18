@@ -6,6 +6,16 @@ namespace Mizan.Application.Interfaces;
 
 public interface ITransactionService
 {
+    // New Statistics / Transactions Feature methods
+    Task<TransactionResponseDto> CreateTransactionAsync(Guid shopId, CreateTransactionDto dto, CancellationToken cancellationToken = default);
+
+    Task<DailyStatisticsResponseDto> GetDailyStatisticsAsync(Guid shopId, DateTime date, CancellationToken cancellationToken = default);
+
+    Task<MonthlyStatisticsResponseDto> GetMonthlyStatisticsAsync(Guid shopId, int year, int month, CancellationToken cancellationToken = default);
+
+    Task<DailyStatisticsResponseDto> GetSummaryAsync(Guid shopId, CancellationToken cancellationToken = default);
+
+    // Existing methods
     Task<TransactionResponse> CreateAsync(Guid ownerUserId, CreateTransactionRequest request, CancellationToken cancellationToken = default);
 
     Task<TransactionResponse> GetByIdAsync(Guid ownerUserId, Guid transactionId, CancellationToken cancellationToken = default);

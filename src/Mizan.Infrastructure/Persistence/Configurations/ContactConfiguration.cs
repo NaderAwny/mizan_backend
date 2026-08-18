@@ -34,6 +34,16 @@ public class ContactConfiguration : IEntityTypeConfiguration<Contact>
             .HasMaxLength(500)
             .IsRequired(false);
 
+        builder.Property(c => c.IsVip)
+            .HasColumnName("is_vip")
+            .HasDefaultValue(false)
+            .IsRequired();
+
+        builder.Property(c => c.ContactEmail)
+            .HasColumnName("contact_email")
+            .HasMaxLength(254)
+            .IsRequired(false);
+
         builder.Property(c => c.IsActive)
             .HasColumnName("is_active")
             .HasDefaultValue(true)

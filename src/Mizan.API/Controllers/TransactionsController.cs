@@ -20,7 +20,7 @@ public class TransactionsController : BaseController
         _transactionService = transactionService;
     }
 
-    /// <summary>POST /api/transactions — إنشاء عملية جديدة (مع خيار الأقساط)</summary>
+    /// <summary>POST /api/transactions — تسجيل عملية جديدة (مبيعات / مشتريات / تحصيل / سداد / أقساط)</summary>
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateTransactionRequest request, CancellationToken cancellationToken)
     {

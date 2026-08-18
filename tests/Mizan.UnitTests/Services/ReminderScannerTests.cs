@@ -44,6 +44,18 @@ public class ReminderScannerTests
             return Task.FromResult(ShouldSucceed);
         }
 
+        public Task<bool> SendInstallmentReminderToContactEmailAsync(
+            string toEmail,
+            string contactName,
+            string shopOwnerName,
+            decimal amount,
+            DateTime dueDate,
+            int daysUntilDue,
+            CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(ShouldSucceed);
+        }
+
         public Task<bool> SendPeriodicReportEmailAsync(
             string toEmail,
             string recipientName,

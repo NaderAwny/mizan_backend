@@ -83,7 +83,7 @@ public class ReminderScanner : IReminderScanner
                 if (string.IsNullOrWhiteSpace(recipientName))
                     recipientName = owner.Email;
 
-                // 2. Send email reminder
+                // 2. Send email reminder to shop owner
                 bool emailSent = await _emailService.SendInstallmentReminderEmailAsync(
                     owner.Email,
                     recipientName,
@@ -100,6 +100,35 @@ public class ReminderScanner : IReminderScanner
                     continue;
                 }
 
+                // 2.b Send bidirectional email reminder to contact (if contact has email)
+                var contactEmail = contact?.ContactEmail;
+                bool contactSent = false;
+
+                if (!string.IsNullOrWhiteSpace(contactEmail))
+                {
+                    contactSent = await _emailService.SendInstallmentReminderToContactEmailAsync(
+                        contactEmail,
+                        contactName,
+                        recipientName,
+                        installment.Amount,
+                        installment.DueDate,
+                        daysBeforeDue,
+                        cancellationToken);
+
+                    if (contactSent)
+                    {
+                        _logger.LogInformation(
+                            "✅ Contact reminder email sent to {ContactEmail} for installment {InstallmentId}",
+                            contactEmail, installment.Id);
+                    }
+                    else
+                    {
+                        _logger.LogWarning(
+                            "⚠️ Failed to send contact reminder email to {ContactEmail} for installment {InstallmentId}",
+                            contactEmail, installment.Id);
+                    }
+                }
+
                 // 3. Create in-app Notification
                 var notification = Notification.CreateInstallmentReminder(
                     transaction.OwnerUserId,
@@ -113,7 +142,7 @@ public class ReminderScanner : IReminderScanner
                 await _unitOfWork.Notifications.AddAsync(notification, cancellationToken);
 
                 // 4. Create InstallmentReminderLog row
-                var reminderLog = InstallmentReminderLog.Create(installment.Id, daysBeforeDue);
+                var reminderLog = InstallmentReminderLog.Create(installment.Id, daysBeforeDue, contactSent);
                 await _unitOfWork.InstallmentReminderLogs.AddAsync(reminderLog, cancellationToken);
 
                 // 5. Commit both Notification and Log

@@ -70,4 +70,41 @@ public class NotificationTests
         // Assert
         Assert.True(notification.IsRead);
     }
+
+    [Fact]
+    public void CreateInstallmentReminderForContact_ShouldCreateNotificationWithCorrectType()
+    {
+        var ownerUserId = Guid.NewGuid();
+        var transactionId = Guid.NewGuid();
+        var installmentId = Guid.NewGuid();
+        var shopOwnerName = "نادر";
+        var amount = 500m;
+        var dueDate = DateTime.UtcNow.Date;
+
+        var notification = Notification.CreateInstallmentReminderForContact(
+            ownerUserId: ownerUserId,
+            transactionId: transactionId,
+            installmentId: installmentId,
+            shopOwnerName: shopOwnerName,
+            amount: amount,
+            dueDate: dueDate);
+
+        Assert.Equal(NotificationType.InstallmentReminderToContact, notification.Type);
+        Assert.Equal(ownerUserId, notification.OwnerUserId);
+        Assert.Contains("نادر", notification.Message);
+        Assert.Contains("500", notification.Message);
+        Assert.Contains("اليوم", notification.Message);
+        Assert.False(notification.IsRead);
+    }
+
+    [Fact]
+    public void CreateInstallmentReminderForContact_ShouldContainDateLabel_WhenDueDateInFuture()
+    {
+        var futureDate = DateTime.UtcNow.Date.AddDays(5);
+        var notification = Notification.CreateInstallmentReminderForContact(
+            Guid.NewGuid(), null, null, "محمد", 1000m, futureDate);
+
+        Assert.Equal(NotificationType.InstallmentReminderToContact, notification.Type);
+        Assert.Contains(futureDate.ToString("yyyy/MM/dd"), notification.Message);
+    }
 }

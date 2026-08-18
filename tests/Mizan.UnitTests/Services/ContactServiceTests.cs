@@ -227,4 +227,135 @@ public class ContactServiceTests
         Assert.Equal(expectedPages, result.TotalPages);
         Assert.Equal(totalItems, result.TotalCount);
     }
+
+    // ── VIP Contacts Feature 2 ───────────────────────────────────────────────
+
+    [Fact]
+    public async Task ToggleVip_ShouldToggleStatusAndPersist()
+    {
+        var (service, db) = CreateService();
+        var ownerId = Guid.NewGuid();
+
+        var contact = Contact.Create(ownerId, "VIP Candidate", null, null);
+        db.Set<Contact>().Add(contact);
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        // Toggle to true
+        var res1 = await service.ToggleVipAsync(ownerId, contact.Id);
+        Assert.True(res1.IsVip);
+
+        var stored1 = await db.Set<Contact>().FindAsync(contact.Id);
+        Assert.True(stored1!.IsVip);
+
+        // Toggle back to false
+        db.ChangeTracker.Clear();
+        var res2 = await service.ToggleVipAsync(ownerId, contact.Id);
+        Assert.False(res2.IsVip);
+
+        var stored2 = await db.Set<Contact>().FindAsync(contact.Id);
+        Assert.False(stored2!.IsVip);
+    }
+
+    [Fact]
+    public async Task GetContactTransactions_ShouldReturnTransactionsAndCalculateTotals()
+    {
+        var (service, db) = CreateService();
+        var ownerId = Guid.NewGuid();
+
+        var contact = Contact.Create(ownerId, "Mahmoud Hassan", "01012345678", null);
+        contact.SetVip(true);
+        contact.SetContactEmail("mahmoud@example.com");
+        db.Set<Contact>().Add(contact);
+
+        var tx1 = Transaction.Create(
+            ownerUserId: ownerId,
+            contactId: contact.Id,
+            type: Mizan.Core.Enums.TransactionType.Sale,
+            amount: 500m,
+            transactionDate: DateTime.UtcNow,
+            noteType: Mizan.Core.Enums.NoteType.None,
+            noteText: null,
+            isInstallment: false,
+            installmentPlanMode: null,
+            shopId: Guid.NewGuid(),
+            partyName: "Mahmoud Hassan",
+            paymentMethod: Mizan.Core.Enums.PaymentMethod.Cash);
+
+        var tx2 = Transaction.Create(
+            ownerUserId: ownerId,
+            contactId: contact.Id,
+            type: Mizan.Core.Enums.TransactionType.InstallmentCollection,
+            amount: 250m,
+            transactionDate: DateTime.UtcNow,
+            noteType: Mizan.Core.Enums.NoteType.None,
+            noteText: null,
+            isInstallment: false,
+            installmentPlanMode: null,
+            shopId: Guid.NewGuid(),
+            partyName: "Mahmoud Hassan",
+            paymentMethod: Mizan.Core.Enums.PaymentMethod.Cash);
+
+        db.Set<Transaction>().AddRange(tx1, tx2);
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var result = await service.GetContactTransactionsAsync(ownerId, contact.Id);
+
+        Assert.Equal(contact.Id, result.ContactId);
+        Assert.Equal("Mahmoud Hassan", result.ContactName);
+        Assert.Equal("mahmoud@example.com", result.ContactEmail);
+        Assert.True(result.IsVip);
+        Assert.Equal(2, result.TotalTransactions);
+        Assert.Equal(750m, result.TotalAmount);
+        Assert.Equal(2, result.Transactions.Count);
+    }
+
+    [Fact]
+    public async Task GetVipContacts_ShouldReturnOnlyVipContacts()
+    {
+        var (service, db) = CreateService();
+        var ownerId = Guid.NewGuid();
+
+        var regularContact = Contact.Create(ownerId, "Regular User", null, null);
+        var vipContact1 = Contact.Create(ownerId, "VIP User One", null, null);
+        vipContact1.SetVip(true);
+        var vipContact2 = Contact.Create(ownerId, "VIP User Two", null, null);
+        vipContact2.SetVip(true);
+
+        db.Set<Contact>().AddRange(regularContact, vipContact1, vipContact2);
+        await db.SaveChangesAsync();
+
+        var result = await service.GetVipContactsAsync(ownerId, 1, 10);
+
+        Assert.Equal(2, result.TotalCount);
+        Assert.All(result.Items, c => Assert.True(c.IsVip));
+    }
+
+    [Fact]
+    public async Task Update_ShouldUpdateVipAndEmail()
+    {
+        var (service, db) = CreateService();
+        var ownerId = Guid.NewGuid();
+
+        var contact = Contact.Create(ownerId, "Contact Name", null, null);
+        db.Set<Contact>().Add(contact);
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        var request = new UpdateContactRequest
+        {
+            Name = "Contact Name Updated",
+            PhoneNumber = "01098765432",
+            Notes = "VIP note",
+            IsVip = true,
+            ContactEmail = "vip@example.com"
+        };
+
+        var response = await service.UpdateAsync(ownerId, contact.Id, request);
+
+        Assert.True(response.IsVip);
+        Assert.Equal("vip@example.com", response.ContactEmail);
+        Assert.Equal("Contact Name Updated", response.Name);
+    }
 }

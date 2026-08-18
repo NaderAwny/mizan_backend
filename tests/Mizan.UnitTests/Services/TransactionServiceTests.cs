@@ -189,4 +189,180 @@ public class TransactionServiceTests
 
         Assert.Equal("Transaction not found", ex.Message);
     }
+
+    // =========================================================================
+    // Feature 1: Statistics / Transactions Unit Tests
+    // =========================================================================
+
+    [Fact]
+    public async Task CreateTransactionAsync_WithValidData_ShouldCreateAndReturnDto()
+    {
+        var (service, db) = CreateService();
+        var ownerId = Guid.NewGuid();
+        var shop = Shop.Create(ownerId, "Al-Mizan Supermarket", "Cairo");
+        db.Set<Shop>().Add(shop);
+        await db.SaveChangesAsync();
+
+        var dto = new CreateTransactionDto
+        {
+            PartyName = "محمد أحمد",
+            OperationType = TransactionType.Sale,
+            Amount = 750.50m,
+            PaymentMethod = PaymentMethod.Cash,
+            OperationDate = DateTime.UtcNow
+        };
+
+        var response = await service.CreateTransactionAsync(shop.Id, dto);
+
+        Assert.NotNull(response);
+        Assert.Equal(shop.Id, response.ShopId);
+        Assert.Equal("محمد أحمد", response.PartyName);
+        Assert.Equal(750.50m, response.Amount);
+        Assert.Equal(TransactionType.Sale, response.OperationType);
+        Assert.Equal(PaymentMethod.Cash, response.PaymentMethod);
+
+        var saved = await db.Set<Transaction>().FirstOrDefaultAsync(t => t.Id == response.Id);
+        Assert.NotNull(saved);
+        Assert.Equal(shop.Id, saved!.ShopId);
+        Assert.Equal(750.50m, saved.Amount);
+    }
+
+    [Fact]
+    public async Task CreateTransactionAsync_WithZeroOrNegativeAmount_ShouldThrowDomainException()
+    {
+        var (service, db) = CreateService();
+        var ownerId = Guid.NewGuid();
+        var shop = Shop.Create(ownerId, "Al-Mizan Store", "Cairo");
+        db.Set<Shop>().Add(shop);
+        await db.SaveChangesAsync();
+
+        var dtoZero = new CreateTransactionDto
+        {
+            PartyName = "عميل",
+            OperationType = TransactionType.Sale,
+            Amount = 0m,
+            PaymentMethod = PaymentMethod.Cash,
+            OperationDate = DateTime.UtcNow
+        };
+
+        await Assert.ThrowsAsync<DomainException>(() =>
+            service.CreateTransactionAsync(shop.Id, dtoZero));
+
+        var dtoNeg = new CreateTransactionDto
+        {
+            PartyName = "عميل",
+            OperationType = TransactionType.Sale,
+            Amount = -100m,
+            PaymentMethod = PaymentMethod.Cash,
+            OperationDate = DateTime.UtcNow
+        };
+
+        await Assert.ThrowsAsync<DomainException>(() =>
+            service.CreateTransactionAsync(shop.Id, dtoNeg));
+    }
+
+    [Fact]
+    public async Task CreateTransactionAsync_WithEmptyPartyNameAndNoContact_ShouldThrowDomainException()
+    {
+        var (service, db) = CreateService();
+        var ownerId = Guid.NewGuid();
+        var shop = Shop.Create(ownerId, "Al-Mizan Store", "Cairo");
+        db.Set<Shop>().Add(shop);
+        await db.SaveChangesAsync();
+
+        var dto = new CreateTransactionDto
+        {
+            ContactId = null,
+            PartyName = "   ",
+            OperationType = TransactionType.Sale,
+            Amount = 100m,
+            PaymentMethod = PaymentMethod.Cash,
+            OperationDate = DateTime.UtcNow
+        };
+
+        await Assert.ThrowsAsync<DomainException>(() =>
+            service.CreateTransactionAsync(shop.Id, dto));
+    }
+
+    [Fact]
+    public async Task GetDailyStatisticsAsync_ShouldCalculateTotalSalesAndPurchasesCorrectly()
+    {
+        var (service, db) = CreateService();
+        var ownerId = Guid.NewGuid();
+        var shop = Shop.Create(ownerId, "Al-Mizan Store", "Cairo");
+        db.Set<Shop>().Add(shop);
+
+        var today = new DateTime(2026, 8, 18, 12, 0, 0, DateTimeKind.Utc);
+        var yesterday = today.AddDays(-1);
+
+        // Transactions today
+        var t1 = Transaction.Create(ownerId, null, TransactionType.Sale, 1000m, today, shopId: shop.Id, partyName: "عميل 1");
+        var t2 = Transaction.Create(ownerId, null, TransactionType.InstallmentCollection, 500m, today, shopId: shop.Id, partyName: "عميل 2");
+        var t3 = Transaction.Create(ownerId, null, TransactionType.Purchase, 300m, today, shopId: shop.Id, partyName: "مورد 1");
+        var t4 = Transaction.Create(ownerId, null, TransactionType.InstallmentPayment, 200m, today, shopId: shop.Id, partyName: "مورد 2");
+
+        // Transaction yesterday (should not be included in today's stats)
+        var tYesterday = Transaction.Create(ownerId, null, TransactionType.Sale, 9999m, yesterday, shopId: shop.Id, partyName: "عميل قديم");
+
+        db.Set<Transaction>().AddRange(t1, t2, t3, t4, tYesterday);
+        await db.SaveChangesAsync();
+
+        var stats = await service.GetDailyStatisticsAsync(shop.Id, today);
+
+        Assert.Equal(today.Date, stats.Date);
+        Assert.Equal(4, stats.OperationsCount);
+        Assert.Equal(1500m, stats.TotalSales); // 1000 + 500
+        Assert.Equal(500m, stats.TotalPurchases); // 300 + 200
+        Assert.Equal(4, stats.Transactions.Count);
+    }
+
+    [Fact]
+    public async Task GetMonthlyStatisticsAsync_ShouldFilterByMonthAndCalculateTotals()
+    {
+        var (service, db) = CreateService();
+        var ownerId = Guid.NewGuid();
+        var shop = Shop.Create(ownerId, "Al-Mizan Store", "Cairo");
+        db.Set<Shop>().Add(shop);
+
+        var augustDate1 = new DateTime(2026, 8, 5, 10, 0, 0, DateTimeKind.Utc);
+        var augustDate2 = new DateTime(2026, 8, 10, 15, 0, 0, DateTimeKind.Utc);
+        var julyDate = new DateTime(2026, 7, 30, 10, 0, 0, DateTimeKind.Utc);
+
+        var t1 = Transaction.Create(ownerId, null, TransactionType.Sale, 2500m, augustDate1, shopId: shop.Id, partyName: "عميل أغسطس 1");
+        var t2 = Transaction.Create(ownerId, null, TransactionType.Purchase, 1000m, augustDate2, shopId: shop.Id, partyName: "مورد أغسطس");
+        var tJuly = Transaction.Create(ownerId, null, TransactionType.Sale, 5000m, julyDate, shopId: shop.Id, partyName: "عميل يوليو");
+
+        db.Set<Transaction>().AddRange(t1, t2, tJuly);
+        await db.SaveChangesAsync();
+
+        var stats = await service.GetMonthlyStatisticsAsync(shop.Id, 2026, 8);
+
+        Assert.Equal(2026, stats.Year);
+        Assert.Equal(8, stats.Month);
+        Assert.Equal(2, stats.OperationsCount);
+        Assert.Equal(2500m, stats.TotalSales);
+        Assert.Equal(1000m, stats.TotalPurchases);
+        Assert.Equal(2, stats.Transactions.Count);
+    }
+
+    [Fact]
+    public async Task GetSummaryAsync_ShouldReturnTodayStatistics()
+    {
+        var (service, db) = CreateService();
+        var ownerId = Guid.NewGuid();
+        var shop = Shop.Create(ownerId, "Al-Mizan Store", "Cairo");
+        db.Set<Shop>().Add(shop);
+
+        var now = DateTime.UtcNow;
+        var t1 = Transaction.Create(ownerId, null, TransactionType.Sale, 450m, now, shopId: shop.Id, partyName: "عميل اليوم");
+        db.Set<Transaction>().Add(t1);
+        await db.SaveChangesAsync();
+
+        var summary = await service.GetSummaryAsync(shop.Id);
+
+        Assert.NotNull(summary);
+        Assert.Equal(1, summary.OperationsCount);
+        Assert.Equal(450m, summary.TotalSales);
+        Assert.Equal(0m, summary.TotalPurchases);
+    }
 }

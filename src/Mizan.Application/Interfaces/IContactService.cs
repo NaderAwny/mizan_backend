@@ -9,4 +9,9 @@ public interface IContactService
     Task DeactivateAsync(Guid ownerUserId, Guid contactId, CancellationToken cancellationToken = default);
     Task<ContactResponse> GetByIdAsync(Guid ownerUserId, Guid contactId, CancellationToken cancellationToken = default);
     Task<PagedContactResponse> GetPagedAsync(Guid ownerUserId, int page, int pageSize, string? searchTerm, CancellationToken cancellationToken = default);
+
+    // Feature 2: VIP Contact methods
+    Task<ContactResponse> ToggleVipAsync(Guid ownerUserId, Guid contactId, CancellationToken cancellationToken = default);
+    Task<ContactTransactionsResponse> GetContactTransactionsAsync(Guid ownerUserId, Guid contactId, CancellationToken cancellationToken = default);
+    Task<PagedContactResponse> GetVipContactsAsync(Guid ownerUserId, int page, int pageSize, CancellationToken cancellationToken = default);
 }

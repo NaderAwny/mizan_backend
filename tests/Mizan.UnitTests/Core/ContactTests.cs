@@ -188,5 +188,56 @@ public class ContactTests
         Assert.Equal(customOwner, contact.OwnerUserId);
         Assert.True(contact.CreatedAt >= before && contact.CreatedAt <= after);
         Assert.True(contact.UpdatedAt >= before && contact.UpdatedAt <= after);
+        Assert.False(contact.IsVip);
+        Assert.Null(contact.ContactEmail);
+    }
+
+    // ── VIP & Email domain methods ───────────────────────────────────────────
+
+    [Fact]
+    public void SetVip_ShouldToggleIsVip_WhenCalled()
+    {
+        var contact = Contact.Create(_ownerId, "Test VIP", null, null);
+        Assert.False(contact.IsVip);
+
+        contact.SetVip(true);
+        Assert.True(contact.IsVip);
+
+        contact.SetVip(false);
+        Assert.False(contact.IsVip);
+    }
+
+    [Fact]
+    public void SetContactEmail_ShouldSetEmail_WhenValidEmailProvided()
+    {
+        var contact = Contact.Create(_ownerId, "Test Email", null, null);
+        contact.SetContactEmail("customer@example.com");
+        Assert.Equal("customer@example.com", contact.ContactEmail);
+    }
+
+    [Theory]
+    [InlineData("not-an-email")]
+    [InlineData("test@")]
+    [InlineData("@example.com")]
+    public void SetContactEmail_ShouldThrowDomainException_WhenInvalidEmailProvided(string invalidEmail)
+    {
+        var contact = Contact.Create(_ownerId, "Test Email", null, null);
+        var ex = Assert.Throws<DomainException>(() => contact.SetContactEmail(invalidEmail));
+        Assert.Contains("Invalid email format", ex.Message);
+    }
+
+    [Fact]
+    public void SetContactEmail_ShouldAllowNullOrEmpty_ForOptionalEmail()
+    {
+        var contact = Contact.Create(_ownerId, "Test Email", null, null);
+        contact.SetContactEmail("customer@example.com");
+        Assert.NotNull(contact.ContactEmail);
+
+        contact.SetContactEmail(null);
+        Assert.Null(contact.ContactEmail);
+
+        contact.SetContactEmail("customer@example.com");
+        contact.SetContactEmail("   ");
+        Assert.Null(contact.ContactEmail);
     }
 }

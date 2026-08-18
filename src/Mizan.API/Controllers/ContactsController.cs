@@ -39,12 +39,39 @@ public class ContactsController : BaseController
         return Success(response);
     }
 
+    /// <summary>GET /api/contacts/vip — قائمة العملاء المميزين (VIP Contacts)</summary>
+    [HttpGet("vip")]
+    public async Task<IActionResult> GetVipContacts(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken cancellationToken = default)
+    {
+        var response = await _contactService.GetVipContactsAsync(CurrentUserId, page, pageSize, cancellationToken);
+        return Success(response);
+    }
+
     /// <summary>GET /api/contacts/{id} — طرف بالمعرف</summary>
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
     {
         var response = await _contactService.GetByIdAsync(CurrentUserId, id, cancellationToken);
         return Success(response);
+    }
+
+    /// <summary>GET /api/contacts/{id}/transactions — قائمة العمليات الخاصة بعميل معين</summary>
+    [HttpGet("{id:guid}/transactions")]
+    public async Task<IActionResult> GetTransactions(Guid id, CancellationToken cancellationToken)
+    {
+        var response = await _contactService.GetContactTransactionsAsync(CurrentUserId, id, cancellationToken);
+        return Success(response);
+    }
+
+    /// <summary>PATCH /api/contacts/{id}/toggle-vip — تحديد أو إلغاء تمييز العميل (VIP Toggle)</summary>
+    [HttpPatch("{id:guid}/toggle-vip")]
+    public async Task<IActionResult> ToggleVip(Guid id, CancellationToken cancellationToken)
+    {
+        var response = await _contactService.ToggleVipAsync(CurrentUserId, id, cancellationToken);
+        return Success(response, "تم تحديث حالة تمييز العميل بنجاح");
     }
 
     /// <summary>PUT /api/contacts/{id} — تعديل طرف</summary>

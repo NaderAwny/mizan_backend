@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Mizan.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using Mizan.Infrastructure.Persistence;
 namespace Mizan.Infrastructure.Migrations
 {
     [DbContext(typeof(MizanDbContext))]
-    partial class MizanDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260818170339_AddTransactionsTableUpdates")]
+    partial class AddTransactionsTableUpdates
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -28,11 +31,6 @@ namespace Mizan.Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("id");
 
-                    b.Property<string>("ContactEmail")
-                        .HasMaxLength(254)
-                        .HasColumnType("nvarchar(254)")
-                        .HasColumnName("contact_email");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2")
                         .HasColumnName("created_at");
@@ -42,12 +40,6 @@ namespace Mizan.Infrastructure.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(true)
                         .HasColumnName("is_active");
-
-                    b.Property<bool>("IsVip")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false)
-                        .HasColumnName("is_vip");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -135,12 +127,6 @@ namespace Mizan.Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("id");
-
-                    b.Property<bool>("ContactEmailSent")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false)
-                        .HasColumnName("contact_email_sent");
 
                     b.Property<int>("DaysBeforeDue")
                         .HasColumnType("int")
@@ -651,7 +637,7 @@ namespace Mizan.Infrastructure.Migrations
             modelBuilder.Entity("Mizan.Core.Entities.Transaction", b =>
                 {
                     b.HasOne("Mizan.Core.Entities.Contact", "Contact")
-                        .WithMany("Transactions")
+                        .WithMany()
                         .HasForeignKey("ContactId")
                         .OnDelete(DeleteBehavior.Restrict);
 
@@ -672,11 +658,6 @@ namespace Mizan.Infrastructure.Migrations
                     b.Navigation("Owner");
 
                     b.Navigation("Shop");
-                });
-
-            modelBuilder.Entity("Mizan.Core.Entities.Contact", b =>
-                {
-                    b.Navigation("Transactions");
                 });
 
             modelBuilder.Entity("Mizan.Core.Entities.Shop", b =>

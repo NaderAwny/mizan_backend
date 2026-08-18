@@ -65,6 +65,19 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
             return Task.FromResult(true);
         }
 
+        public Task<bool> SendInstallmentReminderToContactEmailAsync(
+            string toEmail,
+            string contactName,
+            string shopOwnerName,
+            decimal amount,
+            DateTime dueDate,
+            int daysUntilDue,
+            CancellationToken cancellationToken = default)
+        {
+            LastRecipientEmail = toEmail;
+            return Task.FromResult(true);
+        }
+
         public Task<bool> SendPeriodicReportEmailAsync(
             string toEmail,
             string recipientName,

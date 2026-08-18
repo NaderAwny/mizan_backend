@@ -36,6 +36,11 @@ public class JwtProvider : IJwtProvider
             new("user_type", user.UserType)
         };
 
+        if (user.Shop != null)
+        {
+            claims.Add(new Claim("shop_id", user.Shop.Id.ToString()));
+        }
+
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(claims),

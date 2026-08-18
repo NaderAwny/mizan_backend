@@ -23,6 +23,11 @@ public class InstallmentReminderLogConfiguration : IEntityTypeConfiguration<Inst
             .HasColumnName("days_before_due")
             .IsRequired();
 
+        builder.Property(l => l.ContactEmailSent)
+            .HasColumnName("contact_email_sent")
+            .HasDefaultValue(false)
+            .IsRequired();
+
         builder.Property(l => l.SentAt)
             .HasColumnName("sent_at")
             .IsRequired();

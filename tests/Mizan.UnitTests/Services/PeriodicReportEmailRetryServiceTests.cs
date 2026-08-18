@@ -25,6 +25,9 @@ public class PeriodicReportEmailRetryServiceTests
         public Task<bool> SendInstallmentReminderEmailAsync(
             string toEmail, string recipientName, string contactName, decimal amount, DateTime dueDate, int daysUntilDue, CancellationToken cancellationToken = default) => Task.FromResult(true);
 
+        public Task<bool> SendInstallmentReminderToContactEmailAsync(
+            string toEmail, string contactName, string shopOwnerName, decimal amount, DateTime dueDate, int daysUntilDue, CancellationToken cancellationToken = default) => Task.FromResult(true);
+
         public Task<bool> SendPeriodicReportEmailAsync(
             string toEmail, string recipientName, int batchNumber, byte[] pdfBytes, CancellationToken cancellationToken = default)
         {

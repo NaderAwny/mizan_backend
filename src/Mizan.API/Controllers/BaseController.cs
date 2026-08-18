@@ -20,6 +20,19 @@ public abstract class BaseController : ControllerBase
         }
     }
 
+    protected Guid? CurrentShopId
+    {
+        get
+        {
+            var claimValue = User.FindFirstValue("shop_id") ?? User.FindFirstValue("ShopId");
+            if (!string.IsNullOrEmpty(claimValue) && Guid.TryParse(claimValue, out Guid shopId))
+            {
+                return shopId;
+            }
+            return null;
+        }
+    }
+
     protected IActionResult Success(object? data = null, string? message = null) =>
         Ok(new { success = true, message, data });
 

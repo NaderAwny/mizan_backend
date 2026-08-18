@@ -7,6 +7,10 @@ public interface ITransactionRepository
 {
     Task<Transaction?> GetByIdAsync(Guid id, Guid ownerUserId, CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<Transaction>> GetByShopAndDateAsync(Guid shopId, DateTime date, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<Transaction>> GetByShopAndMonthAsync(Guid shopId, int year, int month, CancellationToken cancellationToken = default);
+
     Task<(IReadOnlyList<Transaction> Items, int TotalCount)> GetPagedByOwnerAsync(
         Guid ownerUserId,
         int page,

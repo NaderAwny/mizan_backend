@@ -103,6 +103,36 @@ public class Notification
         };
     }
 
+    public static Notification CreateInstallmentReminderForContact(
+        Guid ownerUserId,
+        Guid? transactionId,
+        Guid? installmentId,
+        string shopOwnerName,
+        decimal amount,
+        DateTime dueDate)
+    {
+        if (ownerUserId == Guid.Empty)
+            throw new DomainException("معرف المستخدم غير صالح");
+
+        var daysLabel = dueDate.Date == DateTime.UtcNow.Date
+            ? "اليوم"
+            : $"في {dueDate:yyyy/MM/dd}";
+
+        return new Notification
+        {
+            Id = Guid.NewGuid(),
+            OwnerUserId = ownerUserId,
+            Type = NotificationType.InstallmentReminderToContact,
+            Title = "تذكير بموعد القسط",
+            Message = $"خلي بالك، {shopOwnerName} هيجي يحصّل منك قسط بقيمة {amount:N2} جنيه {daysLabel}.",
+            TransactionId = transactionId,
+            InstallmentId = installmentId,
+            PeriodicReportId = null,
+            IsRead = false,
+            CreatedAt = DateTime.UtcNow
+        };
+    }
+
     public void MarkAsRead()
     {
         IsRead = true;

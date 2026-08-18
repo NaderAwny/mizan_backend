@@ -7,6 +7,8 @@ using QuestPDF.Infrastructure;
 
 namespace Mizan.Infrastructure.Services.Reports;
 
+// NOTE: [Deprecated] — هذا النظام لتوليد تقارير PDF سيتم استبداله كلياً بنظام Statistics API (/api/statistics) بعد التأكد من عمله
+[Obsolete("Deprecated — Use Statistics API (/api/statistics) instead")]
 public class ReportPdfGenerator : IReportPdfGenerator
 {
     static ReportPdfGenerator()

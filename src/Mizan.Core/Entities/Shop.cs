@@ -10,8 +10,9 @@ public class Shop
     public string Address { get; private set; } = string.Empty;
     public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
 
-    // Navigation property
+    // Navigation properties
     public User Owner { get; private set; } = null!;
+    public ICollection<Transaction> Transactions { get; private set; } = new List<Transaction>();
 
     private Shop() { }
 

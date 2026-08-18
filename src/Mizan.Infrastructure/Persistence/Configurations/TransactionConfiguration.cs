@@ -15,16 +15,31 @@ public class TransactionConfiguration : IEntityTypeConfiguration<Transaction>
             .HasColumnName("id")
             .ValueGeneratedNever();
 
+        builder.Property(t => t.ShopId)
+            .HasColumnName("shop_id")
+            .IsRequired();
+
         builder.Property(t => t.OwnerUserId)
             .HasColumnName("owner_user_id")
             .IsRequired();
 
         builder.Property(t => t.ContactId)
             .HasColumnName("contact_id")
-            .IsRequired();
+            .IsRequired(false);
+
+        builder.Property(t => t.PartyName)
+            .HasColumnName("party_name")
+            .HasMaxLength(200)
+            .IsRequired()
+            .HasDefaultValue(string.Empty);
 
         builder.Property(t => t.Type)
             .HasColumnName("type")
+            .IsRequired();
+
+        builder.Property(t => t.PaymentMethod)
+            .HasColumnName("payment_method")
+            .HasDefaultValue(Core.Enums.PaymentMethod.Cash)
             .IsRequired();
 
         builder.Property(t => t.Amount)
@@ -68,13 +83,18 @@ public class TransactionConfiguration : IEntityTypeConfiguration<Transaction>
             .HasColumnName("updated_at")
             .IsRequired();
 
+        builder.HasOne(t => t.Shop)
+            .WithMany(s => s.Transactions)
+            .HasForeignKey(t => t.ShopId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasOne(t => t.Owner)
             .WithMany()
             .HasForeignKey(t => t.OwnerUserId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(t => t.Contact)
-            .WithMany()
+            .WithMany(c => c.Transactions)
             .HasForeignKey(t => t.ContactId)
             .OnDelete(DeleteBehavior.Restrict);
 
@@ -83,6 +103,7 @@ public class TransactionConfiguration : IEntityTypeConfiguration<Transaction>
             .HasForeignKey(i => i.TransactionId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.HasIndex(t => new { t.ShopId, t.TransactionDate });
         builder.HasIndex(t => new { t.OwnerUserId, t.TransactionDate });
         builder.HasIndex(t => t.ContactId);
     }

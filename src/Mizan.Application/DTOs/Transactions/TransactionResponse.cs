@@ -5,10 +5,13 @@ namespace Mizan.Application.DTOs.Transactions;
 public class TransactionResponse
 {
     public Guid Id { get; set; }
-    public Guid ContactId { get; set; }
+    public Guid ShopId { get; set; }
+    public Guid? ContactId { get; set; }
     public string ContactName { get; set; } = string.Empty;
+    public string PartyName { get; set; } = string.Empty;
     public TransactionType Type { get; set; }
     public decimal Amount { get; set; }
+    public PaymentMethod PaymentMethod { get; set; } = PaymentMethod.Cash;
     public DateTime TransactionDate { get; set; }
     public bool IsInstallment { get; set; }
     public InstallmentPlanMode? InstallmentPlanMode { get; set; }

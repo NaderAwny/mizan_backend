@@ -37,15 +37,175 @@ public class TransactionService : ITransactionService
         _logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<TransactionService>.Instance;
     }
 
+    public async Task<TransactionResponseDto> CreateTransactionAsync(
+        Guid shopId,
+        CreateTransactionDto dto,
+        CancellationToken cancellationToken = default)
+    {
+        if (shopId == Guid.Empty)
+            throw new BadRequestException("معرف المحل مطلوب");
+
+        var shop = await _unitOfWork.Shops.GetByIdAsync(shopId, cancellationToken)
+            ?? await _unitOfWork.Shops.GetByOwnerIdAsync(shopId, cancellationToken);
+
+        if (shop == null)
+            throw new NotFoundException("المحل", shopId);
+
+        Contact? contact = null;
+        if (dto.ContactId.HasValue)
+        {
+            contact = await _unitOfWork.Contacts.GetByIdAsync(dto.ContactId.Value, shop.OwnerId, cancellationToken);
+            if (contact == null)
+                throw new NotFoundException("الطرف", dto.ContactId.Value);
+        }
+
+        var partyName = !string.IsNullOrWhiteSpace(dto.PartyName)
+            ? dto.PartyName.Trim()
+            : (contact?.Name ?? string.Empty);
+
+        var transaction = Transaction.Create(
+            ownerUserId: shop.OwnerId,
+            contactId: dto.ContactId,
+            type: dto.OperationType,
+            amount: dto.Amount,
+            transactionDate: dto.OperationDate,
+            noteType: NoteType.None,
+            noteText: null,
+            isInstallment: false,
+            installmentPlanMode: null,
+            shopId: shop.Id,
+            partyName: partyName,
+            paymentMethod: dto.PaymentMethod);
+
+        await _unitOfWork.Transactions.AddAsync(transaction, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return MapToTransactionResponseDto(transaction, contact?.Name);
+    }
+
+    public async Task<DailyStatisticsResponseDto> GetDailyStatisticsAsync(
+        Guid shopId,
+        DateTime date,
+        CancellationToken cancellationToken = default)
+    {
+        if (shopId == Guid.Empty)
+            throw new BadRequestException("معرف المحل مطلوب");
+
+        var shop = await _unitOfWork.Shops.GetByIdAsync(shopId, cancellationToken)
+            ?? await _unitOfWork.Shops.GetByOwnerIdAsync(shopId, cancellationToken);
+
+        var effectiveShopId = shop?.Id ?? shopId;
+
+        var transactions = await _unitOfWork.Transactions.GetByShopAndDateAsync(effectiveShopId, date, cancellationToken);
+        var dtos = transactions.Select(t => MapToTransactionResponseDto(t)).ToList();
+
+        var totalSales = transactions
+            .Where(t => t.Type == TransactionType.Sale || t.Type == TransactionType.InstallmentCollection)
+            .Sum(t => t.Amount);
+
+        var totalPurchases = transactions
+            .Where(t => t.Type == TransactionType.Purchase || t.Type == TransactionType.InstallmentPayment)
+            .Sum(t => t.Amount);
+
+        return new DailyStatisticsResponseDto
+        {
+            Date = date.Date,
+            TotalSales = totalSales,
+            TotalPurchases = totalPurchases,
+            OperationsCount = transactions.Count,
+            Transactions = dtos
+        };
+    }
+
+    public async Task<MonthlyStatisticsResponseDto> GetMonthlyStatisticsAsync(
+        Guid shopId,
+        int year,
+        int month,
+        CancellationToken cancellationToken = default)
+    {
+        if (shopId == Guid.Empty)
+            throw new BadRequestException("معرف المحل مطلوب");
+
+        if (year < 2000 || year > 2100)
+            throw new BadRequestException("السنة المحددة غير صحيحة");
+
+        if (month < 1 || month > 12)
+            throw new BadRequestException("الشهر المحدد غير صحيح");
+
+        var shop = await _unitOfWork.Shops.GetByIdAsync(shopId, cancellationToken)
+            ?? await _unitOfWork.Shops.GetByOwnerIdAsync(shopId, cancellationToken);
+
+        var effectiveShopId = shop?.Id ?? shopId;
+
+        var transactions = await _unitOfWork.Transactions.GetByShopAndMonthAsync(effectiveShopId, year, month, cancellationToken);
+        var dtos = transactions.Select(t => MapToTransactionResponseDto(t)).ToList();
+
+        var totalSales = transactions
+            .Where(t => t.Type == TransactionType.Sale || t.Type == TransactionType.InstallmentCollection)
+            .Sum(t => t.Amount);
+
+        var totalPurchases = transactions
+            .Where(t => t.Type == TransactionType.Purchase || t.Type == TransactionType.InstallmentPayment)
+            .Sum(t => t.Amount);
+
+        return new MonthlyStatisticsResponseDto
+        {
+            Year = year,
+            Month = month,
+            TotalSales = totalSales,
+            TotalPurchases = totalPurchases,
+            OperationsCount = transactions.Count,
+            Transactions = dtos
+        };
+    }
+
+    public async Task<DailyStatisticsResponseDto> GetSummaryAsync(
+        Guid shopId,
+        CancellationToken cancellationToken = default)
+    {
+        return await GetDailyStatisticsAsync(shopId, DateTime.UtcNow, cancellationToken);
+    }
+
+    private static TransactionResponseDto MapToTransactionResponseDto(Transaction t, string? contactName = null)
+    {
+        var party = !string.IsNullOrWhiteSpace(t.PartyName)
+            ? t.PartyName
+            : (t.Contact?.Name ?? contactName ?? string.Empty);
+
+        return new TransactionResponseDto
+        {
+            Id = t.Id,
+            ShopId = t.ShopId,
+            ContactId = t.ContactId,
+            PartyName = party,
+            OperationType = t.Type,
+            Amount = t.Amount,
+            PaymentMethod = t.PaymentMethod,
+            OperationDate = t.TransactionDate,
+            CreatedAt = t.CreatedAt
+        };
+    }
+
     public async Task<TransactionResponse> CreateAsync(
         Guid ownerUserId,
         CreateTransactionRequest request,
         CancellationToken cancellationToken = default)
     {
-        // 1. Verify Contact belongs to caller
-        var contact = await _unitOfWork.Contacts.GetByIdAsync(request.ContactId, ownerUserId, cancellationToken);
-        if (contact == null)
-            throw new NotFoundException("Contact not found");
+        // 1. Verify Contact belongs to caller if specified
+        Contact? contact = null;
+        if (request.ContactId.HasValue && request.ContactId.Value != Guid.Empty)
+        {
+            contact = await _unitOfWork.Contacts.GetByIdAsync(request.ContactId.Value, ownerUserId, cancellationToken);
+            if (contact == null)
+                throw new NotFoundException("Contact not found");
+        }
+
+        var partyName = !string.IsNullOrWhiteSpace(request.PartyName)
+            ? request.PartyName.Trim()
+            : (contact?.Name ?? string.Empty);
+
+        var shop = await _unitOfWork.Shops.GetByOwnerIdAsync(ownerUserId, cancellationToken);
+        var effectiveShopId = shop?.Id ?? ownerUserId;
 
         // 2. Create Transaction entity via factory
         var transaction = Transaction.Create(
@@ -57,7 +217,10 @@ public class TransactionService : ITransactionService
             request.NoteType,
             request.NoteText,
             request.IsInstallment,
-            request.InstallmentPlanMode);
+            request.InstallmentPlanMode,
+            shopId: effectiveShopId,
+            partyName: partyName,
+            paymentMethod: request.PaymentMethod);
 
         // 3. Generate Installments if IsInstallment is true
         List<Installment> installments = new();
@@ -331,10 +494,13 @@ public class TransactionService : ITransactionService
         return new TransactionResponse
         {
             Id = transaction.Id,
+            ShopId = transaction.ShopId,
             ContactId = transaction.ContactId,
             ContactName = contactName ?? transaction.Contact?.Name ?? string.Empty,
+            PartyName = !string.IsNullOrWhiteSpace(transaction.PartyName) ? transaction.PartyName : (contactName ?? transaction.Contact?.Name ?? string.Empty),
             Type = transaction.Type,
             Amount = transaction.Amount,
+            PaymentMethod = transaction.PaymentMethod,
             TransactionDate = transaction.TransactionDate,
             IsInstallment = transaction.IsInstallment,
             InstallmentPlanMode = transaction.InstallmentPlanMode,

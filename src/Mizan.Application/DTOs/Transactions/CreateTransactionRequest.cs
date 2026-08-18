@@ -5,15 +5,19 @@ namespace Mizan.Application.DTOs.Transactions;
 
 public class CreateTransactionRequest : IValidatableObject
 {
-    [Required]
-    public Guid ContactId { get; set; }
+    public Guid? ContactId { get; set; }
+
+    [MaxLength(200, ErrorMessage = "اسم الطرف يجب ألا يتجاوز 200 حرف")]
+    public string? PartyName { get; set; }
 
     [Required]
-    public TransactionType Type { get; set; }
+    public TransactionType Type { get; set; } = TransactionType.Sale;
 
     [Required]
     [Range(typeof(decimal), "0.01", "999999999", ErrorMessage = "Amount must be between 0.01 and 999,999,999")]
     public decimal Amount { get; set; }
+
+    public PaymentMethod PaymentMethod { get; set; } = PaymentMethod.Cash;
 
     [Required]
     public DateTime TransactionDate { get; set; }
@@ -40,6 +44,13 @@ public class CreateTransactionRequest : IValidatableObject
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
+        if (ContactId == null && string.IsNullOrWhiteSpace(PartyName))
+        {
+            yield return new ValidationResult(
+                "Party name is required when contact is not specified.",
+                new[] { nameof(PartyName) });
+        }
+
         if (NoteType == NoteType.Voice)
         {
             yield return new ValidationResult(
@@ -103,14 +114,14 @@ public class CreateTransactionRequest : IValidatableObject
                 if (CustomInstallments == null || CustomInstallments.Count < 2)
                 {
                     yield return new ValidationResult(
-                        "CustomInstallments must contain at least 2 items for custom installment plans.",
+                        "CustomInstallments must contain at least 2 items when InstallmentPlanMode is Custom.",
                         new[] { nameof(CustomInstallments) });
                 }
 
                 if (InstallmentCount != null || FirstInstallmentDate != null || Frequency != null)
                 {
                     yield return new ValidationResult(
-                        "InstallmentCount, FirstInstallmentDate, and Frequency must be null when InstallmentPlanMode is Custom.",
+                        "InstallmentCount, FirstInstallmentDate, and Frequency must be empty when InstallmentPlanMode is Custom.",
                         new[] { nameof(InstallmentPlanMode) });
                 }
             }

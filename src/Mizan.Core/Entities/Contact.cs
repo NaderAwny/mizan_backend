@@ -1,3 +1,4 @@
+using System.Net.Mail;
 using System.Text.RegularExpressions;
 using Mizan.Core.Exceptions;
 
@@ -10,12 +11,15 @@ public class Contact
     public string Name { get; private set; } = string.Empty;
     public string? PhoneNumber { get; private set; }
     public string? Notes { get; private set; }
+    public bool IsVip { get; private set; } = false;
+    public string? ContactEmail { get; private set; }
     public bool IsActive { get; private set; } = true;
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
 
-    // Navigation property
+    // Navigation properties
     public User? Owner { get; private set; }
+    public ICollection<Transaction> Transactions { get; private set; } = new List<Transaction>();
 
     private Contact() { } // Required for EF Core
 
@@ -25,6 +29,8 @@ public class Contact
         {
             Id = Guid.NewGuid(),
             OwnerUserId = ownerUserId,
+            IsVip = false,
+            ContactEmail = null,
             IsActive = true,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
@@ -42,6 +48,41 @@ public class Contact
         SetName(name);
         SetPhoneNumber(phoneNumber);
         SetNotes(notes);
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void SetVip(bool isVip)
+    {
+        IsVip = isVip;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void SetContactEmail(string? email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            ContactEmail = null;
+            UpdatedAt = DateTime.UtcNow;
+            return;
+        }
+
+        email = email.Trim().ToLowerInvariant();
+
+        if (email.Length > 254)
+            throw new DomainException("Email must not exceed 254 characters");
+
+        try
+        {
+            var mailAddress = new MailAddress(email);
+            if (mailAddress.Address != email)
+                throw new DomainException("Invalid email format");
+        }
+        catch
+        {
+            throw new DomainException("Invalid email format");
+        }
+
+        ContactEmail = email;
         UpdatedAt = DateTime.UtcNow;
     }
 

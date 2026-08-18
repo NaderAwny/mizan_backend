@@ -224,6 +224,116 @@ public class EmailService : IEmailService
         }
     }
 
+    public async Task<bool> SendInstallmentReminderToContactEmailAsync(
+        string toEmail,
+        string contactName,
+        string shopOwnerName,
+        decimal amount,
+        DateTime dueDate,
+        int daysUntilDue,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(toEmail))
+        {
+            _logger.LogWarning("⚠️ Cannot send installment reminder email to contact: email is empty.");
+            return false;
+        }
+
+        string formattedAmount = amount.ToString("N2");
+        string dueText = daysUntilDue switch
+        {
+            0 => "مستحق اليوم",
+            1 => "مستحق غداً (خلال يوم واحد)",
+            2 => "مستحق خلال يومين",
+            _ => $"مستحق خلال {daysUntilDue} أيام"
+        };
+
+        // In development / mock mode: log without sending
+        if (_options.UseMockInDevelopment)
+        {
+            _logger.LogInformation(
+                "📧 [DEV MOCK EMAIL] Contact Installment reminder for {Email} ({Contact}) | Shop Owner: {ShopOwner} | Amount: {Amount} | DueDate: {DueDate:yyyy-MM-dd} | Status: {DueText}",
+                toEmail, contactName, shopOwnerName, formattedAmount, dueDate, dueText);
+            return true;
+        }
+
+        try
+        {
+            var from = new EmailAddress(_options.SenderEmail, _options.SenderName);
+            var to = new EmailAddress(toEmail.Trim());
+            string subject = daysUntilDue == 0
+                ? $"تذكير: موعد سداد قسط مستحق اليوم لصالح {shopOwnerName} — تطبيق ميزان"
+                : $"تذكير: موعد سداد قسط مستحق قريباً لصالح {shopOwnerName} — تطبيق ميزان";
+
+            var plainTextContent = $@"مرحباً {contactName}،
+
+نود تذكيرك بأن هناك قسطاً مستحقاً عليك لصالح {shopOwnerName}:
+- المبلغ المستحق: {formattedAmount} جنيه
+- موعد الاستحقاق: {dueDate:yyyy-MM-dd} ({dueText})
+
+يرجى التنسيق مع {shopOwnerName} لإتمام عملية السداد في الموعد المحدد.
+
+---
+هذه رسالة تلقائية من تطبيق ميزان. إذا كنت لا تتوقع هذه الرسالة، يمكنك تجاهلها بأمان.
+تطبيق ميزان — الزقازيق، الشرقية، مصر
+© {DateTime.UtcNow.Year} تطبيق ميزان. جميع الحقوق محفوظة.";
+
+            var htmlContent = $@"<!DOCTYPE html>
+<html dir=""rtl"" lang=""ar"">
+<head>
+    <meta charset=""UTF-8"">
+    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+    <title>تذكير بموعد سداد القسط — تطبيق ميزان</title>
+</head>
+<body style=""margin: 0; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f3f4f6; text-align: right; direction: rtl; color: #1f2937; line-height: 1.6;"">
+    <div style=""max-width: 500px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 28px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);"">
+        <h2 style=""color: #059669; text-align: center; margin-top: 0; margin-bottom: 20px; font-size: 22px;"">تطبيق ميزان — Mizan</h2>
+        <p style=""font-size: 16px; margin: 0 0 12px 0;"">مرحباً {contactName}،</p>
+        <p style=""font-size: 15px; color: #4b5563; margin: 0 0 20px 0;"">نود تذكيرك بموعد استحقاق القسط التالي المسجل لصالح <strong>{shopOwnerName}</strong>:</p>
+        <div style=""background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 18px; margin: 20px 0;"">
+            <p style=""margin: 6px 0; font-size: 15px; color: #374151;""><strong>المستفيد / صاحب المحل:</strong> {shopOwnerName}</p>
+            <p style=""margin: 6px 0; font-size: 15px; color: #374151;""><strong>المبلغ المستحق:</strong> <span style=""color: #059669; font-weight: bold; font-size: 18px;"">{formattedAmount} جنيه</span></p>
+            <p style=""margin: 6px 0; font-size: 15px; color: #374151;""><strong>تاريخ الاستحقاق:</strong> {dueDate:yyyy-MM-dd}</p>
+            <p style=""margin: 6px 0; font-size: 14px; color: #d97706; font-weight: bold;"">⚠️ {dueText}</p>
+        </div>
+        <p style=""font-size: 14px; color: #4b5563; margin: 0 0 20px 0;"">يرجى التنسيق مع <strong>{shopOwnerName}</strong> لإتمام عملية السداد.</p>
+        <hr style=""border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;"" />
+        <div style=""font-size: 12px; color: #9ca3af; text-align: center; line-height: 1.6;"">
+            <p style=""margin: 4px 0;"">هذه رسالة تلقائية من تطبيق ميزان. إذا كنت لا تتوقع هذه الرسالة، يمكنك تجاهلها بأمان.</p>
+            <p style=""margin: 4px 0;"">تطبيق ميزان — الزقازيق، الشرقية، مصر</p>
+            <p style=""margin: 4px 0;"">&copy; {DateTime.UtcNow.Year} تطبيق ميزان. جميع الحقوق محفوظة.</p>
+        </div>
+    </div>
+</body>
+</html>";
+
+            var msg = MailHelper.CreateSingleEmail(from, to, subject, plainTextContent, htmlContent);
+            msg.SetReplyTo(new EmailAddress(_options.SenderEmail, _options.SenderName));
+            var response = await _sendGridClient.SendEmailAsync(msg, cancellationToken);
+
+            if (response.IsSuccessStatusCode)
+            {
+                _logger.LogInformation("✅ Contact installment reminder email sent successfully via SendGrid to {Email} (StatusCode: {StatusCode})", toEmail, response.StatusCode);
+                return true;
+            }
+
+            string responseBody = string.Empty;
+            if (response.Body != null)
+            {
+                responseBody = await response.Body.ReadAsStringAsync();
+            }
+
+            _logger.LogWarning("⚠️ SendGrid returned non-success status code {StatusCode} when sending reminder to contact {Email}. Response body: {ResponseBody}",
+                response.StatusCode, toEmail, responseBody);
+            return false;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌ Transient error sending contact installment reminder email via SendGrid to {Email}", toEmail);
+            return false;
+        }
+    }
+
     public async Task<bool> SendPeriodicReportEmailAsync(
         string toEmail,
         string recipientName,
