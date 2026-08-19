@@ -11,9 +11,26 @@ public class VerifyOtpRequest
     [JsonPropertyName("email")]
     public string Email { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "كود التحقق مطلوب")]
-    [StringLength(6, MinimumLength = 6, ErrorMessage = "كود التحقق يجب أن يتكون من 6 أرقام")]
-    [RegularExpression(@"^[0-9]{6}$", ErrorMessage = "Code must be 6 digits")]
+    private string _code = string.Empty;
+
     [JsonPropertyName("code")]
-    public string Code { get; set; } = string.Empty;
+    public string Code
+    {
+        get => _code;
+        set => _code = value ?? string.Empty;
+    }
+
+    [JsonPropertyName("otpCode")]
+    public string? OtpCode
+    {
+        get => _code;
+        set
+        {
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                _code = value;
+            }
+        }
+    }
 }
+
