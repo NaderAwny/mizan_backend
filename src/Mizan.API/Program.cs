@@ -105,7 +105,6 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.Configure<Mizan.Application.DTOs.Notifications.RemindersOptions>(builder.Configuration.GetSection(Mizan.Application.DTOs.Notifications.RemindersOptions.SectionName));
 builder.Services.Configure<Mizan.Application.DTOs.Reports.PeriodicReportsOptions>(builder.Configuration.GetSection(Mizan.Application.DTOs.Reports.PeriodicReportsOptions.SectionName));
 builder.Services.AddHostedService<Mizan.Infrastructure.BackgroundServices.ReminderCheckService>();
-builder.Services.AddHostedService<Mizan.Infrastructure.BackgroundServices.PeriodicReportEmailRetryService>();
 
 // 6. JWT Authentication & Strict Key Validation
 var jwtOptions = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? new JwtOptions();

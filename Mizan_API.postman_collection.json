@@ -2,12 +2,13 @@
   "info": {
     "_postman_id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
     "name": "Mizan API — ميزان (Official Collection)",
-    "description": "# 🚀 توثيق ومجموعة طلبات API الرسمية لتطبيق ميزان (Mizan Backend)\n\nدليل تفاعلي متكامل لتجربة واختبار كافة خدمات النظام وفق معايير Clean Architecture و .NET 9.\n\n### 📌 الميزات الرئيسية المغطاة في هذه المجموعة:\n1. **🔐 المصادقة والتحقق (Authentication & Accounts)**: نظام تسجيل ودخول آمن برمز OTP مؤقت عبر البريد الإلكتروني مع Refresh Tokens وإدارة الصلاحيات.\n2. **👤 إدارة الحساب والمتجر (User & Shop Profile)**: استعراض بيانات الحساب، المحل، والإعدادات.\n3. **👥 إدارة الأطراف وحساب العميل المميز (Contacts & VIP Contacts - Feature 2)**: تسجيل العملاء والموردين، تمييز العملاء (VIP)، إضافة البريد الإلكتروني، واستعراض بروفايل مالي متكامل لعمليات العميل.\n4. **💸 إدارة العمليات المالية (Manual Transactions)**: تسجيل المبيعات والمشتريات نقدياً أو بجدولة أقساط آلية ومخصصة.\n5. **🎙️ الملاحظات الصوتية (Voice Notes)**: رفع وبث الملاحظات الصوتية المسجلة للعمليات.\n6. **📅 إدارة وتسديد الأقساط (Installments & Payments)**: متابعة الأقساط وتسجيل سدادها فورياً.\n7. **📈 لوحة الإحصائيات الفورية والعمليات السريعة (Real-Time Statistics - Feature 1)**: بديل فوري للتقارير الثابتة، يعرض إجمالي المبيعات، المشتريات، وعدد العمليات لليوم أو لأي تاريخ/شهر محدد لحظياً.\n8. **🔔 الإشعارات والتنبيهات الثنائية (Notifications & Bidirectional Reminders - Feature 3)**: إشعارات تنبيه فورية للأقساط تُرسل لصاحب المحل وإيميل تذكير مباشر للعميل في نفس الوقت.\n9. **🛡️ اختبارات الأمان والتحقق السلبي (Security & Negative Validation Tests)**: تغطية كافة حالات الرفض والأخطاء (400 Bad Request, 401 Unauthorized, 404 Not Found).",
+    "description": "# 🚀 توثيق ومجموعة طلبات API الرسمية لتطبيق ميزان (Mizan Backend)\n\nدليل تفاعلي متكامل لتجربة واختبار كافة خدمات النظام وفق معايير Clean Architecture و .NET 9.\n\n### 📌 الميزات الرئيسية المغطاة في هذه المجموعة:\n1. **🔐 المصادقة والتحقق (Authentication & Accounts)**: نظام تسجيل ودخول آمن برمز OTP مؤقت عبر البريد الإلكتروني مع Refresh Tokens وإدارة الصلاحيات ونوع الحساب (`customer` / `shop_owner`).\n2. **👤 إدارة الحساب والمتجر (User & Shop Profile)**: استعراض بيانات الحساب، المحل، والإعدادات.\n3. **👥 إدارة الأطراف وحساب العميل المميز (Contacts & VIP Contacts - Feature 2)**: تسجيل العملاء والموردين، تمييز العملاء (`isVip`)، إضافة البريد الإلكتروني (`contactEmail`)، واستعراض بروفايل مالي متكامل لعمليات العميل.\n4. **💸 إدارة العمليات المالية (Manual Transactions)**: تسجيل المبيعات والمشتريات نقدياً أو بجدولة أقساط آلية ومخصصة.\n5. **📅 إدارة وتسديد الأقساط (Installments & Payments)**: متابعة الأقساط وتسجيل سدادها فورياً وتحديث حالتها.\n6. **📈 لوحة الإحصائيات الفورية والعمليات السريعة (Real-Time Statistics - Feature 1)**: بديل فوري للتقارير الثابتة، يعرض إجمالي المبيعات، المشتريات، وعدد العمليات لليوم أو لأي تاريخ/شهر محدد لحظياً مع إمكانية تسجيل عمليات سريعة.\n7. **🔔 الإشعارات والتنبيهات الثنائية (Notifications & Bidirectional Reminders - Feature 3)**: إشعارات تنبيه فورية للأقساط تُرسل لصاحب المحل وإيميل تذكير مباشر للعميل في نفس الوقت.\n8. **🎙️ الملاحظات الصوتية (Voice Notes — Entity مستقل)**: رفع واستعراض الملاحظات الصوتية المستقلة للعمليات بملف صوتي وبيانات كاملة.\n9. **🛡️ اختبارات الأمان والتحقق السلبي (Security & Negative Validation Tests)**: تغطية شاملة لكافة حالات الرفض والأخطاء (400 Bad Request, 401 Unauthorized, 404 Not Found, 429 Rate Limit).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
       "name": "🔐 1. المصادقة والتحقق (Authentication & Accounts)",
+      "description": "خدمات تسجيل المستخدمين الجدد، طلب كود الـ OTP، التحقق وتوليد التوكنات، تحديد نوع الحساب، وتجديد الجلسات.",
       "item": [
         {
           "name": "1.1 — تسجيل حساب جديد (Register)",
@@ -15,6 +16,7 @@
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
                   "if (pm.response.code === 200) {",
                   "    var json = pm.response.json();",
@@ -24,15 +26,17 @@
                   "    });",
                   "    console.log('✉️ تم إرسال كود الـ OTP إلى البريد الإلكتروني. تفقد صندوق الوارد.');",
                   "}"
-                ],
-                "type": "text/javascript"
+                ]
               }
             }
           ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -40,11 +44,45 @@
             },
             "url": {
               "raw": "{{base_url}}/api/auth/register",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "register"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
             },
-            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nتسجيل مستخدم جديد في النظام، وإنشاء حسابه، وإرسال كود OTP مؤقت مكون من 6 أرقام إلى بريده الإلكتروني لتأكيد الحساب.\n\n---\n### 📥 المدخلات المطلوبة (Request Body):\n| الحقل | النوع | إجباري؟ | الوصف والقواعد |\n|---|---|---|---|\n| `email` | String | نعم | البريد الإلكتروني (صيغة صحيحة مثل: `user@example.com`). |\n| `firstName` | String | نعم | الاسم الأول (أحرف عربية أو إنجليزية فقط بدون أرقام). |\n| `lastName` | String | نعم | الاسم الأخير / اللقب (أحرف فقط). |\n\n---\n### 💡 أمثلة وسيناريوهات (Cases):\n- **الحالة الأساسية:** تسجيل تاجر جديد ببريد صحيح واسم ثلاثي.\n- **إذا كان البريد مسجل مسبقاً:** يتم إرسال كود OTP جديد لتسجيل الدخول مباشرة.\n\n---\n### ⚠️ تنبيهات وأخطاء شائعة (Common Errors):\n- ❌ `400 Bad Request`: بريد إلكتروني غير صالح أو اسم فارغ أو يحتوي أرقاماً.\n- ❌ `429 Too Many Requests`: إرسال طلبات تسجيل متكررة خلال وقت قصير (محمي بـ Rate Limiting).\n\n---\n### 🎯 الاستجابة المتوقعة (Expected Response):\n- **Status:** `200 OK`\n```json\n{\n  \"success\": true,\n  \"message\": \"تم إرسال كود التحقق بنجاح\",\n  \"data\": { \"email\": \"owner@mizan.app\", \"otpSent\": true, \"expiresInSeconds\": 120 }\n}\n```"
-          }
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nتسجيل مستخدم جديد في النظام وإنشاء حسابه، وإرسال كود OTP مؤقت مكون من 6 أرقام إلى بريده الإلكتروني لتأكيد الحساب.\n\n---\n### 📥 المدخلات المطلوبة (Request Body):\n| الحقل (Field) | النوع (Type) | إجباري؟ | الوصف والقواعد (Description & Rules) |\n|---|---|---|---|\n| `email` | String | نعم | البريد الإلكتروني (صيغة قياسية صحيحة، أقصى طول 254 حرف). |\n| `firstName` | String | نعم | الاسم الأول (أحرف عربية أو إنجليزية فقط بدون أرقام). |\n| `lastName` | String | نعم | اسم العائلة / اللقب (أحرف فقط بدون أرقام). |\n\n---\n### 💡 أمثلة وسيناريوهات الاستخدام (Use Cases):\n- **الحالة الأساسية:** تسجيل تاجر أو عميل جديد ببيانات صحيحة.\n- **في حال كان البريد مسجلاً مسبقاً:** يقوم النظام بتوليد وإرسال كود OTP لتسجيل الدخول مباشرة دون تكرار الحساب.\n\n---\n### ⚠️ تنبيهات وأخطاء شائعة (Common Errors):\n- ❌ `400 Bad Request`: بريد إلكتروني غير صالح أو اسم فارغ أو يحتوي على أرقام/رموز غير مسموحة.\n- ❌ `429 Too Many Requests`: طلبات تسجيل متتالية تتجاوز حد الـ Rate Limit.\n\n---\n### 🎯 الاستجابة المتوقعة (Expected Response):\n```json\n{\n  \"success\": true,\n  \"message\": \"تم إرسال كود التحقق بنجاح\",\n  \"data\": {\n    \"email\": \"owner@mizan.app\",\n    \"otpSent\": true,\n    \"expiresInSeconds\": 120\n  }\n}\n```"
+          },
+          "response": [
+            {
+              "name": "200 OK — تم إرسال كود التحقق بنجاح",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"تم إرسال كود التحقق بنجاح\",\n  \"data\": {\n    \"email\": \"owner@mizan.app\",\n    \"otpSent\": true,\n    \"expiresInSeconds\": 120\n  }\n}"
+            },
+            {
+              "name": "400 Bad Request — بريد إلكتروني غير صالح",
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"statusCode\": 400,\n  \"message\": \"صيغة البريد الإلكتروني غير صالحة\"\n}"
+            }
+          ]
         },
         {
           "name": "1.2 — طلب كود تسجيل الدخول (Send OTP)",
@@ -52,6 +90,7 @@
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
                   "if (pm.response.code === 200) {",
                   "    var json = pm.response.json();",
@@ -60,15 +99,17 @@
                   "        pm.expect(json.data.otpSent).to.be.true;",
                   "    });",
                   "}"
-                ],
-                "type": "text/javascript"
+                ]
               }
             }
           ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -76,11 +117,32 @@
             },
             "url": {
               "raw": "{{base_url}}/api/auth/send-otp",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "send-otp"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "send-otp"
+              ]
             },
-            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nإرسال كود تحقق جديد (OTP) مكوّن من 6 أرقام إلى البريد الإلكتروني للمستخدم لتسجيل الدخول بدون كلمة مرور (Passwordless Login).\n\n---\n### 📥 المدخلات المطلوبة (Request Body):\n| الحقل | النوع | إجباري؟ | الوصف |\n|---|---|---|---|\n| `email` | String | نعم | البريد الإلكتروني المسجل به المستخدم. |\n\n---\n### ⚠️ تنبيهات وملاحظات هامة:\n- كود الـ OTP صالح لمدة **دقيقتين فقط (120 ثانية)**.\n- في بيئة التطوير (Development)، الكود يظهر أيضاً في الـ Console/Logs لتسهيل التجربة.\n\n---\n### 🎯 الاستجابة المتوقعة (200 OK):\n```json\n{\n  \"success\": true,\n  \"message\": \"تم إرسال كود التحقق بنجاح\",\n  \"data\": { \"email\": \"owner@mizan.app\", \"otpSent\": true, \"expiresInSeconds\": 120 }\n}\n```"
-          }
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nإرسال كود تحقق جديد (OTP) مكوّن من 6 أرقام إلى البريد الإلكتروني للمستخدم لتسجيل الدخول بدون كلمة مرور (Passwordless Login).\n\n---\n### 📥 المدخلات المطلوبة (Request Body):\n| الحقل (Field) | النوع (Type) | إجباري؟ | الوصف (Description) |\n|---|---|---|---|\n| `email` | String | نعم | البريد الإلكتروني المسجل للمستخدم. |\n\n---\n### 💡 سيناريوهات الاستخدام:\n- تسجيل دخول المستخدم بالبريد الإلكتروني فقط واستلام كود مؤقت صالح لمدة دقيقتين.\n\n---\n### 🎯 الاستجابة المتوقعة (200 OK):\n```json\n{\n  \"success\": true,\n  \"message\": \"تم إرسال كود التحقق بنجاح\",\n  \"data\": {\n    \"email\": \"owner@mizan.app\",\n    \"otpSent\": true,\n    \"expiresInSeconds\": 120\n  }\n}\n```"
+          },
+          "response": [
+            {
+              "name": "200 OK — تم إرسال الكود بنجاح",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"تم إرسال كود التحقق بنجاح\",\n  \"data\": {\n    \"email\": \"owner@mizan.app\",\n    \"otpSent\": true,\n    \"expiresInSeconds\": 120\n  }\n}"
+            }
+          ]
         },
         {
           "name": "1.3 — تأكيد الكود وتسجيل الدخول (Verify OTP)",
@@ -88,6 +150,7 @@
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
                   "if (pm.response.code === 200) {",
                   "    var json = pm.response.json();",
@@ -95,34 +158,70 @@
                   "        pm.environment.set('access_token', json.data.token);",
                   "        pm.environment.set('refresh_token', json.data.refreshToken);",
                   "        pm.environment.set('user_id', json.data.userId);",
-                  "        console.log('✅ تم حفظ access_token في البيئة بنجاح.');",
+                  "        console.log('✅ تم حفظ access_token و refresh_token في البيئة بنجاح.');",
                   "    }",
                   "    pm.test('تسجيل الدخول ناجح وتم استلام التوكن', function() {",
                   "        pm.expect(json.success).to.be.true;",
                   "        pm.expect(json.data.token).to.not.be.empty;",
                   "    });",
                   "}"
-                ],
-                "type": "text/javascript"
+                ]
               }
             }
           ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"owner@mizan.app\",\n  \"otpCode\": \"123456\"\n}"
+              "raw": "{\n  \"email\": \"owner@mizan.app\",\n  \"code\": \"123456\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/auth/verify-otp",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "verify-otp"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "verify-otp"
+              ]
             },
-            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nالتحقق من صحة كود الـ OTP المدخل وإتمام تسجيل الدخول، وإرجاع الـ JWT Access Token والـ Refresh Token ومعلومات المتجر.\n\n---\n### 📥 المدخلات المطلوبة (Request Body):\n| الحقل | النوع | إجباري؟ | الوصف |\n|---|---|---|---|\n| `email` | String | نعم | البريد الإلكتروني. |\n| `otpCode` | String | نعم | كود الـ OTP المكون من 6 أرقام (مثال: `\"123456\"`). |\n\n---\n### 💡 سكربت تلقائي في Postman:\nيقوم السكربت المرفق تلقائياً بحفظ `access_token` و `refresh_token` في متغيرات البيئة (Environment) لاستخدامها في جميع الطلبات التالية فوراً دون نسخ يدوي.\n\n---\n### ⚠️ تنبيهات وأخطاء شائعة:\n- ❌ `400 Bad Request`: الكود غير صحيح، أو منتهي الصلاحية (أكثر من دقيقتين)، أو تم استخدامه مسبقاً."
-          }
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nالتحقق من صحة كود الـ OTP المدخل وإتمام تسجيل الدخول، وإرجاع الـ JWT Access Token والـ Refresh Token ومعلومات الحساب والمحل.\n\n---\n### 📥 المدخلات المطلوبة (Request Body):\n| الحقل (Field) | النوع (Type) | إجباري؟ | الوصف (Description) |\n|---|---|---|---|\n| `email` | String | نعم | البريد الإلكتروني. |\n| `code` / `otpCode` | String | نعم | كود الـ OTP المكون من 6 أرقام (مثال: `\"123456\"`). |\n\n---\n### 💡 سكربت تلقائي في Postman:\nيقوم السكربت المرفق تلقائياً بحفظ `access_token` و `refresh_token` و `user_id` في متغيرات البيئة (Environment) لاستخدامها في جميع الطلبات التالية فوراً.\n\n---\n### 🎯 الاستجابة المتوقعة (200 OK):\n```json\n{\n  \"success\": true,\n  \"message\": \"تم تسجيل الدخول بنجاح\",\n  \"data\": {\n    \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n    \"refreshToken\": \"c+OdcQUPHhD8P4HN+QLab4Hur...\",\n    \"expiresInSeconds\": 604800,\n    \"isNewUser\": false,\n    \"userId\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\n    \"firstName\": \"نادر\",\n    \"lastName\": \"عوني\",\n    \"email\": \"owner@mizan.app\",\n    \"userType\": \"shop_owner\",\n    \"shopName\": \"محل ميزان\"\n  }\n}\n```"
+          },
+          "response": [
+            {
+              "name": "200 OK — تسجيل الدخول ناجح",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"تم تسجيل الدخول بنجاح\",\n  \"data\": {\n    \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.example\",\n    \"refreshToken\": \"c+OdcQUPHhD8P4HN+QLab4Hur5KAXwwx52QxjzFNrwvC/C9yPdfYwIWBEOebR5+GyGeZhUBDGqIAYfhH2xPq6w==\",\n    \"expiresInSeconds\": 604800,\n    \"isNewUser\": false,\n    \"userId\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\n    \"firstName\": \"نادر\",\n    \"lastName\": \"عوني\",\n    \"email\": \"owner@mizan.app\",\n    \"userType\": \"shop_owner\",\n    \"shopName\": \"محل ميزان\"\n  }\n}"
+            },
+            {
+              "name": "400 Bad Request — كود منتهي أو غير صحيح",
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"statusCode\": 400,\n  \"message\": \"كود التحقق غير صحيح أو منتهي الصلاحية\"\n}"
+            }
+          ]
         },
         {
           "name": "1.4 — اختيار نوع الحساب والنشاط (Select User Type)",
@@ -130,6 +229,7 @@
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
                   "if (pm.response.code === 200) {",
                   "    var json = pm.response.json();",
@@ -137,53 +237,84 @@
                   "        pm.expect(json.success).to.be.true;",
                   "    });",
                   "}"
-                ],
-                "type": "text/javascript"
+                ]
               }
             }
           ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"userType\": \"Merchant\",\n  \"shopName\": \"محل الأمانة للأجهزة الكهربائية\"\n}"
+              "raw": "{\n  \"userType\": \"shop_owner\",\n  \"shopName\": \"محل ميزان التجاري\",\n  \"address\": \"القاهرة، مصر\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/auth/select-user-type",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "select-user-type"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "select-user-type"
+              ]
             },
-            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nتحديد هوية ونشاط المستخدم في أول استخدام له بعد التسجيل (تاجر `Merchant` أو حرفي `Craftsman` أو فرد `Individual`) وتسمية المتجر.\n\n---\n### 📥 المدخلات المطلوبة (Request Body):\n| الحقل | النوع | إجباري؟ | القيم المقبولة |\n|---|---|---|---|\n| `userType` | String (Enum) | نعم | `\"Merchant\"` أو `\"Craftsman\"` أو `\"Individual\"` |\n| `shopName` | String | اختياري/مطلوب للتاجر | اسم المحل أو النشاط التجاري. |\n\n---\n### ⚠️ تنبيه:\nيجب إرسال قيمة الـ Enum كنص `\"Merchant\"` وليس كرقم `0`."
-          }
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nتحديد نوع الحساب بعد التسجيل الأولي: إما صاحب متجر (`shop_owner`) مع اسم المتجر وعنوانه، أو عميل عادي (`customer`).\n\n---\n### 📥 المدخلات المطلوبة (Request Body):\n| الحقل (Field) | النوع (Type) | إجباري؟ | الوصف والقيم المقبولة |\n|---|---|---|---|\n| `userType` | String | نعم | إما `\"shop_owner\"` أو `\"customer\"`. |\n| `shopName` | String | نعم إذا كان shop_owner | اسم المحل التجاري (أقصى طول 100 حرف). |\n| `address` | String | اختياري | عنوان المحل. |\n\n---\n### 🎯 الاستجابة المتوقعة (200 OK):\n```json\n{\n  \"success\": true,\n  \"message\": \"تم تحديث نوع الحساب بنجاح\",\n  \"data\": {\n    \"token\": \"eyJhbGciOi...\",\n    \"refreshToken\": \"...\",\n    \"expiresInSeconds\": 604800,\n    \"isNewUser\": false,\n    \"userId\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\n    \"firstName\": \"نادر\",\n    \"lastName\": \"عوني\",\n    \"email\": \"owner@mizan.app\",\n    \"userType\": \"shop_owner\",\n    \"shopName\": \"محل ميزان التجاري\"\n  }\n}\n```"
+          },
+          "response": [
+            {
+              "name": "200 OK — تم تحديث نوع الحساب",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"تم تحديث نوع الحساب بنجاح\",\n  \"data\": {\n    \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.example\",\n    \"refreshToken\": \"c+OdcQUPHhD8P4HN+QLab4Hur5KAXwwx52QxjzFNrwvC/C9yPdfYwIWBEOebR5+GyGeZhUBDGqIAYfhH2xPq6w==\",\n    \"expiresInSeconds\": 604800,\n    \"isNewUser\": false,\n    \"userId\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\n    \"firstName\": \"نادر\",\n    \"lastName\": \"عوني\",\n    \"email\": \"owner@mizan.app\",\n    \"userType\": \"shop_owner\",\n    \"shopName\": \"محل ميزان التجاري\"\n  }\n}"
+            }
+          ]
         },
         {
-          "name": "1.5 — تجديد رمز الدخول (Refresh Token)",
+          "name": "1.5 — تجديد التوكن (Refresh Token)",
           "event": [
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
                   "if (pm.response.code === 200) {",
                   "    var json = pm.response.json();",
-                  "    pm.environment.set('access_token', json.data.token);",
-                  "    pm.environment.set('refresh_token', json.data.refreshToken);",
+                  "    if (json.data && json.data.token) {",
+                  "        pm.environment.set('access_token', json.data.token);",
+                  "        pm.environment.set('refresh_token', json.data.refreshToken);",
+                  "    }",
                   "    pm.test('تم تجديد الرمز بنجاح', function() {",
                   "        pm.expect(json.success).to.be.true;",
                   "    });",
                   "}"
-                ],
-                "type": "text/javascript"
+                ]
               }
             }
           ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -191,19 +322,59 @@
             },
             "url": {
               "raw": "{{base_url}}/api/auth/refresh-token",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "refresh-token"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "refresh-token"
+              ]
             },
-            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nتجديد الـ `AccessToken` المنتهي الصلاحية باستخدام الـ `RefreshToken` الساري دون إجبار المستخدم على تسجيل الدخول مرة أخرى."
-          }
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nإصدار `access_token` جديد عند انتهاء صلاحية التوكن القديم باستخدام `refreshToken` صالح، مما يضمن استمرارية جلسة المستخدم بدون تسجيل دخول متكرر."
+          },
+          "response": [
+            {
+              "name": "200 OK — تم تجديد التوكن",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"تم تجديد الرمز بنجاح\",\n  \"data\": {\n    \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.newtoken\",\n    \"refreshToken\": \"new_refresh_token_string_example\",\n    \"expiresInSeconds\": 604800,\n    \"isNewUser\": false,\n    \"userId\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\n    \"firstName\": \"نادر\",\n    \"lastName\": \"عوني\",\n    \"email\": \"owner@mizan.app\",\n    \"userType\": \"shop_owner\",\n    \"shopName\": \"محل ميزان التجاري\"\n  }\n}"
+            }
+          ]
         },
         {
-          "name": "1.6 — تسجيل الخروج وإبطال الرمز (Logout)",
+          "name": "1.6 — تسجيل الخروج (Logout)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('تم تسجيل الخروج بنجاح', function() {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -211,53 +382,98 @@
             },
             "url": {
               "raw": "{{base_url}}/api/auth/logout",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "logout"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "logout"
+              ]
             },
-            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nإلغاء تفعيل الـ Refresh Token الحالي للمستخدم لمنع استخدامه مستقبلاً وإتمام تسجيل الخروج بأمان."
-          }
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nتسجيل خروج المستخدم وإلغاء صلاحية الـ Refresh Token في قاعدة البيانات لمنع إعادة استخدامه."
+          },
+          "response": [
+            {
+              "name": "200 OK — تم تسجيل الخروج",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"تم تسجيل الخروج بنجاح\",\n  \"data\": null\n}"
+            }
+          ]
         }
       ]
     },
     {
       "name": "👤 2. إدارة الحساب والبروفايل (Users & Shop Profiles)",
+      "description": "استعراض بيانات المستخدم الحالي، المتجر التابع له، وحالة الحساب.",
       "item": [
         {
-          "name": "2.1 — عرض الملف الشخصي للمستخدم الحالي (Get User Profile)",
+          "name": "2.1 — استعراض بيانات الحساب والمحل (Get Profile)",
           "event": [
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
-                  "if (pm.response.code === 200) {",
+                  "pm.test('تم جلب بيانات البروفايل بنجاح', function() {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
                   "    var json = pm.response.json();",
-                  "    pm.test('تم استرجاع بيانات الملف الشخصي بنجاح', function() {",
-                  "        pm.expect(json.success).to.be.true;",
-                  "        pm.expect(json.data.email).to.not.be.empty;",
-                  "    });",
-                  "}"
-                ],
-                "type": "text/javascript"
+                  "    pm.expect(json.data.email).to.not.be.empty;",
+                  "});"
+                ]
               }
             }
           ],
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/users/me",
-              "host": ["{{base_url}}"],
-              "path": ["api", "users", "me"]
+              "raw": "{{base_url}}/api/users/profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "profile"
+              ]
             },
-            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nاسترجاع كامل بيانات صاحب الحساب، الاسم، البريد، نوع الحساب، وبيانات المتجر التابع له.\n\n---\n### 🔒 المتطلبات:\n- تتطلب Header: `Authorization: Bearer {{access_token}}`.\n\n---\n### 🎯 الاستجابة المتوقعة (200 OK):\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"id\": \"3fa85f64-...\",\n    \"email\": \"owner@mizan.app\",\n    \"firstName\": \"نادر\",\n    \"lastName\": \"عوني\",\n    \"userType\": \"Merchant\",\n    \"shop\": { \"id\": \"d3b07384...\", \"name\": \"محل الأمانة للأجهزة الكهربائية\" }\n  }\n}\n```"
-          }
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nجلب بيانات المستخدم المسجل حالياً من واقع الـ JWT Token، متضمنة بيانات الاسم، البريد، نوع الحساب، وبيانات المحل المرتبط به.\n\n---\n### 🎯 الاستجابة المتوقعة (200 OK):\n```json\n{\n  \"success\": true,\n  \"message\": null,\n  \"data\": {\n    \"id\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\n    \"firstName\": \"نادر\",\n    \"lastName\": \"عوني\",\n    \"email\": \"owner@mizan.app\",\n    \"userType\": \"shop_owner\",\n    \"isActive\": true,\n    \"shop\": {\n      \"id\": \"46af05b1-4bc7-4086-91f0-f0b99bfbdc7c\",\n      \"shopName\": \"محل ميزان التجاري\",\n      \"address\": \"القاهرة، مصر\"\n    }\n  }\n}\n```"
+          },
+          "response": [
+            {
+              "name": "200 OK — بيانات الحساب والمحل",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": null,\n  \"data\": {\n    \"id\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\n    \"firstName\": \"نادر\",\n    \"lastName\": \"عوني\",\n    \"email\": \"owner@mizan.app\",\n    \"userType\": \"shop_owner\",\n    \"isActive\": true,\n    \"shop\": {\n      \"id\": \"46af05b1-4bc7-4086-91f0-f0b99bfbdc7c\",\n      \"shopName\": \"محل ميزان التجاري\",\n      \"address\": \"القاهرة، مصر\"\n    }\n  }\n}"
+            }
+          ]
         }
       ]
     },
     {
       "name": "👥 3. إدارة الأطراف والعملاء المميزين (Contacts & VIP Management)",
+      "description": "إدارة العملاء والموردين، تمييز العملاء (VIP - Feature 2)، إضافة البريد الإلكتروني لإرسال تذكيرات الأقساط، وعرض بروفايل مالي متكامل.",
       "item": [
         {
           "name": "3.1 — إضافة طرف: عميل (Create Contact - Customer)",
@@ -265,38 +481,66 @@
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
                   "if (pm.response.code === 201) {",
                   "    var json = pm.response.json();",
-                  "    pm.environment.set('contact_id', json.data.id);",
-                  "    console.log('✅ تم حفظ contact_id بنجاح:', json.data.id);",
-                  "    pm.test('تم إنشاء العميل بنجاح', function() {",
+                  "    if (json.data && json.data.id) {",
+                  "        pm.environment.set('contact_id', json.data.id);",
+                  "        console.log('✅ تم تعيين contact_id بنجاح:', json.data.id);",
+                  "    }",
+                  "    pm.test('تم إنشاء جهة الاتصال بنجاح', function() {",
                   "        pm.expect(json.success).to.be.true;",
-                  "        pm.expect(json.data.name).to.not.be.empty;",
+                  "        pm.expect(json.data.name).to.equal('محمود حسن إبراهيم');",
                   "    });",
                   "}"
-                ],
-                "type": "text/javascript"
+                ]
               }
             }
           ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"محمود حسن إبراهيم\",\n  \"phoneNumber\": \"01012345678\",\n  \"notes\": \"عميل منتظم في السداد\"\n}"
+              "raw": "{\n  \"name\": \"محمود حسن إبراهيم\",\n  \"phoneNumber\": \"01012345678\",\n  \"notes\": \"عميل موثوق ومستمر\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/contacts",
-              "host": ["{{base_url}}"],
-              "path": ["api", "contacts"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "contacts"
+              ]
             },
-            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nإضافة طرف جديد (عميل) في دليل الهاتف الخاص بالمتجر، لتسجيل العمليات والأقساط باسمه.\n\n---\n### 📥 المدخلات المطلوبة (Request Body):\n| الحقل | النوع | إجباري؟ | الوصف والقواعد |\n|---|---|---|---|\n| `name` | String | نعم | اسم العميل (أحرف فقط بطول من 2 إلى 100 حرف — **ممنوع الأرقام**). |\n| `phoneNumber` | String | اختياري | رقم هاتف العميل (صيغة مصرية أو دولية صحيحة). |\n| `notes` | String | اختياري | ملاحظات إضافية حول العميل. |\n\n---\n### 💡 أمثلة وسيناريوهات (Cases):\n1. **عميل عادي:** إرسال الاسم ورقم الهاتف والملاحظات.\n2. **عميل مميز (VIP):** يمكنك ترقيته لاحقاً عبر `PATCH /api/contacts/{id}/toggle-vip` أو إضافة بريده الإلكتروني عبر `PUT /api/contacts/{id}`.\n\n---\n### ⚠️ تنبيهات وأخطاء شائعة (Common Errors):\n- ❌ `400 Bad Request`: كتابة أرقام داخل حقل الاسم (مثل: `\"محمود 123\"`).\n- ❌ `400 Bad Request`: رقم هاتف بتنسيق غير صالح.\n\n---\n### 🎯 الاستجابة المتوقعة (201 Created):\n```json\n{\n  \"success\": true,\n  \"message\": \"تم إنشاء الطرف بنجاح\",\n  \"data\": {\n    \"id\": \"7b0a7cb5-9852-4467-85e3-46ea317454f7\",\n    \"name\": \"محمود حسن إبراهيم\",\n    \"phoneNumber\": \"01012345678\",\n    \"notes\": \"عميل منتظم في السداد\",\n    \"isVip\": false,\n    \"contactEmail\": null\n  }\n}\n```"
-          }
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nإنشاء جهة اتصال جديدة (عميل أو مورد) تابعة لحساب صاحب المتجر الحالي.\n\n---\n### 📥 المدخلات المطلوبة (Request Body):\n| الحقل (Field) | النوع (Type) | إجباري؟ | الوصف والقواعد |\n|---|---|---|---|\n| `name` | String | نعم | اسم الطرف (أحرف فقط، أقصى طول 100 حرف). |\n| `phoneNumber` | String | اختياري | رقم الهاتف (صيغة صحيحة 8-15 رقم). |\n| `notes` | String | اختياري | ملاحظات إضافية (أقصى طول 500 حرف). |\n\n---\n### 🎯 الاستجابة المتوقعة (201 Created):\n```json\n{\n  \"success\": true,\n  \"message\": \"تم إضافة الطرف بنجاح\",\n  \"data\": {\n    \"id\": \"7b0a7cb5-8d9e-4a1b-bc3d-1e2f3a4b5c6d\",\n    \"name\": \"محمود حسن إبراهيم\",\n    \"phoneNumber\": \"01012345678\",\n    \"notes\": \"عميل موثوق ومستمر\",\n    \"isVip\": false,\n    \"contactEmail\": null,\n    \"createdAt\": \"2026-08-19T10:00:00Z\",\n    \"updatedAt\": \"2026-08-19T10:00:00Z\"\n  }\n}\n```"
+          },
+          "response": [
+            {
+              "name": "201 Created — تم إضافة العميل",
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"تم إضافة الطرف بنجاح\",\n  \"data\": {\n    \"id\": \"7b0a7cb5-8d9e-4a1b-bc3d-1e2f3a4b5c6d\",\n    \"name\": \"محمود حسن إبراهيم\",\n    \"phoneNumber\": \"01012345678\",\n    \"notes\": \"عميل موثوق ومستمر\",\n    \"isVip\": false,\n    \"contactEmail\": null,\n    \"createdAt\": \"2026-08-19T10:00:00Z\",\n    \"updatedAt\": \"2026-08-19T10:00:00Z\"\n  }\n}"
+            }
+          ]
         },
         {
           "name": "3.2 — إضافة طرف: مورد (Create Contact - Supplier)",
@@ -304,37 +548,61 @@
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
                   "if (pm.response.code === 201) {",
                   "    var json = pm.response.json();",
-                  "    pm.environment.set('contact_supplier_id', json.data.id);",
-                  "    console.log('✅ تم حفظ contact_supplier_id:', json.data.id);",
-                  "    pm.test('تم إنشاء المورد بنجاح', function() {",
-                  "        pm.expect(json.success).to.be.true;",
-                  "    });",
+                  "    if (json.data && json.data.id) {",
+                  "        pm.environment.set('contact_supplier_id', json.data.id);",
+                  "    }",
                   "}"
-                ],
-                "type": "text/javascript"
+                ]
               }
             }
           ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"شركة النور للتوريدات الغذائية\",\n  \"phoneNumber\": \"01123456789\",\n  \"notes\": \"مورد الأجهزة والأدوات\"\n}"
+              "raw": "{\n  \"name\": \"شركة الأمل للتوريدات التجارية\",\n  \"phoneNumber\": \"01122334455\",\n  \"notes\": \"مورد رئيسي للبضائع\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/contacts",
-              "host": ["{{base_url}}"],
-              "path": ["api", "contacts"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "contacts"
+              ]
             },
-            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nإضافة مورد بضائع لتسجيل عمليات المشتريات الآجلة أو النقدية الخاصة به."
-          }
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nإضافة مورد تجاري لتسجيل عمليات الشراء وفواتير التوريد والأقساط الخاصة به."
+          },
+          "response": [
+            {
+              "name": "201 Created — تم إضافة المورد",
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"تم إضافة الطرف بنجاح\",\n  \"data\": {\n    \"id\": \"8c1b8dc6-9e0f-5b2c-cd4e-2f3a4b5c6d7e\",\n    \"name\": \"شركة الأمل للتوريدات التجارية\",\n    \"phoneNumber\": \"01122334455\",\n    \"notes\": \"مورد رئيسي للبضائع\",\n    \"isVip\": false,\n    \"contactEmail\": null,\n    \"createdAt\": \"2026-08-19T10:05:00Z\",\n    \"updatedAt\": \"2026-08-19T10:05:00Z\"\n  }\n}"
+            }
+          ]
         },
         {
           "name": "3.3 — قائمة الأطراف مع البحث والتصفح (List Contacts)",
@@ -342,49 +610,121 @@
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
                   "pm.test('تم جلب قائمة الأطراف بنجاح', function() {",
                   "    pm.expect(pm.response.code).to.equal(200);",
                   "    var json = pm.response.json();",
                   "    pm.expect(json.data.items).to.be.an('array');",
                   "});"
-                ],
-                "type": "text/javascript"
+                ]
               }
             }
           ],
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/contacts?page=1&pageSize=20&search=محمود",
-              "host": ["{{base_url}}"],
-              "path": ["api", "contacts"],
+              "raw": "{{base_url}}/api/contacts?page=1&pageSize=20&search=",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "contacts"
+              ],
               "query": [
-                { "key": "page", "value": "1" },
-                { "key": "pageSize", "value": "20" },
-                { "key": "search", "value": "محمود" }
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "رقم الصفحة (افتراضي: 1)"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20",
+                  "description": "عدد العناصر في الصفحة (1-50)"
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "description": "بحث اختياري بالاسم أو رقم الهاتف"
+                }
               ]
             },
-            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nاستعراض قائمة جهات الاتصال الخاصة بالمتجر مع دعم التصفح (Pagination) والبحث بالاسم (Search)."
-          }
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nاستعراض جهات الاتصال الخاصة بالمستخدم مع دعم البحث والتقسيم لصفحات (`Pagination`)."
+          },
+          "response": [
+            {
+              "name": "200 OK — قائمة الأطراف",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": null,\n  \"data\": {\n    \"items\": [\n      {\n        \"id\": \"7b0a7cb5-8d9e-4a1b-bc3d-1e2f3a4b5c6d\",\n        \"name\": \"محمود حسن إبراهيم\",\n        \"phoneNumber\": \"01012345678\",\n        \"notes\": \"عميل موثوق\",\n        \"isVip\": true,\n        \"contactEmail\": \"mahmoud@example.com\",\n        \"createdAt\": \"2026-08-19T10:00:00Z\",\n        \"updatedAt\": \"2026-08-19T10:00:00Z\"\n      }\n    ],\n    \"totalCount\": 1,\n    \"page\": 1,\n    \"pageSize\": 20,\n    \"totalPages\": 1\n  }\n}"
+            }
+          ]
         },
         {
-          "name": "3.4 — طرف محدد بالمعرف (Get Contact By ID)",
+          "name": "3.4 — جلب طرف محدد بالمعرف (Get Contact by ID)",
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/api/contacts/{{contact_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "contacts", "{{contact_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "contacts",
+                "{{contact_id}}"
+              ]
             },
-            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nجلب البيانات الكاملة لجهة اتصال معينة بالمعرف المرجعي الخاص بها (ID)."
-          }
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nجلب بيانات جهة اتصال معينة باستخدام المعرف الفريد الخاص بها (`contact_id`)."
+          },
+          "response": [
+            {
+              "name": "200 OK — تفاصيل الطرف",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": null,\n  \"data\": {\n    \"id\": \"7b0a7cb5-8d9e-4a1b-bc3d-1e2f3a4b5c6d\",\n    \"name\": \"محمود حسن إبراهيم\",\n    \"phoneNumber\": \"01012345678\",\n    \"notes\": \"عميل موثوق\",\n    \"isVip\": false,\n    \"contactEmail\": null,\n    \"createdAt\": \"2026-08-19T10:00:00Z\",\n    \"updatedAt\": \"2026-08-19T10:00:00Z\"\n  }\n}"
+            },
+            {
+              "name": "404 Not Found — الطرف غير موجود",
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"statusCode\": 404,\n  \"message\": \"الطرف بالمعرف ... غير موجود\"\n}"
+            }
+          ]
         },
         {
           "name": "3.5 — ترقية / إلغاء تمييز العميل المميز (Toggle VIP Contact - Feature 2)",
@@ -392,6 +732,7 @@
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
                   "if (pm.response.code === 200) {",
                   "    var json = pm.response.json();",
@@ -399,25 +740,48 @@
                   "        pm.expect(json.success).to.be.true;",
                   "        pm.expect(json.data.isVip).to.be.a('boolean');",
                   "    });",
-                  "    console.log('⭐ حالة الـ VIP الحالية:', json.data.isVip);",
                   "}"
-                ],
-                "type": "text/javascript"
+                ]
               }
             }
           ],
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/api/contacts/{{contact_id}}/toggle-vip",
-              "host": ["{{base_url}}"],
-              "path": ["api", "contacts", "{{contact_id}}", "toggle-vip"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "contacts",
+                "{{contact_id}}",
+                "toggle-vip"
+              ]
             },
-            "description": "### 📌 ما وظيفة هذه الـ Endpoint (Feature 2)؟\nتبديل حالة العميل إلى **عميل مميز (VIP Contact)** بنقرة واحدة (من `false` إلى `true` أو العكس).\n\n---\n### 💡 ماذا يحدث عند ترقية العميل لـ VIP؟\n- يصبح له بروفايل مستقل وحساب مالي خاص داخل التطبيق.\n- تظهر جميع عملياته المالية مجمعة في بروفايله عبر `GET /api/contacts/{id}/transactions`.\n- يظهر في قائمة العملاء المميزين المخصصة عبر `GET /api/contacts/vip`.\n\n---\n### 🎯 الاستجابة المتوقعة (200 OK):\n```json\n{\n  \"success\": true,\n  \"message\": \"تم تحديث حالة تمييز العميل بنجاح\",\n  \"data\": {\n    \"id\": \"7b0a7cb5-...\",\n    \"name\": \"محمود حسن إبراهيم\",\n    \"isVip\": true,\n    \"contactEmail\": \"mahmoud@example.com\"\n  }\n}\n```"
-          }
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint (Feature 2)؟\nتبديل حالة العميل إلى **عميل مميز (VIP Contact)** بنقرة واحدة (من `false` إلى `true` أو العكس).\n\n---\n### 💡 ماذا يحدث عند ترقية العميل لـ VIP؟\n- يصبح له بروفايل مستقل وحساب مالي خاص داخل التطبيق.\n- تظهر جميع عملياته المالية مجمعة في بروفايله عبر `GET /api/contacts/{id}/transactions`.\n- يظهر في قائمة العملاء المميزين المخصصة عبر `GET /api/contacts/vip`.\n\n---\n### 🎯 الاستجابة المتوقعة (200 OK):\n```json\n{\n  \"success\": true,\n  \"message\": \"تم تحديث حالة تمييز العميل بنجاح\",\n  \"data\": {\n    \"id\": \"7b0a7cb5-8d9e-4a1b-bc3d-1e2f3a4b5c6d\",\n    \"name\": \"محمود حسن إبراهيم\",\n    \"isVip\": true,\n    \"contactEmail\": \"mahmoud@example.com\"\n  }\n}\n```"
+          },
+          "response": [
+            {
+              "name": "200 OK — تم ترقية العميل لـ VIP",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"تم تحديث حالة تمييز العميل بنجاح\",\n  \"data\": {\n    \"id\": \"7b0a7cb5-8d9e-4a1b-bc3d-1e2f3a4b5c6d\",\n    \"name\": \"محمود حسن إبراهيم\",\n    \"phoneNumber\": \"01012345678\",\n    \"notes\": \"عميل موثوق\",\n    \"isVip\": true,\n    \"contactEmail\": \"mahmoud@example.com\",\n    \"createdAt\": \"2026-08-19T10:00:00Z\",\n    \"updatedAt\": \"2026-08-19T10:10:00Z\"\n  }\n}"
+            }
+          ]
         },
         {
           "name": "3.6 — بروفايل وعمليات العميل المميز (Get Contact Transactions & Profile - Feature 2)",
@@ -425,6 +789,7 @@
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
                   "pm.test('تم جلب بروفايل العميل وعملياته بنجاح', function() {",
                   "    pm.expect(pm.response.code).to.equal(200);",
@@ -432,23 +797,47 @@
                   "    pm.expect(json.data.contactId).to.not.be.null;",
                   "    pm.expect(json.data.transactions).to.be.an('array');",
                   "});"
-                ],
-                "type": "text/javascript"
+                ]
               }
             }
           ],
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/api/contacts/{{contact_id}}/transactions",
-              "host": ["{{base_url}}"],
-              "path": ["api", "contacts", "{{contact_id}}", "transactions"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "contacts",
+                "{{contact_id}}",
+                "transactions"
+              ]
             },
-            "description": "### 📌 ما وظيفة هذه الـ Endpoint (Feature 2)؟\nعرض الحساب المالي الكامل للعميل، ويشمل:\n1. إجمالي عدد العمليات التي أجراها (`totalTransactions`).\n2. إجمالي المبالغ المالية (`totalAmount`).\n3. القائمة الكاملة للعمليات (مبيعات، تحصيلات، أقساط) مرتبة من الأحدث إلى الأقدم.\n\n---\n### 🎯 الاستجابة المتوقعة (200 OK):\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"contactId\": \"7b0a7cb5-...\",\n    \"contactName\": \"محمود حسن إبراهيم\",\n    \"phoneNumber\": \"01012345678\",\n    \"contactEmail\": \"mahmoud@example.com\",\n    \"isVip\": true,\n    \"totalTransactions\": 2,\n    \"totalAmount\": 750.00,\n    \"transactions\": [\n      {\n        \"id\": \"c1356f91-...\",\n        \"type\": \"Sale\",\n        \"amount\": 500.00,\n        \"paymentMethod\": \"Cash\",\n        \"transactionDate\": \"2026-08-18T14:30:00Z\"\n      }\n    ]\n  }\n}\n```"
-          }
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint (Feature 2)؟\nعرض الحساب المالي الكامل للعميل، ويشمل:\n1. إجمالي عدد العمليات التي أجراها (`totalTransactions`).\n2. إجمالي المبالغ المالية (`totalAmount`).\n3. القائمة الكاملة للعمليات (مبيعات، تحصيلات، أقساط) مرتبة من الأحدث إلى الأقدم.\n\n---\n### 🎯 الاستجابة المتوقعة (200 OK):\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"contactId\": \"7b0a7cb5-8d9e-4a1b-bc3d-1e2f3a4b5c6d\",\n    \"contactName\": \"محمود حسن إبراهيم\",\n    \"phoneNumber\": \"01012345678\",\n    \"contactEmail\": \"mahmoud@example.com\",\n    \"isVip\": true,\n    \"totalTransactions\": 2,\n    \"totalAmount\": 750.00,\n    \"transactions\": [\n      {\n        \"id\": \"c1356f91-2a3b-4c5d-6e7f-8a9b0c1d2e3f\",\n        \"partyName\": \"محمود حسن إبراهيم\",\n        \"type\": \"Sale\",\n        \"amount\": 500.00,\n        \"paymentMethod\": \"Cash\",\n        \"transactionDate\": \"2026-08-19T14:30:00Z\"\n      }\n    ]\n  }\n}\n```"
+          },
+          "response": [
+            {
+              "name": "200 OK — بروفايل العميل وعملياته",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": null,\n  \"data\": {\n    \"contactId\": \"7b0a7cb5-8d9e-4a1b-bc3d-1e2f3a4b5c6d\",\n    \"contactName\": \"محمود حسن إبراهيم\",\n    \"phoneNumber\": \"01012345678\",\n    \"contactEmail\": \"mahmoud@example.com\",\n    \"isVip\": true,\n    \"totalTransactions\": 2,\n    \"totalAmount\": 750,\n    \"transactions\": [\n      {\n        \"id\": \"c1356f91-2a3b-4c5d-6e7f-8a9b0c1d2e3f\",\n        \"partyName\": \"محمود حسن إبراهيم\",\n        \"type\": \"Sale\",\n        \"amount\": 500,\n        \"paymentMethod\": \"Cash\",\n        \"transactionDate\": \"2026-08-19T14:30:00Z\"\n      },\n      {\n        \"id\": \"d2467a02-3b4c-5d6e-7f8a-9b0c1d2e3f4a\",\n        \"partyName\": \"محمود حسن إبراهيم\",\n        \"type\": \"Sale\",\n        \"amount\": 250,\n        \"paymentMethod\": \"Cash\",\n        \"transactionDate\": \"2026-08-18T10:00:00Z\"\n      }\n    ]\n  }\n}"
+            }
+          ]
         },
         {
           "name": "3.7 — قائمة العملاء المميزين فقط (List VIP Contacts - Feature 2)",
@@ -456,41 +845,92 @@
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
                   "pm.test('تم جلب قائمة العملاء المميزين', function() {",
                   "    pm.expect(pm.response.code).to.equal(200);",
                   "    var json = pm.response.json();",
                   "    pm.expect(json.data.items).to.be.an('array');",
                   "});"
-                ],
-                "type": "text/javascript"
+                ]
               }
             }
           ],
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/api/contacts/vip?page=1&pageSize=20",
-              "host": ["{{base_url}}"],
-              "path": ["api", "contacts", "vip"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "contacts",
+                "vip"
+              ],
               "query": [
-                { "key": "page", "value": "1" },
-                { "key": "pageSize", "value": "20" }
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20"
+                }
               ]
             },
-            "description": "### 📌 ما وظيفة هذه الـ Endpoint (Feature 2)؟\nاستعراض قائمة بجميع جهات الاتصال المصنفة كـ **عميل مميز (`isVip = true`)** فقط مع دعم التصفح."
-          }
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint (Feature 2)؟\nاستعراض قائمة بجميع جهات الاتصال المصنفة كـ **عميل مميز (`isVip = true`)** فقط."
+          },
+          "response": [
+            {
+              "name": "200 OK — قائمة العملاء المميزين",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": null,\n  \"data\": {\n    \"items\": [\n      {\n        \"id\": \"7b0a7cb5-8d9e-4a1b-bc3d-1e2f3a4b5c6d\",\n        \"name\": \"محمود حسن إبراهيم\",\n        \"phoneNumber\": \"01012345678\",\n        \"notes\": \"عميل مميز\",\n        \"isVip\": true,\n        \"contactEmail\": \"mahmoud@example.com\",\n        \"createdAt\": \"2026-08-19T10:00:00Z\",\n        \"updatedAt\": \"2026-08-19T10:10:00Z\"\n      }\n    ],\n    \"totalCount\": 1,\n    \"page\": 1,\n    \"pageSize\": 20,\n    \"totalPages\": 1\n  }\n}"
+            }
+          ]
         },
         {
           "name": "3.8 — تعديل طرف وإضافة إيميل (Update Contact & Email)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('تم تعديل بيانات الطرف بنجاح', function() {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.data.contactEmail).to.equal('mahmoud@example.com');",
+                  "});"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -498,109 +938,210 @@
             },
             "url": {
               "raw": "{{base_url}}/api/contacts/{{contact_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "contacts", "{{contact_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "contacts",
+                "{{contact_id}}"
+              ]
             },
-            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nتعديل بيانات العميل، وتعيين بريده الإلكتروني (`contactEmail`) وحالة التمييز (`isVip`).\n\n---\n### 💡 فائدة البريد الإلكتروني للعميل (Feature 3):\nعند تعيين `contactEmail` للعميل، يقوم النظام بإرسال **إيميل تذكير تلقائي ومباشر** للعميل في يوم استحقاق قسطه لإبلاغه بقدوم المحصل بالمبلغ المطلوب."
-          }
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nتعديل بيانات العميل، وتعيين بريده الإلكتروني (`contactEmail`) وحالة التمييز (`isVip`).\n\n---\n### 📥 المدخلات المطلوبة (Request Body):\n| الحقل (Field) | النوع (Type) | إجباري؟ | الوصف (Description) |\n|---|---|---|---|\n| `name` | String | نعم | اسم الطرف. |\n| `phoneNumber` | String | اختياري | رقم الهاتف. |\n| `notes` | String | اختياري | ملاحظات إضافية. |\n| `isVip` | Boolean | اختياري | هل هو عميل مميز (`true` / `false`). |\n| `contactEmail` | String | اختياري | البريد الإلكتروني لاستلام تذكيرات الأقساط تلقائياً (Feature 3). |\n\n---\n### 💡 فائدة البريد الإلكتروني للعميل (Feature 3):\nعند تعيين `contactEmail` للعميل، يقوم النظام بإرسال **إيميل تذكير تلقائي ومباشر** للعميل في موعد استحقاق قسطه لإبلاغه بقدوم المحصل بالمبلغ المطلوب."
+          },
+          "response": [
+            {
+              "name": "200 OK — تم تعديل الطرف وإضافة الإيميل",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"تم تعديل الطرف بنجاح\",\n  \"data\": {\n    \"id\": \"7b0a7cb5-8d9e-4a1b-bc3d-1e2f3a4b5c6d\",\n    \"name\": \"محمود حسن إبراهيم المعدل\",\n    \"phoneNumber\": \"01099998888\",\n    \"notes\": \"عميل VIP مميز\",\n    \"isVip\": true,\n    \"contactEmail\": \"mahmoud@example.com\",\n    \"createdAt\": \"2026-08-19T10:00:00Z\",\n    \"updatedAt\": \"2026-08-19T10:15:00Z\"\n  }\n}"
+            }
+          ]
         },
         {
           "name": "3.9 — حذف طرف ناعم (Soft Delete Contact)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('تم حذف الطرف ناعماً بنجاح', function() {",
+                  "    pm.expect(pm.response.code).to.equal(204);",
+                  "});"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "DELETE",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/api/contacts/{{contact_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "contacts", "{{contact_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "contacts",
+                "{{contact_id}}"
+              ]
             },
-            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nإلغاء تفعيل الطرف وحذفه ناعماً (Soft Delete) دون فقدان سجل عملياته التاريخية (204 No Content)."
-          }
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nإلغاء تفعيل الطرف وحذفه ناعماً (Soft Delete) دون فقدان سجل عملياته التاريخية (يعيد `204 No Content`)."
+          },
+          "response": [
+            {
+              "name": "204 No Content — تم الحذف بنجاح",
+              "status": "No Content",
+              "code": 204,
+              "_postman_previewlanguage": "plain",
+              "header": [],
+              "body": ""
+            }
+          ]
         }
       ]
     },
     {
       "name": "💸 4. العمليات — إدخال يدوي (Manual Transactions)",
+      "description": "تسجيل عمليات البيع والشراء نقداً أو بجدولة أقساط تلقائية أو مخصصة.",
       "item": [
         {
-          "name": "4.1 — مبيعات كاش مرتبطة بعميل (Manual Sale - Cash Linked to Contact)",
+          "name": "4.1 — مبيعات كاش مرتبطة بطرف (Manual Sale - Cash Linked to Contact)",
           "event": [
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
                   "if (pm.response.code === 201) {",
                   "    var json = pm.response.json();",
-                  "    pm.environment.set('transaction_id', json.data.id);",
-                  "    console.log('📌 تم حفظ transaction_id (كاش مبيعات):', json.data.id);",
-                  "    pm.test('تم إنشاء عملية البيع الكاش بنجاح', function() {",
+                  "    if (json.data && json.data.id) {",
+                  "        pm.environment.set('transaction_id', json.data.id);",
+                  "    }",
+                  "    pm.test('تم إنشاء عملية البيع النقدي بنجاح', function() {",
                   "        pm.expect(json.success).to.be.true;",
-                  "        pm.expect(json.data.type).to.equal('Sale');",
-                  "        pm.expect(json.data.isInstallment).to.be.false;",
+                  "        pm.expect(json.data.amount).to.equal(500);",
                   "    });",
                   "}"
-                ],
-                "type": "text/javascript"
+                ]
               }
             }
           ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"contactId\": \"{{contact_id}}\",\n  \"type\": \"Sale\",\n  \"amount\": 1500.00,\n  \"paymentMethod\": \"Cash\",\n  \"transactionDate\": \"2026-08-18T10:00:00Z\",\n  \"noteType\": \"None\",\n  \"isInstallment\": false\n}"
+              "raw": "{\n  \"contactId\": \"{{contact_id}}\",\n  \"type\": \"Sale\",\n  \"amount\": 500,\n  \"paymentMethod\": \"Cash\",\n  \"transactionDate\": \"2026-08-19T10:00:00Z\",\n  \"noteText\": \"مبيعات بضاعة كاش للعميل\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/transactions",
-              "host": ["{{base_url}}"],
-              "path": ["api", "transactions"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "transactions"
+              ]
             },
-            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nتسجيل عملية بيع نقدي فوري مرتبطة بجهة اتصال مسجلة مسبقاً (`contactId`).\n\n---\n### 📥 المدخلات (Body):\n- `contactId`: معرف العميل المسجل.\n- `type`: نوع العملية (`\"Sale\"`).\n- `amount`: المبلغ (أكبر من 0).\n- `paymentMethod`: طريقة الدفع (`\"Cash\"` أو `\"BankTransfer\"` أو `\"Deferred\"`).\n- `transactionDate`: تاريخ وتوقيت العملية بصيغة ISO-8601.\n- `isInstallment`: `false` (نقدي بدون أقساط)."
-          }
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nتسجيل عملية بيع نقدية فورية (`Cash`) منسوبة إلى جهة اتصال محددة (`contactId`).\n\n---\n### 📥 المدخلات المطلوبة (Request Body):\n| الحقل (Field) | النوع (Type) | إجباري؟ | الوصف (Description) |\n|---|---|---|---|\n| `contactId` | UUID | اختياري | معرف الطرف من جدول Contacts. |\n| `partyName` | String | اختياري | اسم الطرف (مطلوب إذا كان contactId فارغاً). |\n| `type` | String Enum | نعم | إما `\"Sale\"` أو `\"Purchase\"`. |\n| `amount` | Decimal | نعم | المبلغ (أكبر من صفر). |\n| `paymentMethod` | String Enum | نعم | إما `\"Cash\"` أو `\"Installments\"`. |\n| `transactionDate` | ISO DateTime | نعم | تاريخ ووقت العملية. |\n| `noteText` | String | اختياري | ملاحظة نصية. |"
+          },
+          "response": [
+            {
+              "name": "201 Created — تم تسجيل البيع الكاش",
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"تم إنشاء العملية بنجاح\",\n  \"data\": {\n    \"id\": \"c1356f91-2a3b-4c5d-6e7f-8a9b0c1d2e3f\",\n    \"contactId\": \"7b0a7cb5-8d9e-4a1b-bc3d-1e2f3a4b5c6d\",\n    \"contactName\": \"محمود حسن إبراهيم\",\n    \"type\": \"Sale\",\n    \"amount\": 500,\n    \"paymentMethod\": \"Cash\",\n    \"transactionDate\": \"2026-08-19T10:00:00Z\",\n    \"isInstallment\": false,\n    \"installments\": [],\n    \"createdAt\": \"2026-08-19T10:00:05Z\"\n  }\n}"
+            }
+          ]
         },
         {
-          "name": "4.2 — مشتريات كاش فورية (Manual Purchase - Cash)",
+          "name": "4.2 — مشتريات كاش من مورد (Manual Purchase - Cash)",
           "event": [
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
-                  "if (pm.response.code === 201) {",
-                  "    var json = pm.response.json();",
-                  "    pm.environment.set('transaction_id', json.data.id);",
-                  "    pm.test('تم إنشاء عملية الشراء الكاش بنجاح', function() {",
-                  "        pm.expect(json.success).to.be.true;",
-                  "        pm.expect(json.data.type).to.equal('Purchase');",
-                  "    });",
-                  "}"
-                ],
-                "type": "text/javascript"
+                  "pm.test('تم تسجيل عملية الشراء النقدي', function() {",
+                  "    pm.expect(pm.response.code).to.equal(201);",
+                  "});"
+                ]
               }
             }
           ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"contactId\": \"{{contact_supplier_id}}\",\n  \"type\": \"Purchase\",\n  \"amount\": 3000.00,\n  \"paymentMethod\": \"BankTransfer\",\n  \"transactionDate\": \"2026-08-18T11:00:00Z\",\n  \"noteType\": \"Text\",\n  \"noteText\": \"فاتورة شراء بضائع بالأمانة\",\n  \"isInstallment\": false\n}"
+              "raw": "{\n  \"contactId\": \"{{contact_supplier_id}}\",\n  \"type\": \"Purchase\",\n  \"amount\": 1200,\n  \"paymentMethod\": \"Cash\",\n  \"transactionDate\": \"2026-08-19T11:00:00Z\",\n  \"noteText\": \"شراء بضاعة نقداً من المورد\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/transactions",
-              "host": ["{{base_url}}"],
-              "path": ["api", "transactions"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "transactions"
+              ]
             },
-            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nتسجيل عملية شراء بضاعة لمحل التاجر من مورد مسجل مع إضافة ملاحظة نصية."
-          }
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nتسجيل فاتورة مشتريات نقدية مسددة للمورد بالكامل."
+          },
+          "response": [
+            {
+              "name": "201 Created — تم تسجيل الشراء",
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"تم إنشاء العملية بنجاح\",\n  \"data\": {\n    \"id\": \"e3578b12-4c5d-6e7f-8a9b-0c1d2e3f4a5b\",\n    \"contactId\": \"8c1b8dc6-9e0f-5b2c-cd4e-2f3a4b5c6d7e\",\n    \"contactName\": \"شركة الأمل للتوريدات التجارية\",\n    \"type\": \"Purchase\",\n    \"amount\": 1200,\n    \"paymentMethod\": \"Cash\",\n    \"transactionDate\": \"2026-08-19T11:00:00Z\",\n    \"isInstallment\": false,\n    \"installments\": [],\n    \"createdAt\": \"2026-08-19T11:00:05Z\"\n  }\n}"
+            }
+          ]
         },
         {
           "name": "4.3 — مبيعات بالتقسيط الآلي (Sale with Automatic Installments)",
@@ -608,40 +1149,65 @@
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
                   "if (pm.response.code === 201) {",
                   "    var json = pm.response.json();",
-                  "    pm.environment.set('transaction_id', json.data.id);",
                   "    if (json.data.installments && json.data.installments.length > 0) {",
                   "        pm.environment.set('installment_id', json.data.installments[0].id);",
-                  "        console.log('📌 تم حفظ installment_id الأول:', json.data.installments[0].id);",
+                  "        console.log('✅ تم تعيين installment_id للقسط الأول:', json.data.installments[0].id);",
                   "    }",
-                  "    pm.test('تم توليد جدول الأقساط الآلي بنجاح', function() {",
+                  "    pm.test('تم إنشاء الأقساط التلقائية بنجاح', function() {",
                   "        pm.expect(json.data.installments.length).to.equal(3);",
                   "    });",
                   "}"
-                ],
-                "type": "text/javascript"
+                ]
               }
             }
           ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"contactId\": \"{{contact_id}}\",\n  \"type\": \"Sale\",\n  \"amount\": 6000.00,\n  \"paymentMethod\": \"Deferred\",\n  \"transactionDate\": \"2026-08-18T12:00:00Z\",\n  \"isInstallment\": true,\n  \"installmentPlanMode\": \"Automatic\",\n  \"installmentCount\": 3,\n  \"firstInstallmentDate\": \"2026-09-01T00:00:00Z\",\n  \"frequency\": \"Monthly\"\n}"
+              "raw": "{\n  \"contactId\": \"{{contact_id}}\",\n  \"type\": \"Sale\",\n  \"amount\": 3000,\n  \"paymentMethod\": \"Installments\",\n  \"isInstallment\": true,\n  \"installmentPlanMode\": \"Automatic\",\n  \"installmentsCount\": 3,\n  \"firstInstallmentDate\": \"2026-09-01T00:00:00Z\",\n  \"transactionDate\": \"2026-08-19T12:00:00Z\",\n  \"noteText\": \"بيع جهاز بالتقسيط على 3 أشهر متساوية\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/transactions",
-              "host": ["{{base_url}}"],
-              "path": ["api", "transactions"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "transactions"
+              ]
             },
-            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nتسجيل عملية بيع بالتقسيط مع **توليد آلي كامل لجدول الأقساط**:\n- المبلغ الإجمالي: `6000` على `3` أقساط شهرية.\n- يقوم النظام بحساب قيمة كل قسط تلقائياً (`2000` لكل قسط) وجدولتها في المواعيد المحددة."
-          }
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nإنشاء عملية بيع بالتقسيط مع توليد أقساط متساوية آلياً شهرياً تبدأ من `firstInstallmentDate`.\n\n---\n### 📥 مدخلات خطة التقسيط الآلية:\n- `isInstallment`: `true`\n- `installmentPlanMode`: `\"Automatic\"`\n- `installmentsCount`: عدد الأقساط (مثال: 3 أقساط بقيمة 1000 لكل قسط).\n- `firstInstallmentDate`: تاريخ استحقاق القسط الأول."
+          },
+          "response": [
+            {
+              "name": "201 Created — تم توليد الأقساط الآلية",
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"تم إنشاء العملية بنجاح\",\n  \"data\": {\n    \"id\": \"f4689c23-5d6e-7f8a-9b0c-1d2e3f4a5b6c\",\n    \"contactId\": \"7b0a7cb5-8d9e-4a1b-bc3d-1e2f3a4b5c6d\",\n    \"contactName\": \"محمود حسن إبراهيم\",\n    \"type\": \"Sale\",\n    \"amount\": 3000,\n    \"paymentMethod\": \"Installments\",\n    \"transactionDate\": \"2026-08-19T12:00:00Z\",\n    \"isInstallment\": true,\n    \"installments\": [\n      {\n        \"id\": \"11111111-2222-3333-4444-555555555555\",\n        \"installmentNumber\": 1,\n        \"amount\": 1000,\n        \"dueDate\": \"2026-09-01T00:00:00Z\",\n        \"isPaid\": false,\n        \"status\": \"Pending\"\n      },\n      {\n        \"id\": \"22222222-3333-4444-5555-666666666666\",\n        \"installmentNumber\": 2,\n        \"amount\": 1000,\n        \"dueDate\": \"2026-10-01T00:00:00Z\",\n        \"isPaid\": false,\n        \"status\": \"Pending\"\n      },\n      {\n        \"id\": \"33333333-4444-5555-6666-777777777777\",\n        \"installmentNumber\": 3,\n        \"amount\": 1000,\n        \"dueDate\": \"2026-11-01T00:00:00Z\",\n        \"isPaid\": false,\n        \"status\": \"Pending\"\n      }\n    ]\n  }\n}"
+            }
+          ]
         },
         {
           "name": "4.4 — مشتريات بجدول أقساط مخصص (Purchase with Custom Installments)",
@@ -649,35 +1215,58 @@
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
-                  "if (pm.response.code === 201) {",
-                  "    var json = pm.response.json();",
-                  "    pm.test('تم إنشاء الأقساط المخصصة بنجاح', function() {",
-                  "        pm.expect(json.data.installments.length).to.equal(2);",
-                  "    });",
-                  "}"
-                ],
-                "type": "text/javascript"
+                  "pm.test('تم إنشاء الأقساط المخصصة بنجاح', function() {",
+                  "    pm.expect(pm.response.code).to.equal(201);",
+                  "});"
+                ]
               }
             }
           ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"contactId\": \"{{contact_supplier_id}}\",\n  \"type\": \"Purchase\",\n  \"amount\": 5000.00,\n  \"paymentMethod\": \"Deferred\",\n  \"transactionDate\": \"2026-08-18T13:00:00Z\",\n  \"noteType\": \"Text\",\n  \"noteText\": \"توريد على دفعتين\",\n  \"isInstallment\": true,\n  \"installmentPlanMode\": \"Custom\",\n  \"customInstallments\": [\n    {\n      \"amount\": 2000.00,\n      \"dueDate\": \"2026-08-25T00:00:00Z\"\n    },\n    {\n      \"amount\": 3000.00,\n      \"dueDate\": \"2026-09-10T00:00:00Z\"\n    }\n  ]\n}"
+              "raw": "{\n  \"contactId\": \"{{contact_supplier_id}}\",\n  \"type\": \"Purchase\",\n  \"amount\": 2500,\n  \"paymentMethod\": \"Installments\",\n  \"isInstallment\": true,\n  \"installmentPlanMode\": \"Custom\",\n  \"customInstallments\": [\n    {\n      \"amount\": 1000,\n      \"dueDate\": \"2026-09-15T00:00:00Z\"\n    },\n    {\n      \"amount\": 1500,\n      \"dueDate\": \"2026-10-15T00:00:00Z\"\n    }\n  ],\n  \"transactionDate\": \"2026-08-19T13:00:00Z\",\n  \"noteText\": \"شراء بضاعة بجدول سداد مخصص\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/transactions",
-              "host": ["{{base_url}}"],
-              "path": ["api", "transactions"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "transactions"
+              ]
             },
-            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nتسجيل عملية بجدول أقساط مخصص المواعيد والمبالغ (`installmentPlanMode: \"Custom\"`).\n\n---\n### ⚠️ تنبيه صارم (Domain Validation Rule):\nمجموع مبالغ الأقساط المخصصة (`2000 + 3000 = 5000`) **يجب أن يطابق بدقة تامة** المبلغ الإجمالي للعملية (`amount: 5000`) وإلا سيتم رفض الطلب بـ `400 Bad Request`."
-          }
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nإنشاء عملية شراء مع تحديد مبالغ وتواريخ استحقاق مخصصة لكل قسط (`Custom Installments`)."
+          },
+          "response": [
+            {
+              "name": "201 Created — تم حفظ الأقساط المخصصة",
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"تم إنشاء العملية بنجاح\",\n  \"data\": {\n    \"id\": \"a5790d34-6e7f-8a9b-0c1d-2e3f4a5b6c7d\",\n    \"contactId\": \"8c1b8dc6-9e0f-5b2c-cd4e-2f3a4b5c6d7e\",\n    \"type\": \"Purchase\",\n    \"amount\": 2500,\n    \"paymentMethod\": \"Installments\",\n    \"isInstallment\": true,\n    \"installments\": [\n      {\n        \"id\": \"44444444-5555-6666-7777-888888888888\",\n        \"installmentNumber\": 1,\n        \"amount\": 1000,\n        \"dueDate\": \"2026-09-15T00:00:00Z\",\n        \"isPaid\": false,\n        \"status\": \"Pending\"\n      },\n      {\n        \"id\": \"55555555-6666-7777-8888-999999999999\",\n        \"installmentNumber\": 2,\n        \"amount\": 1500,\n        \"dueDate\": \"2026-10-15T00:00:00Z\",\n        \"isPaid\": false,\n        \"status\": \"Pending\"\n      }\n    ]\n  }\n}"
+            }
+          ]
         },
         {
           "name": "4.5 — قائمة العمليات مع الفلترة والتصفح (List Transactions)",
@@ -685,111 +1274,243 @@
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
                   "pm.test('تم جلب قائمة العمليات بنجاح', function() {",
                   "    pm.expect(pm.response.code).to.equal(200);",
                   "    var json = pm.response.json();",
                   "    pm.expect(json.data.items).to.be.an('array');",
                   "});"
-                ],
-                "type": "text/javascript"
+                ]
               }
             }
           ],
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/transactions?page=1&pageSize=20&type=Sale",
-              "host": ["{{base_url}}"],
-              "path": ["api", "transactions"],
+              "raw": "{{base_url}}/api/transactions?page=1&pageSize=20&contactId=&type=&dateFrom=&dateTo=",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "transactions"
+              ],
               "query": [
-                { "key": "page", "value": "1" },
-                { "key": "pageSize", "value": "20" },
-                { "key": "type", "value": "Sale" }
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20"
+                },
+                {
+                  "key": "contactId",
+                  "value": "",
+                  "description": "فلترة حسب طرف معين (اختياري)"
+                },
+                {
+                  "key": "type",
+                  "value": "",
+                  "description": "Sale أو Purchase (اختياري)"
+                },
+                {
+                  "key": "dateFrom",
+                  "value": "",
+                  "description": "تاريخ البداية (اختياري)"
+                },
+                {
+                  "key": "dateTo",
+                  "value": "",
+                  "description": "تاريخ النهاية (اختياري)"
+                }
               ]
             },
-            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nاستعراض قائمة العمليات المالية الخاصة بالمتجر مع الفلترة حسب النوع (`Sale`, `Purchase`, `InstallmentCollection`) أو الطرف أو النطاق الزمني."
-          }
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nاستعراض كافة العمليات المالية للمتجر مع إمكانية الفلترة بنوع العملية، الطرف، ونطاق التاريخ."
+          },
+          "response": [
+            {
+              "name": "200 OK — قائمة العمليات",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": null,\n  \"data\": {\n    \"items\": [\n      {\n        \"id\": \"c1356f91-2a3b-4c5d-6e7f-8a9b0c1d2e3f\",\n        \"contactId\": \"7b0a7cb5-8d9e-4a1b-bc3d-1e2f3a4b5c6d\",\n        \"contactName\": \"محمود حسن إبراهيم\",\n        \"type\": \"Sale\",\n        \"amount\": 500,\n        \"paymentMethod\": \"Cash\",\n        \"transactionDate\": \"2026-08-19T10:00:00Z\",\n        \"isInstallment\": false,\n        \"createdAt\": \"2026-08-19T10:00:05Z\"\n      }\n    ],\n    \"totalCount\": 1,\n    \"page\": 1,\n    \"pageSize\": 20,\n    \"totalPages\": 1\n  }\n}"
+            }
+          ]
         },
         {
-          "name": "4.6 — تفاصيل عملية محددة (Get Transaction By ID)",
+          "name": "4.6 — تفاصيل عملية محددة وأقساطها (Get Transaction by ID)",
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/api/transactions/{{transaction_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "transactions", "{{transaction_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "transactions",
+                "{{transaction_id}}"
+              ]
             },
-            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nاسترجاع التفاصيل الكاملة لعملية محددة وجدول أقساطها والملاحظات الصوتية المرفقة بها."
-          }
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nجلب بيانات العملية المحددة متضمنة جدول الأقساط وحالة السداد لكل قسط."
+          },
+          "response": [
+            {
+              "name": "200 OK — تفاصيل العملية",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": null,\n  \"data\": {\n    \"id\": \"c1356f91-2a3b-4c5d-6e7f-8a9b0c1d2e3f\",\n    \"contactId\": \"7b0a7cb5-8d9e-4a1b-bc3d-1e2f3a4b5c6d\",\n    \"contactName\": \"محمود حسن إبراهيم\",\n    \"type\": \"Sale\",\n    \"amount\": 500,\n    \"paymentMethod\": \"Cash\",\n    \"transactionDate\": \"2026-08-19T10:00:00Z\",\n    \"isInstallment\": false,\n    \"installments\": []\n  }\n}"
+            }
+          ]
         },
         {
-          "name": "4.7 — حذف ناعم للعملية وإلغاء أقساطها (Soft Delete Transaction)",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/transactions/{{transaction_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "transactions", "{{transaction_id}}"]
-            },
-            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nإلغاء تفعيل وحذف العملية ناعماً، وإلغاء أي أقساط معلقة غير مدفوعة تابعة لها تلقائياً (204 No Content)."
-          }
-        }
-      ]
-    },
-    {
-      "name": "📅 6. الأقساط — استعراض وتسديد (Installments & Payments)",
-      "item": [
-        {
-          "name": "6.1 — تسجيل سداد قسط (Mark Installment Paid)",
+          "name": "4.7 — حذف عملية ناعم (Soft Delete Transaction)",
           "event": [
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('تم حذف العملية ناعماً بنجاح', function() {",
+                  "    pm.expect(pm.response.code).to.equal(204);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/transactions/{{transaction_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "transactions",
+                "{{transaction_id}}"
+              ]
+            },
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nإلغاء تفعيل العملية وحذفها ناعماً، وإلغاء أي أقساط معلقة غير مدفوعة تابعة لها تلقائياً (يعيد `204 No Content`)."
+          },
+          "response": [
+            {
+              "name": "204 No Content — تم الحذف بنجاح",
+              "status": "No Content",
+              "code": 204,
+              "_postman_previewlanguage": "plain",
+              "header": [],
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "📅 5. الأقساط — استعراض وتسديد (Installments & Payments)",
+      "description": "تسجيل سداد الأقساط المستحقة وتحديث حالة القسط إلى مدفوع (Paid).",
+      "item": [
+        {
+          "name": "5.1 — تسجيل سداد قسط (Mark Installment Paid)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
                 "exec": [
                   "pm.test('تم تسديد القسط وتحديث حالته', function() {",
                   "    pm.expect(pm.response.code).to.equal(200);",
                   "    var json = pm.response.json();",
                   "    pm.expect(json.data.isPaid).to.be.true;",
                   "});"
-                ],
-                "type": "text/javascript"
+                ]
               }
             }
           ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/transactions/{{transaction_id}}/installments/{{installment_id}}/pay",
-              "host": ["{{base_url}}"],
-              "path": ["api", "transactions", "{{transaction_id}}", "installments", "{{installment_id}}", "pay"]
+              "raw": "{{base_url}}/api/installments/{{installment_id}}/pay",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "installments",
+                "{{installment_id}}",
+                "pay"
+              ]
             },
-            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nتسجيل تحصيل وسداد قسط مستحق، وتحويل حالته إلى `isPaid: true` وتسجيل توقيت السداد الفعلي (`paidAt`)."
-          }
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nتسجيل سداد القسط المستحق، وتعيين `isPaid = true` وتاريخ السداد `paidAt`، وتحويل حالته إلى `Paid`.\n\n---\n### 🎯 الاستجابة المتوقعة (200 OK):\n```json\n{\n  \"success\": true,\n  \"message\": \"تم سداد القسط بنجاح\",\n  \"data\": {\n    \"id\": \"11111111-2222-3333-4444-555555555555\",\n    \"installmentNumber\": 1,\n    \"amount\": 1000.00,\n    \"dueDate\": \"2026-09-01T00:00:00Z\",\n    \"isPaid\": true,\n    \"paidAt\": \"2026-08-19T14:00:00Z\",\n    \"status\": \"Paid\"\n  }\n}\n```"
+          },
+          "response": [
+            {
+              "name": "200 OK — تم سداد القسط",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"تم سداد القسط بنجاح\",\n  \"data\": {\n    \"id\": \"11111111-2222-3333-4444-555555555555\",\n    \"installmentNumber\": 1,\n    \"amount\": 1000,\n    \"dueDate\": \"2026-09-01T00:00:00Z\",\n    \"isPaid\": true,\n    \"paidAt\": \"2026-08-19T14:00:00Z\",\n    \"status\": \"Paid\"\n  }\n}"
+            }
+          ]
         }
       ]
     },
     {
-      "name": "📈 7. الإحصائيات الفورية والعمليات السريعة (Real-Time Statistics - Feature 1)",
+      "name": "📈 6. الإحصائيات الفورية والعمليات السريعة (Real-Time Statistics - Feature 1)",
+      "description": "نظام الإحصائيات الحية الفورية (بديل ملفات PDF الثابتة) — يعرض إجمالي المبيعات، المشتريات، عدد العمليات لليوم أو لأي يوم/شهر محدد لحظياً، مع إمكانية إضافة عمليات سريعة.",
       "item": [
         {
-          "name": "7.1 — ملخص إحصائيات اليوم الحالي (Get Today's Summary - Feature 1)",
+          "name": "6.1 — ملخص إحصائيات اليوم الحالي (Get Today's Summary - Feature 1)",
           "event": [
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
                   "if (pm.response.code === 200) {",
                   "    var json = pm.response.json();",
@@ -802,274 +1523,887 @@
                   "    });",
                   "    console.log('📊 مبيعات اليوم:', json.data.totalSales, '| مشتريات:', json.data.totalPurchases, '| عدد العمليات:', json.data.operationsCount);",
                   "}"
-                ],
-                "type": "text/javascript"
+                ]
               }
             }
           ],
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/api/statistics/summary",
-              "host": ["{{base_url}}"],
-              "path": ["api", "statistics", "summary"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "statistics",
+                "summary"
+              ]
             },
-            "description": "### 📌 ما وظيفة هذه الـ Endpoint (Feature 1)؟\n**بديل نظام الـ PDF**: يستدعيها التطبيق فوراً عند فتحه لعرض شاشة الإحصائيات الحية لليوم الحالي:\n- إجمالي المبيعات (`totalSales`).\n- إجمالي المشتريات (`totalPurchases`).\n- عدد العمليات المنفذة (`operationsCount`).\n- قائمة عمليات اليوم مرتبة لحظياً من الأحدث إلى الأقدم.\n\n---\n### 🎯 الاستجابة المتوقعة (200 OK):\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"date\": \"2026-08-18T00:00:00Z\",\n    \"totalSales\": 2450.00,\n    \"totalPurchases\": 800.00,\n    \"operationsCount\": 3,\n    \"transactions\": [\n      {\n        \"id\": \"c1356f91-...\",\n        \"partyName\": \"أحمد محمود (عميل نقدي)\",\n        \"type\": \"Sale\",\n        \"amount\": 450.00,\n        \"paymentMethod\": \"Cash\",\n        \"transactionDate\": \"2026-08-18T14:30:00Z\"\n      }\n    ]\n  }\n}\n```"
-          }
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint (Feature 1)؟\nيستدعيها التطبيق فوراً عند فتحه لعرض شاشة الإحصائيات الحية لليوم الحالي:\n- إجمالي المبيعات (`totalSales`).\n- إجمالي المشتريات (`totalPurchases`).\n- عدد العمليات المنفذة اليوم (`operationsCount`).\n- قائمة عمليات اليوم مرتبة لحظياً من الأحدث إلى الأقدم.\n\n---\n### 🎯 الاستجابة المتوقعة (200 OK):\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"date\": \"2026-08-19T00:00:00Z\",\n    \"totalSales\": 3500.00,\n    \"totalPurchases\": 1200.00,\n    \"operationsCount\": 3,\n    \"transactions\": [\n      {\n        \"id\": \"c1356f91-2a3b-4c5d-6e7f-8a9b0c1d2e3f\",\n        \"partyName\": \"محمود حسن إبراهيم\",\n        \"type\": \"Sale\",\n        \"amount\": 500.00,\n        \"paymentMethod\": \"Cash\",\n        \"transactionDate\": \"2026-08-19T10:00:00Z\"\n      }\n    ]\n  }\n}\n```"
+          },
+          "response": [
+            {
+              "name": "200 OK — إحصائيات اليوم الحالي",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": null,\n  \"data\": {\n    \"date\": \"2026-08-19T00:00:00Z\",\n    \"totalSales\": 3500,\n    \"totalPurchases\": 1200,\n    \"operationsCount\": 3,\n    \"transactions\": [\n      {\n        \"id\": \"c1356f91-2a3b-4c5d-6e7f-8a9b0c1d2e3f\",\n        \"partyName\": \"محمود حسن إبراهيم\",\n        \"type\": \"Sale\",\n        \"amount\": 500,\n        \"paymentMethod\": \"Cash\",\n        \"transactionDate\": \"2026-08-19T10:00:00Z\"\n      }\n    ]\n  }\n}"
+            }
+          ]
         },
         {
-          "name": "7.2 — إحصائيات يوم محدد (Get Daily Statistics - Feature 1)",
+          "name": "6.2 — إحصائيات يوم محدد (Get Daily Statistics - Feature 1)",
           "event": [
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
                   "pm.test('تم جلب إحصائيات اليوم المحدد بنجاح', function() {",
                   "    pm.expect(pm.response.code).to.equal(200);",
                   "    var json = pm.response.json();",
-                  "    pm.expect(json.success).to.be.true;",
                   "    pm.expect(json.data.transactions).to.be.an('array');",
                   "});"
-                ],
-                "type": "text/javascript"
+                ]
               }
             }
           ],
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "url": {
-              "raw": "{{base_url}}/api/statistics/daily?date=2026-08-18",
-              "host": ["{{base_url}}"],
-              "path": ["api", "statistics", "daily"],
+              "raw": "{{base_url}}/api/statistics/daily?date=2026-08-19",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "statistics",
+                "daily"
+              ],
               "query": [
-                { "key": "date", "value": "2026-08-18" }
+                {
+                  "key": "date",
+                  "value": "2026-08-19",
+                  "description": "التاريخ المطلوب (YYYY-MM-DD)"
+                }
               ]
             },
-            "description": "### 📌 ما وظيفة هذه الـ Endpoint (Feature 1)؟\nجلب الإحصائيات الفورية والعمليات ليوم محدد عبر تمرير المعامل `date` بصيغة `YYYY-MM-DD`."
-          }
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nجلب تقرير إحصائي مفصل لأي يوم محدد بالماضي أو الحاضر."
+          },
+          "response": [
+            {
+              "name": "200 OK — إحصائيات اليوم المحدد",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": null,\n  \"data\": {\n    \"date\": \"2026-08-19T00:00:00Z\",\n    \"totalSales\": 3500,\n    \"totalPurchases\": 1200,\n    \"operationsCount\": 3,\n    \"transactions\": []\n  }\n}"
+            }
+          ]
         },
         {
-          "name": "7.3 — إحصائيات شهر كامل (Get Monthly Statistics - Feature 1)",
+          "name": "6.3 — إحصائيات شهر محدد (Get Monthly Statistics - Feature 1)",
           "event": [
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
                   "pm.test('تم جلب إحصائيات الشهر بنجاح', function() {",
                   "    pm.expect(pm.response.code).to.equal(200);",
                   "    var json = pm.response.json();",
-                  "    pm.expect(json.success).to.be.true;",
-                  "    pm.expect(json.data.days).to.be.an('array');",
+                  "    pm.expect(json.data.dailyBreakdown).to.be.an('array');",
                   "});"
-                ],
-                "type": "text/javascript"
+                ]
               }
             }
           ],
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/api/statistics/monthly?year=2026&month=8",
-              "host": ["{{base_url}}"],
-              "path": ["api", "statistics", "monthly"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "statistics",
+                "monthly"
+              ],
               "query": [
-                { "key": "year", "value": "2026" },
-                { "key": "month", "value": "8" }
+                {
+                  "key": "year",
+                  "value": "2026",
+                  "description": "السنة (مثال: 2026)"
+                },
+                {
+                  "key": "month",
+                  "value": "8",
+                  "description": "الشهر (1 - 12)"
+                }
               ]
             },
-            "description": "### 📌 ما وظيفة هذه الـ Endpoint (Feature 1)؟\nعرض ملخص شهر كامل مع تفصيل إحصائيات كل يوم على حدة لرسم الرسوم البيانية (Charts) ومتابعة أداء المتجر الشهري."
-          }
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nاستعراض التقرير المالي والشهري متضمناً توزيع الأيام والعمليات (`dailyBreakdown`)."
+          },
+          "response": [
+            {
+              "name": "200 OK — إحصائيات الشهر",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": null,\n  \"data\": {\n    \"year\": 2026,\n    \"month\": 8,\n    \"totalSales\": 25000,\n    \"totalPurchases\": 10000,\n    \"operationsCount\": 28,\n    \"dailyBreakdown\": [\n      {\n        \"date\": \"2026-08-19T00:00:00Z\",\n        \"totalSales\": 3500,\n        \"totalPurchases\": 1200,\n        \"operationsCount\": 3\n      }\n    ]\n  }\n}"
+            }
+          ]
         },
         {
-          "name": "7.4 — تسجيل عملية بيع نقدي سريعة بطرف حر (Quick Cash Sale - Feature 1)",
+          "name": "6.4 — تسجيل عملية بيع سريعة بطرف حر (Quick Cash Sale - Feature 1)",
           "event": [
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
-                  "if (pm.response.code === 201) {",
+                  "pm.test('تم حفظ عملية البيع السريع بنجاح', function() {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
                   "    var json = pm.response.json();",
-                  "    pm.environment.set('transaction_id', json.data.id);",
-                  "    pm.test('تم تسجيل البيع النقدي السريع بنجاح', function() {",
-                  "        pm.expect(json.success).to.be.true;",
-                  "        pm.expect(json.data.paymentMethod).to.equal('Cash');",
-                  "    });",
-                  "}"
-                ],
-                "type": "text/javascript"
+                  "    pm.expect(json.data.amount).to.equal(150);",
+                  "});"
+                ]
               }
             }
           ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"partyName\": \"أحمد محمود (عميل نقدي)\",\n  \"type\": \"Sale\",\n  \"amount\": 450.00,\n  \"paymentMethod\": \"Cash\",\n  \"transactionDate\": \"2026-08-18T14:30:00Z\"\n}"
+              "raw": "{\n  \"amount\": 150,\n  \"partyName\": \"عميل نقدي عابر\",\n  \"operationDate\": \"2026-08-19T14:00:00Z\",\n  \"notes\": \"بيع منتج سريع بدون إضافة جهة اتصال مسبقة\"\n}"
             },
             "url": {
-              "raw": "{{base_url}}/api/transactions",
-              "host": ["{{base_url}}"],
-              "path": ["api", "transactions"]
+              "raw": "{{base_url}}/api/statistics/quick-sale",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "statistics",
+                "quick-sale"
+              ]
             },
-            "description": "### 📌 ما وظيفة هذه الـ Endpoint (Feature 1)؟\nتسجيل عملية بيع كاش فورية سريعة لزبون عابر باستخدام `partyName` فقط، **بدون الحاجة لإنشاء جهة اتصال مسجلة مسبقاً (Contact)** وبدون حقول إضافية."
-          }
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint (Feature 1)؟\nتسجيل مبيعات نقدية سريعة بضغطة زر واحدة دون الحاجة لإضافة جهة اتصال مسبقة في جدول Contacts، مع كتابة اسم الطرف مباشرة في `partyName`."
+          },
+          "response": [
+            {
+              "name": "200 OK — تم تسجيل البيع السريع",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"تم تسجيل البيع السريع بنجاح\",\n  \"data\": {\n    \"id\": \"b2468c13-5e7f-8a9b-0c1d-2e3f4a5b6c7d\",\n    \"partyName\": \"عميل نقدي عابر\",\n    \"type\": \"Sale\",\n    \"amount\": 150,\n    \"paymentMethod\": \"Cash\",\n    \"transactionDate\": \"2026-08-19T14:00:00Z\"\n  }\n}"
+            }
+          ]
         },
         {
-          "name": "7.5 — تسجيل عملية تحصيل قسط فورية (Quick Installment Collection - Feature 1)",
+          "name": "6.5 — تسجيل تحصيل قسط سريع (Quick Installment Collection - Feature 1)",
           "event": [
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
-                  "if (pm.response.code === 201) {",
-                  "    var json = pm.response.json();",
-                  "    pm.test('تم تسجيل تحصيل القسط بنجاح', function() {",
-                  "        pm.expect(json.success).to.be.true;",
-                  "        pm.expect(json.data.type).to.equal('InstallmentCollection');",
-                  "    });",
-                  "}"
-                ],
-                "type": "text/javascript"
+                  "pm.test('تم تحصيل القسط وتحديث الرصيد بنجاح', function() {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});"
+                ]
               }
             }
           ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"partyName\": \"محمود حسن إبراهيم\",\n  \"type\": \"InstallmentCollection\",\n  \"amount\": 250.00,\n  \"paymentMethod\": \"Cash\",\n  \"transactionDate\": \"2026-08-18T16:00:00Z\"\n}"
+              "raw": "{\n  \"installmentId\": \"{{installment_id}}\"\n}"
             },
             "url": {
-              "raw": "{{base_url}}/api/transactions",
-              "host": ["{{base_url}}"],
-              "path": ["api", "transactions"]
+              "raw": "{{base_url}}/api/statistics/quick-installment-collection",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "statistics",
+                "quick-installment-collection"
+              ]
             },
-            "description": "### 📌 ما وظيفة هذه الـ Endpoint (Feature 1)؟\nتسجيل تحصيل قسط مباشر بنوع `InstallmentCollection` ليُحسب مباشرة ضمن إجمالي المقبوضات اليومية للمتجر."
-          }
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint (Feature 1)؟\nتحصيل قسط فوري من الشاشة الرئيسية بنقرة واحدة وتحديث عدّادات مبيعات اليوم مباشرة."
+          },
+          "response": [
+            {
+              "name": "200 OK — تم تحصيل القسط",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"تم تحصيل القسط وتحديث حالة السداد بنجاح\",\n  \"data\": {\n    \"id\": \"11111111-2222-3333-4444-555555555555\",\n    \"installmentNumber\": 1,\n    \"amount\": 1000,\n    \"dueDate\": \"2026-09-01T00:00:00Z\",\n    \"isPaid\": true,\n    \"paidAt\": \"2026-08-19T14:30:00Z\",\n    \"status\": \"Paid\"\n  }\n}"
+            }
+          ]
         }
       ]
     },
     {
-      "name": "🔔 8. الإشعارات والتنبيهات الثنائية (Notifications & Bidirectional Reminders - Feature 3)",
+      "name": "🔔 7. الإشعارات والتنبيهات الثنائية (Notifications & Bidirectional Reminders - Feature 3)",
+      "description": "إشعارات تذكير الأقساط المستحقة الثنائية (إشعار لصاحب المتجر + إيميل مباشر للعميل في نفس اللحظة).",
       "item": [
         {
-          "name": "8.1 — قائمة الإشعارات (Get Notifications)",
+          "name": "7.1 — قائمة الإشعارات (List Notifications)",
           "event": [
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
-                  "if (pm.response.code === 200) {",
+                  "pm.test('تم جلب قائمة الإشعارات', function() {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
                   "    var json = pm.response.json();",
-                  "    if (json.data && json.data.items && json.data.items.length > 0) {",
+                  "    pm.expect(json.data.items).to.be.an('array');",
+                  "    if (json.data.items.length > 0) {",
                   "        pm.environment.set('notification_id', json.data.items[0].id);",
                   "    }",
-                  "    pm.test('تم جلب قائمة الإشعارات', function() {",
-                  "        pm.expect(json.success).to.be.true;",
-                  "    });",
-                  "}"
-                ],
-                "type": "text/javascript"
+                  "});"
+                ]
               }
             }
           ],
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/api/notifications?page=1&pageSize=20&unreadOnly=false",
-              "host": ["{{base_url}}"],
-              "path": ["api", "notifications"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "notifications"
+              ],
               "query": [
-                { "key": "page", "value": "1" },
-                { "key": "pageSize", "value": "20" },
-                { "key": "unreadOnly", "value": "false" }
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20"
+                },
+                {
+                  "key": "unreadOnly",
+                  "value": "false",
+                  "description": "true لجلب الإشعارات غير المقروءة فقط"
+                }
               ]
             },
-            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nاستعراض إشعارات التنبيهات الخاصة بصاحب المتجر (تذكيرات الأقساط المستحقة اليوم، إشعارات النظام، وغيرها).\n\n---\n### 🔔 الإشعارات ثنائية الاتجاه (Feature 3):\nفي يوم استحقاق أي قسط:\n1. **الطرف الأول (التاجر):** يستلم إشعاراً داخل التطبيق + إيميل: *\"النهارده يوم تحصيل قسط من [اسم العميل] بقيمة [المبلغ]\"*.\n2. **الطرف الثاني (العميل):** يستلم إيميل تذكير مباشر على بريده: *\"خلي بالك، [اسم صاحب المحل] هيجي يحصّل منك قسط بقيمة [المبلغ] اليوم\"*."
-          }
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nاستعراض الإشعارات والتنبيهات المستلمة في التطبيق مع إمكانية الفلترة بغير المقروءة فقط."
+          },
+          "response": [
+            {
+              "name": "200 OK — قائمة الإشعارات",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": null,\n  \"data\": {\n    \"items\": [\n      {\n        \"id\": \"99999999-8888-7777-6666-555555555555\",\n        \"type\": \"InstallmentReminder\",\n        \"title\": \"تذكير بقسط مستحق\",\n        \"message\": \"يستحق قسط بمبلغ 1000.00 ج.م على الطرف محمود حسن إبراهيم اليوم.\",\n        \"transactionId\": \"f4689c23-5d6e-7f8a-9b0c-1d2e3f4a5b6c\",\n        \"installmentId\": \"11111111-2222-3333-4444-555555555555\",\n        \"isRead\": false,\n        \"createdAt\": \"2026-08-19T06:00:00Z\"\n      }\n    ],\n    \"totalCount\": 1,\n    \"page\": 1,\n    \"pageSize\": 20,\n    \"totalPages\": 1\n  }\n}"
+            }
+          ]
         },
         {
-          "name": "8.2 — عدد الإشعارات غير المقروءة (Unread Count)",
+          "name": "7.2 — تعيين إشعار كمقروء (Mark Notification as Read)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('تم تعيين الإشعار كمقروء', function() {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
           "request": {
-            "method": "GET",
+            "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/notifications/unread-count",
-              "host": ["{{base_url}}"],
-              "path": ["api", "notifications", "unread-count"]
-            },
-            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nاسترجاع عدد الإشعارات غير المقروءة لوضع شارة التنبيه (Badge) على أيقونة الإشعارات في التطبيق."
-          }
-        },
-        {
-          "name": "8.3 — تمييز إشعار كمقروء (Mark Read)",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/api/notifications/{{notification_id}}/read",
-              "host": ["{{base_url}}"],
-              "path": ["api", "notifications", "{{notification_id}}", "read"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "notifications",
+                "{{notification_id}}",
+                "read"
+              ]
             },
-            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nتمييز إشعار محدد كمقروء (204 No Content)."
-          }
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nتحديث حالة إشعار محدد إلى مقروء (`isRead = true`)."
+          },
+          "response": [
+            {
+              "name": "200 OK — تم تعيين الإشعار كمقروء",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"تم تحديث حالة الإشعار\",\n  \"data\": {\n    \"id\": \"99999999-8888-7777-6666-555555555555\",\n    \"isRead\": true\n  }\n}"
+            }
+          ]
         },
         {
-          "name": "8.4 — تمييز جميع الإشعارات كمقروءة (Mark All Read)",
+          "name": "7.3 — تعيين كافة الإشعارات كمقروءة (Mark All Notifications Read)",
           "request": {
-            "method": "POST",
+            "method": "PATCH",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/api/notifications/read-all",
-              "host": ["{{base_url}}"],
-              "path": ["api", "notifications", "read-all"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "notifications",
+                "read-all"
+              ]
             },
-            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nتمييز كافة إشعارات المستخدم كمقروءة دفعة واحدة بطلب واحد (204 No Content)."
-          }
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nتعليم كافة إشعارات المستخدم غير المقروءة كمقروءة دفعة واحدة."
+          },
+          "response": [
+            {
+              "name": "200 OK — تم تعيين الكل كمقروء",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"تم تعليم جميع الإشعارات كمقروءة\",\n  \"data\": null\n}"
+            }
+          ]
+        },
+        {
+          "name": "7.4 — تشغيل فحص التذكيرات الثنائية يدوياً (Trigger Reminders Scan - Feature 3)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('تم تشغيل فحص التذكيرات بنجاح', function() {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.data.remindersProcessed).to.be.a('number');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/notifications/run-reminders-scan",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "notifications",
+                "run-reminders-scan"
+              ]
+            },
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint (Feature 3)؟\nتشغيل فوري يدوي لماسح التذكيرات الثنائية (Reminder Scanner):\n1. يفحص الأقساط المستحقة قبل موعدها بـ 3 أيام، بيوم، وفي نفس اليوم.\n2. ينشئ إشعاراً في التطبيق لصاحب المتجر.\n3. يرسل إيميل تذكير مباشر للعميل إذا كان مسجلاً لديه `contactEmail`."
+          },
+          "response": [
+            {
+              "name": "200 OK — تم تشغيل فحص التذكيرات",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"تم تشغيل فحص تذكيرات الأقساط وإرسال الإشعارات وإيميلات التذكير بنجاح\",\n  \"data\": {\n    \"remindersProcessed\": 3,\n    \"timestamp\": \"2026-08-19T10:00:00Z\"\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "🎙️ 8. الملاحظات الصوتية (Voice Notes — Entity مستقل)",
+      "description": "نظام الملاحظات الصوتية المستقل تماماً عن جدول العمليات — يتيح رفع ملف صوتي مع بيانات العملية، واستعراض قائمة الملاحظات الصوتية مع تفاصيلها وحذفها ناعماً.",
+      "item": [
+        {
+          "name": "8.1 — رفع ملاحظة صوتية جديدة (Create Voice Note)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var json = pm.response.json();",
+                  "    if (json.data && json.data.id) {",
+                  "        pm.environment.set('voice_note_id', json.data.id);",
+                  "        console.log('✅ تم تعيين voice_note_id بنجاح:', json.data.id);",
+                  "    }",
+                  "    pm.test('تم حفظ الملاحظة الصوتية بنجاح', function() {",
+                  "        pm.expect(json.success).to.be.true;",
+                  "        pm.expect(json.data.audioPath).to.not.be.empty;",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "audioFile",
+                  "type": "file",
+                  "src": [],
+                  "description": "ملف الصوت (.m4a / .mp3 / .wav / .ogg)"
+                },
+                {
+                  "key": "operationType",
+                  "value": "Sale",
+                  "type": "text",
+                  "description": "Sale / Purchase / InstallmentCollection / InstallmentPayment"
+                },
+                {
+                  "key": "amount",
+                  "value": "1500.00",
+                  "type": "text",
+                  "description": "المبلغ (أكبر من صفر)"
+                },
+                {
+                  "key": "operationDate",
+                  "value": "2026-08-19T14:30:00Z",
+                  "type": "text",
+                  "description": "تاريخ العملية (ISO 8601)"
+                },
+                {
+                  "key": "contactId",
+                  "value": "{{contact_id}}",
+                  "type": "text",
+                  "description": "معرف الطرف (اختياري)"
+                },
+                {
+                  "key": "partyName",
+                  "value": "محمد أحمد",
+                  "type": "text",
+                  "description": "اسم الطرف (مطلوب إذا كان contactId فارغاً)"
+                },
+                {
+                  "key": "notes",
+                  "value": "تسجيل صوتي لعملية بيع سريعة",
+                  "type": "text",
+                  "description": "ملاحظة نصية اختيارية"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/voice-notes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "voice-notes"
+              ]
+            },
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nرفع ملاحظة صوتية جديدة مع بيانات العملية وحفظ ملف الصوت وتخزين السجل في جدول `voice_notes` المستقل تماماً.\n\n---\n### 📥 المدخلات المطلوبة (multipart/form-data):\n| الحقل (Form Field) | النوع (Type) | إجباري؟ | الوصف والقيم |\n|---|---|---|---|\n| `audioFile` | File Binary | نعم | ملف الصوت المسجل (`.m4a`, `.mp3`, `.wav`, `.ogg`). |\n| `operationType` | String Enum | نعم | `Sale` (بيع) / `Purchase` (شراء) / `InstallmentCollection` (تحصيل قسط) / `InstallmentPayment` (سداد قسط). |\n| `amount` | Decimal | نعم | المبلغ المالي (أكبر من صفر). |\n| `operationDate` | ISO DateTime | نعم | تاريخ وتوقيت العملية. |\n| `contactId` | UUID | اختياري | معرف الطرف المسجل في جهات الاتصال. |\n| `partyName` | String | اختياري | اسم الطرف (مطلوب إذا لم يتم تمرير `contactId`). |\n| `notes` | String | اختياري | ملاحظة نصية مرفقة مع الصوت. |\n\n---\n### 🎯 الاستجابة المتوقعة (201 Created):\n```json\n{\n  \"success\": true,\n  \"message\": \"تم حفظ الملاحظة الصوتية بنجاح\",\n  \"data\": {\n    \"id\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\n    \"audioPath\": \"/uploads/voice-notes/a1b2c3d4.m4a\",\n    \"operationType\": \"Sale\",\n    \"operationTypeLabel\": \"بيع\",\n    \"amount\": 1500.00,\n    \"operationDate\": \"2026-08-19T14:30:00Z\",\n    \"contactName\": \"محمود حسن إبراهيم\",\n    \"contactId\": \"7b0a7cb5-8d9e-4a1b-bc3d-1e2f3a4b5c6d\",\n    \"notes\": \"تسجيل صوتي لعملية بيع سريعة\",\n    \"createdAt\": \"2026-08-19T14:30:05Z\"\n  }\n}\n```"
+          },
+          "response": [
+            {
+              "name": "201 Created — تم حفظ الملاحظة الصوتية",
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"تم حفظ الملاحظة الصوتية بنجاح\",\n  \"data\": {\n    \"id\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\n    \"audioPath\": \"/uploads/voice-notes/a1b2c3d4.m4a\",\n    \"operationType\": \"Sale\",\n    \"operationTypeLabel\": \"بيع\",\n    \"amount\": 1500,\n    \"operationDate\": \"2026-08-19T14:30:00Z\",\n    \"contactName\": \"محمود حسن إبراهيم\",\n    \"contactId\": \"7b0a7cb5-8d9e-4a1b-bc3d-1e2f3a4b5c6d\",\n    \"notes\": \"تسجيل صوتي لعملية بيع سريعة\",\n    \"createdAt\": \"2026-08-19T14:30:05Z\"\n  }\n}"
+            },
+            {
+              "name": "400 Bad Request — ملف الصوت مفقود",
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"ملف الصوت مطلوب\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "8.2 — قائمة كل الملاحظات الصوتية (List Voice Notes)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('تم جلب قائمة الملاحظات الصوتية بنجاح', function() {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.data.items).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/voice-notes?page=1&pageSize=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "voice-notes"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "رقم الصفحة"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20",
+                  "description": "عدد العناصر (1 - 50)"
+                }
+              ]
+            },
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nاستعراض قائمة الملاحظات الصوتية للمتجر مرتبة من الأحدث إلى الأقدم مع تفاصيل كل عملية واسم الطرف ورابط ملف الصوت."
+          },
+          "response": [
+            {
+              "name": "200 OK — قائمة الملاحظات الصوتية",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": null,\n  \"data\": {\n    \"items\": [\n      {\n        \"id\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\n        \"audioPath\": \"/uploads/voice-notes/a1b2c3d4.m4a\",\n        \"operationType\": \"Sale\",\n        \"operationTypeLabel\": \"بيع\",\n        \"amount\": 1500,\n        \"operationDate\": \"2026-08-19T14:30:00Z\",\n        \"contactName\": \"محمود حسن إبراهيم\",\n        \"contactId\": \"7b0a7cb5-8d9e-4a1b-bc3d-1e2f3a4b5c6d\",\n        \"notes\": \"تسجيل صوتي لعملية بيع سريعة\",\n        \"createdAt\": \"2026-08-19T14:30:05Z\"\n      }\n    ],\n    \"totalCount\": 1,\n    \"page\": 1,\n    \"pageSize\": 20\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "8.3 — تفاصيل ملاحظة صوتية بالمعرف (Get Voice Note by ID)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/voice-notes/{{voice_note_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "voice-notes",
+                "{{voice_note_id}}"
+              ]
+            },
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nجلب بيانات ملاحظة صوتية مفردة ورابط ملف الصوت الخاص بها."
+          },
+          "response": [
+            {
+              "name": "200 OK — تفاصيل الملاحظة الصوتية",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": null,\n  \"data\": {\n    \"id\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\n    \"audioPath\": \"/uploads/voice-notes/a1b2c3d4.m4a\",\n    \"operationType\": \"Sale\",\n    \"operationTypeLabel\": \"بيع\",\n    \"amount\": 1500,\n    \"operationDate\": \"2026-08-19T14:30:00Z\",\n    \"contactName\": \"محمود حسن إبراهيم\",\n    \"contactId\": \"7b0a7cb5-8d9e-4a1b-bc3d-1e2f3a4b5c6d\",\n    \"notes\": \"تسجيل صوتي لعملية بيع سريعة\",\n    \"createdAt\": \"2026-08-19T14:30:05Z\"\n  }\n}"
+            },
+            {
+              "name": "404 Not Found — الملاحظة الصوتية غير موجودة",
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"statusCode\": 404,\n  \"message\": \"VoiceNote بالمعرف ... غير موجود\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "8.4 — حذف ملاحظة صوتية ناعم (Soft Delete Voice Note)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('تم حذف الملاحظة الصوتية بنجاح', function() {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/voice-notes/{{voice_note_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "voice-notes",
+                "{{voice_note_id}}"
+              ]
+            },
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nحذف ملاحظة صوتية بشكل ناعم (`is_active = false`) وإخفائها من القائمة."
+          },
+          "response": [
+            {
+              "name": "200 OK — تم الحذف بنجاح",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"تم حذف الملاحظة الصوتية بنجاح\",\n  \"data\": null\n}"
+            }
+          ]
         }
       ]
     },
     {
       "name": "🛡️ 9. حالات الأمان والتحقق السلبي (Security & Negative Tests)",
+      "description": "اختبارات الأمان والتحقق من رفض المدخلات غير الصالحة بحالات 400 Bad Request و 401 Unauthorized و 429 Rate Limit.",
       "item": [
         {
-          "name": "9.1 — طلب محمي بدون توكن (401 Unauthorized)",
+          "name": "9.1 — كود OTP غير صالح (400 Bad Request)",
           "event": [
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
-                  "pm.test('يرفض الطلب بدون توكن بـ 401', function() {",
+                  "pm.test('يرفض كود الـ OTP الخاطئ بـ 400', function() {",
+                  "    pm.expect(pm.response.code).to.equal(400);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"owner@mizan.app\",\n  \"code\": \"000000\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/verify-otp",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "verify-otp"
+              ]
+            },
+            "description": "### 🧪 اختبار تحقق:\nفحص التحقق من صحة كود الـ OTP ورفض الأكواد الخاطئة بـ 400 Bad Request."
+          },
+          "response": [
+            {
+              "name": "400 Bad Request — كود خاطئ",
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"statusCode\": 400,\n  \"message\": \"كود التحقق غير صحيح أو منتهي الصلاحية\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "9.2 — طلب بدون توكن مصادقة (401 Unauthorized)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('يرفض الطلب بدون Authorization Header بـ 401', function() {",
                   "    pm.expect(pm.response.code).to.equal(401);",
                   "});"
-                ],
-                "type": "text/javascript"
+                ]
               }
             }
           ],
@@ -1077,287 +2411,208 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/transactions",
-              "host": ["{{base_url}}"],
-              "path": ["api", "transactions"]
+              "raw": "{{base_url}}/api/users/profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "profile"
+              ]
             },
-            "description": "### 🧪 اختبار أمني:\nالتأكد من منع الوصول للعمليات دون إرسال JWT Token (401 Unauthorized)."
-          }
-        },
-        {
-          "name": "9.2 — كود OTP غير صحيح (400 Bad Request)",
-          "event": [
+            "description": "### 🧪 اختبار أمان:\nالتأكد من حماية المسارات المحمية ورفض الطلبات التي لا تحتوي على JWT Bearer Token بـ 401 Unauthorized."
+          },
+          "response": [
             {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('يرفض الكود الخاطئ بـ 400', function() {",
-                  "    pm.expect(pm.response.code).to.equal(400);",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
+              "name": "401 Unauthorized — غير مصرح",
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"statusCode\": 401,\n  \"message\": \"تعذر استخراج معرف المستخدم من الرمز أو التوكن غير صالح\"\n}"
             }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"owner@mizan.app\",\n  \"otpCode\": \"000000\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/auth/verify-otp",
-              "host": ["{{base_url}}"],
-              "path": ["api", "auth", "verify-otp"]
-            },
-            "description": "### 🧪 اختبار تحقق:\nفحص التحقق من صحة كود الـ OTP ورفض الأكواد الخاطئة بـ 400 Bad Request."
-          }
+          ]
         },
         {
-          "name": "9.3 — اسم طرف يحتوي على أرقام (400 Bad Request)",
+          "name": "9.3 — اسم طرف يحتوي على أرقام أو رموز غير مسموحة (400 Bad Request)",
           "event": [
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
                   "pm.test('يرفض اسم الطرف المحتوي على أرقام بـ 400', function() {",
                   "    pm.expect(pm.response.code).to.equal(400);",
                   "});"
-                ],
-                "type": "text/javascript"
+                ]
               }
             }
           ],
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"محمود 123\",\n  \"phoneNumber\": \"01012345678\"\n}"
+              "raw": "{\n  \"name\": \"أحمد 1234 @#$\",\n  \"phoneNumber\": \"01012345678\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/contacts",
-              "host": ["{{base_url}}"],
-              "path": ["api", "contacts"]
-            },
-            "description": "### 🧪 اختبار قواعد النطاق (Domain Validation):\nالتأكد من رفض إنشاء طرف باسم يحتوي أرقاماً."
-          }
-        },
-        {
-          "name": "9.4 — عدم تطابق مجموع الأقساط المخصصة مع المبلغ (400 Bad Request)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('يرفض عدم تطابق مجموع الأقساط بـ 400', function() {",
-                  "    pm.expect(pm.response.code).to.equal(400);",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"contactId\": \"{{contact_id}}\",\n  \"type\": \"Sale\",\n  \"amount\": 1000.00,\n  \"paymentMethod\": \"Deferred\",\n  \"transactionDate\": \"2026-08-18T10:00:00Z\",\n  \"noteType\": \"None\",\n  \"isInstallment\": true,\n  \"installmentPlanMode\": \"Custom\",\n  \"customInstallments\": [\n    {\n      \"amount\": 300.00,\n      \"dueDate\": \"2026-08-25T00:00:00Z\"\n    },\n    {\n      \"amount\": 400.00,\n      \"dueDate\": \"2026-09-01T00:00:00Z\"\n    }\n  ]\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/transactions",
-              "host": ["{{base_url}}"],
-              "path": ["api", "transactions"]
-            },
-            "description": "### 🧪 اختبار مالي دقيق:\nفحص رفض العملية عندما يكون مجموع الأقساط 700 والمبلغ الإجمالي 1000."
-          }
-        },
-        {
-          "name": "9.5 — رفض إرسال رقم كـ Enum بـ 400 (400 Bad Request on Numeric Enum)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('يرفض إرسال رقم كـ Enum بـ 400 Bad Request', function() {",
-                  "    pm.expect(pm.response.code).to.equal(400);",
-                  "  });"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"contactId\": \"{{contact_id}}\",\n  \"type\": 0,\n  \"amount\": 500.00,\n  \"paymentMethod\": \"Cash\",\n  \"transactionDate\": \"2026-08-18T10:00:00Z\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/transactions",
-              "host": ["{{base_url}}"],
-              "path": ["api", "transactions"]
-            },
-            "description": "### 🧪 اختبار نوع البيانات:\nالتأكد من أن السيرفر يرفض الأرقام للحقول من نوع Enum بـ 400 Bad Request ويقبل النصوص فقط."
-          }
-        }
-      ]
-    },
-    {
-      "name": "🎙️ Voice Notes — الملاحظات الصوتية",
-      "description": "رفع واستعراض الملاحظات الصوتية المسجلة للعمليات. Entity مستقل تماماً لا يرتبط بجدول الـ transactions.",
-      "item": [
-        {
-          "name": "POST Create Voice Note — رفع ملاحظة صوتية",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{accessToken}}", "type": "text" }
-            ],
-            "body": {
-              "mode": "formdata",
-              "formdata": [
-                { "key": "audioFile",     "type": "file",   "src": [],          "description": "ملف الصوت (.m4a / .mp3 / .ogg / .wav)" },
-                { "key": "operationType", "value": "Sale",  "type": "text",     "description": "Sale | Purchase | InstallmentCollection | InstallmentPayment" },
-                { "key": "amount",        "value": "1500",  "type": "text",     "description": "المبلغ (أكبر من صفر)" },
-                { "key": "operationDate", "value": "2026-08-19T14:30:00Z", "type": "text", "description": "تاريخ ووقت العملية (ISO 8601)" },
-                { "key": "contactId",     "value": "",      "type": "text",     "description": "معرف الطرف من Contacts (اختياري)" },
-                { "key": "partyName",     "value": "محمد أحمد", "type": "text", "description": "اسم الطرف (مطلوب لو contactId فارغ)" },
-                { "key": "notes",         "value": "",      "type": "text",     "description": "ملاحظة نصية اختيارية" }
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "contacts"
               ]
             },
-            "url": {
-              "raw": "{{baseUrl}}/api/voice-notes",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "voice-notes"]
-            },
-            "description": "رفع ملاحظة صوتية جديدة مع بيانات العملية.\n\nيُرسَل كـ `multipart/form-data`.\n\n**الحقول:**\n- `audioFile` (مطلوب): ملف الصوت\n- `operationType` (مطلوب): Sale / Purchase / InstallmentCollection / InstallmentPayment\n- `amount` (مطلوب): المبلغ (أكبر من صفر)\n- `operationDate` (مطلوب): تاريخ العملية\n- `contactId` (اختياري): معرف الطرف من جهات الاتصال\n- `partyName` (اختياري): اسم الطرف — مطلوب لو `contactId` فارغ\n- `notes` (اختياري): ملاحظة نصية"
+            "description": "### 🧪 اختبار تحقق من الأسماء:\nالتأكد من منع الأسماء العشوائية المحتوية على أرقام أو رموز غير مسموحة."
           },
           "response": [
             {
-              "name": "201 Created",
-              "status": "Created",
-              "code": 201,
-              "_postman_previewlanguage": "json",
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
-              "body": "{\n  \"success\": true,\n  \"message\": \"تم حفظ الملاحظة الصوتية بنجاح\",\n  \"data\": {\n    \"id\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\n    \"audioPath\": \"/uploads/voice-notes/abc123.m4a\",\n    \"operationType\": \"Sale\",\n    \"operationTypeLabel\": \"بيع\",\n    \"amount\": 1500.00,\n    \"operationDate\": \"2026-08-19T14:30:00Z\",\n    \"contactName\": \"محمد أحمد\",\n    \"contactId\": null,\n    \"notes\": null,\n    \"createdAt\": \"2026-08-19T14:30:05Z\"\n  }\n}"
-            },
-            {
-              "name": "400 Bad Request — ملف الصوت مفقود",
+              "name": "400 Bad Request — اسم طرف غير صالح",
               "status": "Bad Request",
               "code": 400,
               "_postman_previewlanguage": "json",
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
-              "body": "{\n  \"message\": \"ملف الصوت مطلوب\"\n}"
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"statusCode\": 400,\n  \"message\": \"اسم الطرف يجب أن يحتوي على أحرف فقط\"\n}"
             }
           ]
         },
         {
-          "name": "GET All Voice Notes — كل الملاحظات الصوتية",
+          "name": "9.4 — عملية بمبلغ سالب أو صفر (400 Bad Request)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('يرفض العمليات بالمبالغ الصفرية أو السالبة بـ 400', function() {",
+                  "    pm.expect(pm.response.code).to.equal(400);",
+                  "});"
+                ]
+              }
+            }
+          ],
           "request": {
-            "method": "GET",
+            "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{accessToken}}", "type": "text" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contactId\": \"{{contact_id}}\",\n  \"type\": \"Sale\",\n  \"amount\": -500,\n  \"paymentMethod\": \"Cash\",\n  \"transactionDate\": \"2026-08-19T10:00:00Z\"\n}"
+            },
             "url": {
-              "raw": "{{baseUrl}}/api/voice-notes?page=1&pageSize=20",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "voice-notes"],
-              "query": [
-                { "key": "page",     "value": "1",  "description": "رقم الصفحة" },
-                { "key": "pageSize", "value": "20", "description": "عدد العناصر في الصفحة (max 50)" }
+              "raw": "{{base_url}}/api/transactions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "transactions"
               ]
             },
-            "description": "يرجع قائمة مقسّمة لصفحات بكل الملاحظات الصوتية للمحل، مرتبة من الأحدث للأقدم.\n\nكل عنصر يحتوي على:\n- `id` / `audioPath` / `operationType` / `operationTypeLabel`\n- `amount` / `operationDate` / `contactName` / `contactId` / `notes` / `createdAt`"
+            "description": "### 🧪 اختبار صحة المبالغ المالية:\nالتأكد من رفض المبالغ المالية الصفرية والسالبة في العمليات بـ 400 Bad Request."
           },
           "response": [
             {
-              "name": "200 OK",
-              "status": "OK",
-              "code": 200,
+              "name": "400 Bad Request — مبلغ سالب مرفوض",
+              "status": "Bad Request",
+              "code": 400,
               "_postman_previewlanguage": "json",
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
-              "body": "{\n  \"items\": [\n    {\n      \"id\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\n      \"audioPath\": \"/uploads/voice-notes/abc123.m4a\",\n      \"operationType\": \"Sale\",\n      \"operationTypeLabel\": \"بيع\",\n      \"amount\": 1500.00,\n      \"operationDate\": \"2026-08-19T14:30:00Z\",\n      \"contactName\": \"محمد أحمد\",\n      \"contactId\": null,\n      \"notes\": null,\n      \"createdAt\": \"2026-08-19T14:30:05Z\"\n    }\n  ],\n  \"totalCount\": 1,\n  \"page\": 1,\n  \"pageSize\": 20\n}"
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"statusCode\": 400,\n  \"message\": \"المبلغ يجب أن يكون أكبر من صفر\"\n}"
             }
           ]
         },
         {
-          "name": "GET Voice Note by ID — تفاصيل ملاحظة واحدة",
-          "request": {
-            "method": "GET",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{accessToken}}", "type": "text" }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/voice-notes/{{voice_note_id}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "voice-notes", "{{voice_note_id}}"]
-            },
-            "description": "يرجع تفاصيل ملاحظة صوتية واحدة بالـ ID.\n\nتأكد من تعيين `{{voice_note_id}}` من نتيجة طلب POST أو GET الكل."
-          },
-          "response": [
+          "name": "9.5 — إرسال قيمة رقمية لحقل Enum نصي (400 Bad Request)",
+          "event": [
             {
-              "name": "200 OK",
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
-              "body": "{\n  \"id\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\n  \"audioPath\": \"/uploads/voice-notes/abc123.m4a\",\n  \"operationType\": \"Sale\",\n  \"operationTypeLabel\": \"بيع\",\n  \"amount\": 1500.00,\n  \"operationDate\": \"2026-08-19T14:30:00Z\",\n  \"contactName\": \"محمد أحمد\",\n  \"contactId\": null,\n  \"notes\": null,\n  \"createdAt\": \"2026-08-19T14:30:05Z\"\n}"
-            },
-            {
-              "name": "404 Not Found",
-              "status": "Not Found",
-              "code": 404,
-              "_postman_previewlanguage": "json",
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
-              "body": "{\n  \"statusCode\": 404,\n  \"message\": \"VoiceNote بالمعرف ... غير موجود\"\n}"
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('يرفض الأرقام لحقول الـ Enum النصية بـ 400', function() {",
+                  "    pm.expect(pm.response.code).to.equal(400);",
+                  "});"
+                ]
+              }
             }
-          ]
-        },
-        {
-          "name": "DELETE Voice Note — حذف ملاحظة صوتية (Soft Delete)",
+          ],
           "request": {
-            "method": "DELETE",
+            "method": "POST",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{accessToken}}", "type": "text" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
             ],
-            "url": {
-              "raw": "{{baseUrl}}/api/voice-notes/{{voice_note_id}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "voice-notes", "{{voice_note_id}}"]
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contactId\": \"{{contact_id}}\",\n  \"type\": 0,\n  \"amount\": 500.00,\n  \"paymentMethod\": \"Cash\",\n  \"transactionDate\": \"2026-08-19T10:00:00Z\"\n}"
             },
-            "description": "يحذف ملاحظة صوتية بشكل ناعم (soft delete — `is_active = false`).\nلا يُحذف الملف الصوتي من السيرفر."
+            "url": {
+              "raw": "{{base_url}}/api/transactions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "transactions"
+              ]
+            },
+            "description": "### 🧪 اختبار نوع البيانات:\nالتأكد من أن السيرفر يرفض الأرقام للحقول من نوع Enum بـ 400 Bad Request ويقبل النصوص فقط (`\"Sale\"` / `\"Purchase\"`)."
           },
           "response": [
             {
-              "name": "200 OK",
-              "status": "OK",
-              "code": 200,
+              "name": "400 Bad Request — قيمة Enum رقمية مرفوضة",
+              "status": "Bad Request",
+              "code": 400,
               "_postman_previewlanguage": "json",
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
-              "body": "{\n  \"message\": \"تم حذف الملاحظة الصوتية بنجاح\"\n}"
-            },
-            {
-              "name": "404 Not Found",
-              "status": "Not Found",
-              "code": 404,
-              "_postman_previewlanguage": "json",
-              "header": [{ "key": "Content-Type", "value": "application/json" }],
-              "body": "{\n  \"statusCode\": 404,\n  \"message\": \"VoiceNote بالمعرف ... غير موجود\"\n}"
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"statusCode\": 400,\n  \"message\": \"حقل type يجب أن يكون نصاً وليس رقماً\"\n}"
             }
           ]
         }

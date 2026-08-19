@@ -272,18 +272,8 @@ public class TransactionService : ITransactionService
             await _unitOfWork.Installments.AddRangeAsync(installments, cancellationToken);
         }
 
+        // 5. Save all entities
         await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-        // 5. Trigger Periodic Report check (Every 7th active transaction)
-        try
-        {
-            await TryGeneratePeriodicReportAsync(ownerUserId, cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            // Report generation failure must never fail the transaction creation HTTP response
-            _logger.LogError(ex, "Failed to evaluate or generate periodic report for owner {OwnerUserId}", ownerUserId);
-        }
 
         return MapToResponse(transaction, contact.Name);
     }
