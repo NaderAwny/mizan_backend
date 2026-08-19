@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -43,7 +43,7 @@ namespace Mizan.Infrastructure.Migrations
                         column: x => x.shop_id,
                         principalTable: "shops",
                         principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_voice_notes_users_owner_user_id",
                         column: x => x.owner_user_id,

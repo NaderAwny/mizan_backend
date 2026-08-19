@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -40,6 +40,16 @@ namespace Mizan.Infrastructure.Migrations
                 type: "uniqueidentifier",
                 nullable: false,
                 defaultValue: new Guid("00000000-0000-0000-0000-000000000000"));
+
+            migrationBuilder.Sql(@"
+                UPDATE t
+                SET t.shop_id = COALESCE(
+                    (SELECT TOP 1 s.id FROM shops s WHERE s.owner_id = t.owner_user_id),
+                    (SELECT TOP 1 s.id FROM shops s)
+                )
+                FROM transactions t
+                WHERE t.shop_id = '00000000-0000-0000-0000-000000000000';
+            ");
 
             migrationBuilder.CreateIndex(
                 name: "IX_transactions_shop_id_transaction_date",

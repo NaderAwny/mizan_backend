@@ -72,7 +72,7 @@ public class VoiceNoteConfiguration : IEntityTypeConfiguration<VoiceNote>
         builder.HasOne(v => v.Shop)
             .WithMany()
             .HasForeignKey(v => v.ShopId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(v => v.Owner)
             .WithMany()
