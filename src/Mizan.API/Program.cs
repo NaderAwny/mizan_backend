@@ -80,6 +80,7 @@ builder.Services.AddScoped<IContactService, ContactService>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IPeriodicReportService, PeriodicReportService>();
+builder.Services.AddScoped<IVoiceNoteService, VoiceNoteService>();
 builder.Services.AddScoped<IReportPdfGenerator, Mizan.Infrastructure.Services.Reports.ReportPdfGenerator>();
 builder.Services.AddScoped<IReminderScanner, ReminderScanner>();
 builder.Services.AddSingleton<IJwtProvider, JwtProvider>();

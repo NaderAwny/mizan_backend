@@ -747,65 +747,6 @@
       ]
     },
     {
-      "name": "🎙️ 5. العمليات — إدخال صوتي وملاحظات صوتية (Voice Note Transactions)",
-      "item": [
-        {
-          "name": "5.1 — رفع ملف صوتي للعملية (Upload Voice Note Audio File)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('تم رفع الملف الصوتي بنجاح', function() {",
-                  "    pm.expect(pm.response.code).to.equal(200);",
-                  "    pm.expect(pm.response.json().success).to.be.true;",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
-            ],
-            "body": {
-              "mode": "formdata",
-              "formdata": [
-                {
-                  "key": "file",
-                  "type": "file",
-                  "src": []
-                }
-              ]
-            },
-            "url": {
-              "raw": "{{base_url}}/api/transactions/{{transaction_id}}/voice-note",
-              "host": ["{{base_url}}"],
-              "path": ["api", "transactions", "{{transaction_id}}", "voice-note"]
-            },
-            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nرفع ملف صوتي مسجل (Voice Note) وإرفاقه بالعملية.\n\n---\n### 📥 الصيغ المدعومة:\n- الصيغ: `.mp3`, `.wav`, `.m4a`, `.ogg`, `.aac`.\n- الحد الأقصى للحجم: **10 ميجابايت**."
-          }
-        },
-        {
-          "name": "5.2 — الاستماع للملاحظة الصوتية (Stream Voice Note Audio)",
-          "request": {
-            "method": "GET",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{access_token}}" }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/transactions/{{transaction_id}}/voice-note",
-              "host": ["{{base_url}}"],
-              "path": ["api", "transactions", "{{transaction_id}}", "voice-note"]
-            },
-            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nبث مباشر (Audio Stream) للملاحظة الصوتية المرفقة بالعملية مع دعم الـ Range Processing."
-          }
-        }
-      ]
-    },
-    {
       "name": "📅 6. الأقساط — استعراض وتسديد (Installments & Payments)",
       "item": [
         {
@@ -1273,6 +1214,152 @@
             },
             "description": "### 🧪 اختبار نوع البيانات:\nالتأكد من أن السيرفر يرفض الأرقام للحقول من نوع Enum بـ 400 Bad Request ويقبل النصوص فقط."
           }
+        }
+      ]
+    },
+    {
+      "name": "🎙️ Voice Notes — الملاحظات الصوتية",
+      "description": "رفع واستعراض الملاحظات الصوتية المسجلة للعمليات. Entity مستقل تماماً لا يرتبط بجدول الـ transactions.",
+      "item": [
+        {
+          "name": "POST Create Voice Note — رفع ملاحظة صوتية",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}", "type": "text" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "audioFile",     "type": "file",   "src": [],          "description": "ملف الصوت (.m4a / .mp3 / .ogg / .wav)" },
+                { "key": "operationType", "value": "Sale",  "type": "text",     "description": "Sale | Purchase | InstallmentCollection | InstallmentPayment" },
+                { "key": "amount",        "value": "1500",  "type": "text",     "description": "المبلغ (أكبر من صفر)" },
+                { "key": "operationDate", "value": "2026-08-19T14:30:00Z", "type": "text", "description": "تاريخ ووقت العملية (ISO 8601)" },
+                { "key": "contactId",     "value": "",      "type": "text",     "description": "معرف الطرف من Contacts (اختياري)" },
+                { "key": "partyName",     "value": "محمد أحمد", "type": "text", "description": "اسم الطرف (مطلوب لو contactId فارغ)" },
+                { "key": "notes",         "value": "",      "type": "text",     "description": "ملاحظة نصية اختيارية" }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/voice-notes",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "voice-notes"]
+            },
+            "description": "رفع ملاحظة صوتية جديدة مع بيانات العملية.\n\nيُرسَل كـ `multipart/form-data`.\n\n**الحقول:**\n- `audioFile` (مطلوب): ملف الصوت\n- `operationType` (مطلوب): Sale / Purchase / InstallmentCollection / InstallmentPayment\n- `amount` (مطلوب): المبلغ (أكبر من صفر)\n- `operationDate` (مطلوب): تاريخ العملية\n- `contactId` (اختياري): معرف الطرف من جهات الاتصال\n- `partyName` (اختياري): اسم الطرف — مطلوب لو `contactId` فارغ\n- `notes` (اختياري): ملاحظة نصية"
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"success\": true,\n  \"message\": \"تم حفظ الملاحظة الصوتية بنجاح\",\n  \"data\": {\n    \"id\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\n    \"audioPath\": \"/uploads/voice-notes/abc123.m4a\",\n    \"operationType\": \"Sale\",\n    \"operationTypeLabel\": \"بيع\",\n    \"amount\": 1500.00,\n    \"operationDate\": \"2026-08-19T14:30:00Z\",\n    \"contactName\": \"محمد أحمد\",\n    \"contactId\": null,\n    \"notes\": null,\n    \"createdAt\": \"2026-08-19T14:30:05Z\"\n  }\n}"
+            },
+            {
+              "name": "400 Bad Request — ملف الصوت مفقود",
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"message\": \"ملف الصوت مطلوب\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET All Voice Notes — كل الملاحظات الصوتية",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/voice-notes?page=1&pageSize=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "voice-notes"],
+              "query": [
+                { "key": "page",     "value": "1",  "description": "رقم الصفحة" },
+                { "key": "pageSize", "value": "20", "description": "عدد العناصر في الصفحة (max 50)" }
+              ]
+            },
+            "description": "يرجع قائمة مقسّمة لصفحات بكل الملاحظات الصوتية للمحل، مرتبة من الأحدث للأقدم.\n\nكل عنصر يحتوي على:\n- `id` / `audioPath` / `operationType` / `operationTypeLabel`\n- `amount` / `operationDate` / `contactName` / `contactId` / `notes` / `createdAt`"
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"items\": [\n    {\n      \"id\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\n      \"audioPath\": \"/uploads/voice-notes/abc123.m4a\",\n      \"operationType\": \"Sale\",\n      \"operationTypeLabel\": \"بيع\",\n      \"amount\": 1500.00,\n      \"operationDate\": \"2026-08-19T14:30:00Z\",\n      \"contactName\": \"محمد أحمد\",\n      \"contactId\": null,\n      \"notes\": null,\n      \"createdAt\": \"2026-08-19T14:30:05Z\"\n    }\n  ],\n  \"totalCount\": 1,\n  \"page\": 1,\n  \"pageSize\": 20\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET Voice Note by ID — تفاصيل ملاحظة واحدة",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/voice-notes/{{voice_note_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "voice-notes", "{{voice_note_id}}"]
+            },
+            "description": "يرجع تفاصيل ملاحظة صوتية واحدة بالـ ID.\n\nتأكد من تعيين `{{voice_note_id}}` من نتيجة طلب POST أو GET الكل."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"id\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\n  \"audioPath\": \"/uploads/voice-notes/abc123.m4a\",\n  \"operationType\": \"Sale\",\n  \"operationTypeLabel\": \"بيع\",\n  \"amount\": 1500.00,\n  \"operationDate\": \"2026-08-19T14:30:00Z\",\n  \"contactName\": \"محمد أحمد\",\n  \"contactId\": null,\n  \"notes\": null,\n  \"createdAt\": \"2026-08-19T14:30:05Z\"\n}"
+            },
+            {
+              "name": "404 Not Found",
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"statusCode\": 404,\n  \"message\": \"VoiceNote بالمعرف ... غير موجود\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "DELETE Voice Note — حذف ملاحظة صوتية (Soft Delete)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/voice-notes/{{voice_note_id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "voice-notes", "{{voice_note_id}}"]
+            },
+            "description": "يحذف ملاحظة صوتية بشكل ناعم (soft delete — `is_active = false`).\nلا يُحذف الملف الصوتي من السيرفر."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"message\": \"تم حذف الملاحظة الصوتية بنجاح\"\n}"
+            },
+            {
+              "name": "404 Not Found",
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json" }],
+              "body": "{\n  \"statusCode\": 404,\n  \"message\": \"VoiceNote بالمعرف ... غير موجود\"\n}"
+            }
+          ]
         }
       ]
     }
