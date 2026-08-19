@@ -9,6 +9,7 @@ namespace Mizan.API.Controllers;
 [Authorize]
 [EnableRateLimiting("GeneralPolicy")]
 [ApiController]
+[Route("api/voice-notes")]
 [Route("api/[controller]")]
 public class VoiceNotesController : BaseController
 {

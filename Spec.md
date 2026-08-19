@@ -79,13 +79,11 @@
 
 ---
 
-## 7. مسارات الإحصائيات الفورية والعمليات السريعة (Real-Time Statistics - Feature 1)
+## 7. مسارات الإحصائيات الفورية (Real-Time Statistics - Feature 1)
 بديل لحظي لنظام الـ PDF القديم:
 - `GET /api/statistics/summary`: ملخص إحصائيات اليوم الحالي (إجمالي المبيعات، المشتريات، عدد العمليات، وقائمة العمليات مرتبة من الأحدث للأقدم).
 - `GET /api/statistics/daily?date=YYYY-MM-DD`: إحصائيات يوم محدد.
 - `GET /api/statistics/monthly?year=YYYY&month=M`: إحصائيات شهر محدد مع التوزيع اليومي للعمليات.
-- `POST /api/statistics/quick-sale`: تسجيل عملية بيع نقدي سريعة بطرف حر دون إضافة جهة اتصال مسبقة.
-- `POST /api/statistics/quick-installment-collection`: تحصيل قسط فوري بنقرة واحدة من الشاشة الرئيسية.
 
 ---
 

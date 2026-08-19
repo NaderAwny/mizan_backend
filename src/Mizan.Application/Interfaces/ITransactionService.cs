@@ -37,4 +37,6 @@ public interface ITransactionService
     Task<(FileStream Stream, string ContentType, string FileName)> GetVoiceNoteStreamAsync(Guid ownerUserId, Guid transactionId, CancellationToken cancellationToken = default);
 
     Task<TransactionResponse> MarkInstallmentPaidAsync(Guid ownerUserId, Guid transactionId, Guid installmentId, CancellationToken cancellationToken = default);
+
+    Task<TransactionResponse> MarkInstallmentPaidAsync(Guid ownerUserId, Guid installmentId, CancellationToken cancellationToken = default);
 }

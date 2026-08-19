@@ -83,4 +83,12 @@ public class TransactionsController : BaseController
         var response = await _transactionService.MarkInstallmentPaidAsync(CurrentUserId, id, installmentId, cancellationToken);
         return Success(response, "تم تسجيل سداد القسط بنجاح");
     }
+
+    /// <summary>POST /api/installments/{installmentId}/pay — تسجيل سداد قسط مباشرة بالمعرف</summary>
+    [HttpPost("/api/installments/{installmentId:guid}/pay")]
+    public async Task<IActionResult> MarkInstallmentPaidDirect(Guid installmentId, CancellationToken cancellationToken)
+    {
+        var response = await _transactionService.MarkInstallmentPaidAsync(CurrentUserId, installmentId, cancellationToken);
+        return Success(response, "تم تسجيل سداد القسط بنجاح");
+    }
 }

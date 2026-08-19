@@ -431,6 +431,24 @@ public class TransactionService : ITransactionService
         return MapToResponse(transaction);
     }
 
+    public async Task<TransactionResponse> MarkInstallmentPaidAsync(
+        Guid ownerUserId,
+        Guid installmentId,
+        CancellationToken cancellationToken = default)
+    {
+        var installment = await _unitOfWork.Installments.GetByIdAsync(installmentId, cancellationToken);
+        if (installment == null)
+            throw new NotFoundException("Installment not found");
+
+        var transaction = await GetOwnedTransactionOrThrowAsync(ownerUserId, installment.TransactionId, cancellationToken);
+
+        installment.MarkAsPaid();
+        _unitOfWork.Installments.Update(installment);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return MapToResponse(transaction);
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private async Task<Transaction> GetOwnedTransactionOrThrowAsync(
