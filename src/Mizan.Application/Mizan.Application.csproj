@@ -9,9 +9,6 @@
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.2" />
   </ItemGroup>
 
-  <ItemGroup>
-    <FrameworkReference Include="Microsoft.AspNetCore.App" />
-  </ItemGroup>
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>

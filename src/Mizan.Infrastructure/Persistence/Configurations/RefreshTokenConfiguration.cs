@@ -19,12 +19,13 @@ public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
             .HasColumnName("user_id")
             .IsRequired();
 
-        builder.Property(t => t.Token)
-            .HasColumnName("token")
-            .HasMaxLength(256)
+        // C4: Stored as SHA-256 hex (64 chars) — never plaintext
+        builder.Property(t => t.TokenHash)
+            .HasColumnName("token_hash")
+            .HasMaxLength(64)
             .IsRequired();
 
-        builder.HasIndex(t => t.Token)
+        builder.HasIndex(t => t.TokenHash)
             .IsUnique();
 
         builder.Property(t => t.ExpiresAt)
@@ -39,9 +40,10 @@ public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
             .HasColumnName("revoked_at")
             .IsRequired(false);
 
-        builder.Property(t => t.ReplacedByToken)
-            .HasColumnName("replaced_by_token")
-            .HasMaxLength(256)
+        // C4: Also store replacement token as hash
+        builder.Property(t => t.ReplacedByTokenHash)
+            .HasColumnName("replaced_by_token_hash")
+            .HasMaxLength(64)
             .IsRequired(false);
 
         builder.Ignore(t => t.IsExpired);

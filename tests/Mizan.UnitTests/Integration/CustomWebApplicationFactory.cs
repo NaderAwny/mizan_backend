@@ -11,7 +11,7 @@ namespace Mizan.UnitTests.Integration;
 public class CustomWebApplicationFactory : WebApplicationFactory<Program>
 {
     private readonly string _dbName = Guid.NewGuid().ToString();
-    public static readonly FakeEmailService EmailServiceInstance = new();
+    public FakeEmailService EmailService { get; } = new();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -25,10 +25,29 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
 
         builder.ConfigureServices(services =>
         {
-            services.AddDbContext<MizanDbContext>(options =>
+            var testSqlConn = Environment.GetEnvironmentVariable("TEST_SQL_CONNECTION_STRING");
+            if (!string.IsNullOrWhiteSpace(testSqlConn))
             {
-                options.UseInMemoryDatabase(_dbName);
-            });
+                var connBuilder = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(testSqlConn);
+                connBuilder.InitialCatalog = $"{connBuilder.InitialCatalog}_{_dbName.Replace("-", "")}";
+
+                services.AddDbContext<MizanDbContext>(options =>
+                {
+                    options.UseSqlServer(connBuilder.ConnectionString);
+                });
+
+                var sp = services.BuildServiceProvider();
+                using var scope = sp.CreateScope();
+                var db = scope.ServiceProvider.GetRequiredService<MizanDbContext>();
+                db.Database.EnsureCreated();
+            }
+            else
+            {
+                services.AddDbContext<MizanDbContext>(options =>
+                {
+                    options.UseInMemoryDatabase(_dbName);
+                });
+            }
 
             var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(IEmailService));
             if (descriptor != null)
@@ -36,8 +55,30 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
                 services.Remove(descriptor);
             }
 
-            services.AddSingleton<IEmailService>(EmailServiceInstance);
+            services.AddSingleton<IEmailService>(EmailService);
         });
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            var testSqlConn = Environment.GetEnvironmentVariable("TEST_SQL_CONNECTION_STRING");
+            if (!string.IsNullOrWhiteSpace(testSqlConn))
+            {
+                try
+                {
+                    using var scope = Services.CreateScope();
+                    var db = scope.ServiceProvider.GetService<MizanDbContext>();
+                    db?.Database.EnsureDeleted();
+                }
+                catch
+                {
+                    // Best effort cleanup
+                }
+            }
+        }
+        base.Dispose(disposing);
     }
 
     public class FakeEmailService : IEmailService

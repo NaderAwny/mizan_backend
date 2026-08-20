@@ -14,7 +14,9 @@ public class OtpCodeTests
 
         // Assert
         Assert.Equal("test@example.com", otp.Email);
-        Assert.Equal("123456", otp.Code);
+        // C5: Raw code never stored — CodeHash is the SHA-256 hex of "123456"
+        Assert.NotEmpty(otp.CodeHash);
+        Assert.Equal(64, otp.CodeHash.Length); // SHA-256 hex = 64 chars
         Assert.Equal(0, otp.AttemptsCount);
         Assert.False(otp.IsUsed);
         Assert.True(otp.ExpiresAt > DateTime.UtcNow);

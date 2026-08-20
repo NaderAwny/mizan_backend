@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Mizan.Application.DTOs.Transactions;
+using Mizan.Application.Interfaces;
 using Mizan.Application.Services;
 using Mizan.Core.Entities;
 using Mizan.Core.Enums;
@@ -19,11 +20,30 @@ public class TransactionServiceTests
         return new MizanDbContext(options);
     }
 
+    private class FakeReportPdfGenerator : IReportPdfGenerator
+    {
+        public byte[] GenerateReportPdf(Mizan.Application.DTOs.Reports.PeriodicReportPdfModel model) =>
+            new byte[] { 0x25, 0x50, 0x44, 0x46 };
+    }
+
+    private class FakeHostEnvironment : Microsoft.Extensions.Hosting.IHostEnvironment
+    {
+        public string EnvironmentName { get; set; } = "Testing";
+        public string ApplicationName { get; set; } = "Mizan";
+        public string ContentRootPath { get; set; } = Path.GetTempPath();
+        public Microsoft.Extensions.FileProviders.IFileProvider ContentRootFileProvider { get; set; } = null!;
+    }
+
     private static (TransactionService Service, MizanDbContext Db) CreateService()
     {
         var db = CreateDb();
         var uow = new UnitOfWork(db);
-        var service = new TransactionService(uow);
+        var options = Microsoft.Extensions.Options.Options.Create(new Mizan.Application.DTOs.Reports.PeriodicReportsOptions());
+        var pdfGen = new FakeReportPdfGenerator();
+        var emailChannel = new Mizan.Infrastructure.Channels.PeriodicReportEmailChannel();
+        var env = new FakeHostEnvironment();
+        var logger = Microsoft.Extensions.Logging.Abstractions.NullLogger<TransactionService>.Instance;
+        var service = new TransactionService(uow, options, pdfGen, emailChannel, env, logger);
         return (service, db);
     }
 

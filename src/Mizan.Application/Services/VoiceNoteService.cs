@@ -16,10 +16,12 @@ public class VoiceNoteService : IVoiceNoteService
     private const string AudioStoragePath = "uploads/voice-notes";
 
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IFileStorageService _fileStorage;
 
-    public VoiceNoteService(IUnitOfWork unitOfWork)
+    public VoiceNoteService(IUnitOfWork unitOfWork, IFileStorageService fileStorage)
     {
         _unitOfWork = unitOfWork;
+        _fileStorage = fileStorage;
     }
 
     public async Task<VoiceNoteResponse> CreateAsync(
@@ -48,10 +50,28 @@ public class VoiceNoteService : IVoiceNoteService
                 ? throw new BadRequestException("يجب تحديد اسم الطرف أو اختيار طرف من جهات الاتصال")
                 : request.PartyName.Trim());
 
-        // 4. احفظ ملف الصوت
-        var audioPath = await SaveAudioFileAsync(audioStream, originalFileName, cancellationToken);
+        // 4. تحقق من نوع وحجم ملف الصوت (H4)
+        if (audioStream == null)
+            throw new BadRequestException("ملف الصوت مطلوب");
 
-        // 5. أنشئ الـ Entity وخزّنه
+        var extension = Path.GetExtension(originalFileName).ToLowerInvariant();
+        var allowedExtensions = new[] { ".mp3", ".wav", ".m4a", ".webm", ".mp4", ".ogg", ".aac" };
+        if (string.IsNullOrWhiteSpace(extension) || !allowedExtensions.Contains(extension))
+            throw new BadRequestException("صيغة الملف الصوتي غير مدعومة. الصيغ المسموحة: mp3, wav, m4a, webm, mp4");
+
+        const long maxSizeBytes = 10 * 1024 * 1024; // 10 MB
+        if (audioStream.CanSeek && audioStream.Length > maxSizeBytes)
+            throw new BadRequestException("حجم ملف الصوت يتجاوز الحد الأقصى (10 ميجابايت)");
+
+        // 5. احفظ ملف الصوت عبر IFileStorageService (H5)
+        var audioPath = await _fileStorage.UploadAsync(
+            audioStream,
+            originalFileName,
+            "audio/*",
+            $"{AudioStoragePath}/{ownerUserId}",
+            cancellationToken);
+
+        // 6. أنشئ الـ Entity وخزّنه
         var voiceNote = VoiceNote.Create(
             shopId:        shop.Id,
             ownerUserId:   ownerUserId,
@@ -107,26 +127,9 @@ public class VoiceNoteService : IVoiceNoteService
 
         voiceNote.Delete();
         await _unitOfWork.SaveChangesAsync(cancellationToken);
-    }
 
-    // ── Private Helpers ────────────────────────────────────────────────────────
-
-    private static async Task<string> SaveAudioFileAsync(
-        Stream audioStream, string originalFileName, CancellationToken cancellationToken)
-    {
-        // توليد اسم فريد للملف مع الاحتفاظ بالامتداد الأصلي
-        var extension = Path.GetExtension(originalFileName).ToLowerInvariant();
-        var fileName  = $"{Guid.NewGuid()}{extension}";
-        var directory = Path.Combine(Directory.GetCurrentDirectory(), AudioStoragePath);
-
-        Directory.CreateDirectory(directory); // ينشئ المجلد لو مش موجود
-
-        var filePath = Path.Combine(directory, fileName);
-        await using var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write);
-        await audioStream.CopyToAsync(fileStream, cancellationToken);
-
-        // يرجع المسار النسبي (للتخزين في DB والإرسال للـ client)
-        return $"/{AudioStoragePath}/{fileName}";
+        // Delete underlying file from storage (H5)
+        await _fileStorage.DeleteAsync(voiceNote.AudioPath, cancellationToken);
     }
 
     private static VoiceNoteResponse MapToResponse(VoiceNote v, string? resolvedContactName = null)

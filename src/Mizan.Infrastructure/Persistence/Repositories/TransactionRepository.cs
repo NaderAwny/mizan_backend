@@ -67,7 +67,7 @@ public class TransactionRepository : ITransactionRepository
         var query = _dbSet
             .Include(t => t.Contact)
             .Include(t => t.Installments)
-            .Where(t => t.OwnerUserId == ownerUserId);
+            .Where(t => t.OwnerUserId == ownerUserId && t.IsActive);
 
         if (contactId.HasValue)
         {

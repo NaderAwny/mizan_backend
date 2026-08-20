@@ -31,7 +31,9 @@ public class RefreshTokenTests
         // Assert
         Assert.False(token.IsActive);
         Assert.True(token.IsRevoked);
-        Assert.Equal("replacement-token", token.ReplacedByToken);
+        // C4: ReplacedByTokenHash stores the SHA-256 hash of the replacement token
+        var expectedHash = RefreshToken.HashToken("replacement-token");
+        Assert.Equal(expectedHash, token.ReplacedByTokenHash);
     }
 
     [Fact]

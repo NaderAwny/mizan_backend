@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+
+jobs:
+  build-and-test:
+    name: Build & Test (.NET 9 + SQL Server 2022)
+    runs-on: ubuntu-latest
+
+    services:
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: "Y"
+          MSSQL_SA_PASSWORD: "Mizan_Password123!"
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'Mizan_Password123!' -C -Q 'SELECT 1' || /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P 'Mizan_Password123!' -Q 'SELECT 1'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup .NET 9 SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build with TreatWarningsAsErrors
+      run: dotnet build --no-restore --configuration Release -warnaserror
+
+    - name: Run Unit & Integration Tests (Against Real SQL Server Container)
+      env:
+        TEST_SQL_CONNECTION_STRING: "Server=localhost,1433;Database=Mizan_TestDb;User Id=sa;Password=Mizan_Password123!;TrustServerCertificate=True;Encrypt=False;MultipleActiveResultSets=True;"
+      run: dotnet test tests/Mizan.UnitTests/Mizan.UnitTests.csproj --no-build --configuration Release --verbosity normal

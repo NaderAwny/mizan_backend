@@ -64,7 +64,14 @@ public class TransactionsController : BaseController
     [HttpPost("{id:guid}/voice-note")]
     public async Task<IActionResult> AttachVoiceNote(Guid id, IFormFile file, CancellationToken cancellationToken)
     {
-        var response = await _transactionService.AttachVoiceNoteAsync(CurrentUserId, id, file, cancellationToken);
+        if (file == null || file.Length == 0)
+            return BadRequest(new { statusCode = 400, message = "ملف الصوت مطلوب" });
+
+        await using var stream = file.OpenReadStream();
+#pragma warning disable CS0618 // AttachVoiceNoteAsync is obsolete in favor of /api/voice-notes
+        var response = await _transactionService.AttachVoiceNoteAsync(
+            CurrentUserId, id, stream, file.FileName, file.ContentType, file.Length, cancellationToken);
+#pragma warning restore CS0618
         return Success(response, "تم إرفاق الملاحظة الصوتية بنجاح");
     }
 
@@ -72,7 +79,9 @@ public class TransactionsController : BaseController
     [HttpGet("{id:guid}/voice-note")]
     public async Task<IActionResult> GetVoiceNote(Guid id, CancellationToken cancellationToken)
     {
+#pragma warning disable CS0618 // GetVoiceNoteStreamAsync is obsolete in favor of /api/voice-notes
         var (stream, contentType, fileName) = await _transactionService.GetVoiceNoteStreamAsync(CurrentUserId, id, cancellationToken);
+#pragma warning restore CS0618
         return File(stream, contentType, fileName, enableRangeProcessing: true);
     }
 

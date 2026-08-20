@@ -1,10 +1,13 @@
 using System.Security.Claims;
+using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Mizan.API.Controllers;
 
 [ApiController]
+[ApiVersion("1.0")]
 [Route("api/[controller]")]
+[Route("api/v{version:apiVersion}/[controller]")]
 public abstract class BaseController : ControllerBase
 {
     protected Guid CurrentUserId

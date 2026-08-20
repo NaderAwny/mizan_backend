@@ -16,11 +16,17 @@ using Mizan.Infrastructure.Persistence.Repositories;
 using Mizan.Infrastructure.Services.Auth;
 using Mizan.Infrastructure.Services.Email;
 
+using Asp.Versioning;
+using Serilog;
+
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Logging.ClearProviders();
-builder.Logging.AddConsole();
-builder.Logging.AddDebug();
+// Configure Serilog Structured Logging
+builder.Host.UseSerilog((context, services, configuration) => configuration
+    .ReadFrom.Configuration(context.Configuration)
+    .ReadFrom.Services(services)
+    .Enrich.FromLogContext()
+    .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] [{CorrelationId}] {Message:lj}{NewLine}{Exception}"));
 
 // 1. Controller & Validation Response Configuration
 builder.Services.AddControllers()
@@ -47,7 +53,24 @@ builder.Services.AddControllers()
         };
     });
 
-// 2. Caching
+// 2. API Versioning
+builder.Services.AddApiVersioning(options =>
+{
+    options.DefaultApiVersion = new ApiVersion(1, 0);
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.ReportApiVersions = true;
+    options.ApiVersionReader = ApiVersionReader.Combine(
+        new UrlSegmentApiVersionReader(),
+        new HeaderApiVersionReader("x-api-version"),
+        new QueryStringApiVersionReader("api-version")
+    );
+}).AddApiExplorer(options =>
+{
+    options.GroupNameFormat = "'v'VVV";
+    options.SubstituteApiVersionInUrl = true;
+});
+
+// 3. Caching
 builder.Services.AddMemoryCache();
 
 // 3. Database Context
@@ -81,9 +104,13 @@ builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IPeriodicReportService, PeriodicReportService>();
 builder.Services.AddScoped<IVoiceNoteService, VoiceNoteService>();
-builder.Services.AddScoped<IReportPdfGenerator, Mizan.Infrastructure.Services.Reports.ReportPdfGenerator>();
+builder.Services.AddScoped<IFileStorageService, Mizan.Infrastructure.Storage.LocalFileStorageService>();
+#pragma warning disable CS0618 // ReportPdfGenerator marked obsolete but still registered for backward compat
+        builder.Services.AddScoped<IReportPdfGenerator, Mizan.Infrastructure.Services.Reports.ReportPdfGenerator>();
+#pragma warning restore CS0618
 builder.Services.AddScoped<IReminderScanner, ReminderScanner>();
 builder.Services.AddSingleton<IJwtProvider, JwtProvider>();
+builder.Services.AddHealthChecks();
 
 var emailOptions = builder.Configuration.GetSection(EmailOptions.SectionName).Get<EmailOptions>() ?? new EmailOptions();
 if (!builder.Environment.IsEnvironment("Testing"))
@@ -104,7 +131,11 @@ builder.Services.AddScoped<SendGrid.ISendGridClient>(sp =>
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.Configure<Mizan.Application.DTOs.Notifications.RemindersOptions>(builder.Configuration.GetSection(Mizan.Application.DTOs.Notifications.RemindersOptions.SectionName));
 builder.Services.Configure<Mizan.Application.DTOs.Reports.PeriodicReportsOptions>(builder.Configuration.GetSection(Mizan.Application.DTOs.Reports.PeriodicReportsOptions.SectionName));
+builder.Services.AddSingleton<IUserStatusCache, Mizan.Infrastructure.Caching.UserStatusCache>();
+builder.Services.AddSingleton<IPeriodicReportEmailChannel, Mizan.Infrastructure.Channels.PeriodicReportEmailChannel>();
+builder.Services.AddHostedService<Mizan.Infrastructure.BackgroundServices.PeriodicReportEmailWorker>();
 builder.Services.AddHostedService<Mizan.Infrastructure.BackgroundServices.ReminderCheckService>();
+builder.Services.AddHostedService<Mizan.Infrastructure.BackgroundServices.PeriodicReportEmailRetryService>();
 
 // 6. JWT Authentication & Strict Key Validation
 var jwtOptions = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? new JwtOptions();
@@ -134,7 +165,7 @@ builder.Services.Configure<JwtOptions>(options =>
     options.SecretKey = jwtOptions.SecretKey;
     options.Issuer = jwtOptions.Issuer;
     options.Audience = jwtOptions.Audience;
-    options.AccessTokenExpirationDays = jwtOptions.AccessTokenExpirationDays;
+    options.AccessTokenExpirationMinutes = jwtOptions.AccessTokenExpirationMinutes;
     options.RefreshTokenExpirationDays = jwtOptions.RefreshTokenExpirationDays;
 });
 
@@ -164,21 +195,35 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
-// 7. Rate Limiting (10 requests / minute on Auth endpoints, 100 requests / minute on General endpoints)
+// 7. Rate Limiting — partitioned by IP (H3: each client gets its own bucket)
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-    options.AddFixedWindowLimiter("AuthPolicy", opt =>
+
+    // Auth endpoints: strict — 10 requests/minute per IP
+    options.AddPolicy<string>("AuthPolicy", context =>
     {
-        opt.PermitLimit = builder.Environment.IsEnvironment("Testing") ? 1000 : 10;
-        opt.Window = TimeSpan.FromMinutes(1);
-        opt.QueueLimit = 0;
+        var ip = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        var limit = builder.Environment.IsEnvironment("Testing") ? 1000 : 10;
+        return RateLimitPartition.GetFixedWindowLimiter(ip, _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = limit,
+            Window = TimeSpan.FromMinutes(1),
+            QueueLimit = 0
+        });
     });
-    options.AddFixedWindowLimiter("GeneralPolicy", opt =>
+
+    // General endpoints: 100 requests/minute per IP
+    options.AddPolicy<string>("GeneralPolicy", context =>
     {
-        opt.PermitLimit = builder.Environment.IsEnvironment("Testing") ? 2000 : 100;
-        opt.Window = TimeSpan.FromMinutes(1);
-        opt.QueueLimit = 0;
+        var ip = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        var limit = builder.Environment.IsEnvironment("Testing") ? 2000 : 100;
+        return RateLimitPartition.GetFixedWindowLimiter(ip, _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = limit,
+            Window = TimeSpan.FromMinutes(1),
+            QueueLimit = 0
+        });
     });
 });
 
@@ -244,16 +289,22 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// Ensure database migrations are applied in local development
+// Ensure database migrations are applied when enabled (H6)
 if (!app.Environment.IsEnvironment("Testing"))
 {
-    using var scope = app.Services.CreateScope();
-    var dbContext = scope.ServiceProvider.GetRequiredService<MizanDbContext>();
-    dbContext.Database.Migrate();
+    var runMigrations = app.Configuration.GetValue<bool>("RUN_MIGRATIONS", app.Environment.IsDevelopment());
+    if (runMigrations)
+    {
+        using var scope = app.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<MizanDbContext>();
+        dbContext.Database.Migrate();
+    }
 }
 
 // 10. Middleware Pipeline
+app.UseMiddleware<CorrelationIdMiddleware>();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseSerilogRequestLogging();
 
 if (!app.Environment.IsEnvironment("Testing") && !app.Environment.IsDevelopment())
 {
@@ -271,12 +322,14 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors(app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing") ? "DevelopmentCors" : "ProductionCors");
+app.UseStaticFiles();
 app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseMiddleware<AccountStatusMiddleware>();
 app.UseAuthorization();
 
+app.MapHealthChecks("/health");
 app.MapControllers();
 
 app.Run();

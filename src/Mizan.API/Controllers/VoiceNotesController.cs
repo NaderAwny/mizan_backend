@@ -10,7 +10,7 @@ namespace Mizan.API.Controllers;
 [EnableRateLimiting("GeneralPolicy")]
 [ApiController]
 [Route("api/voice-notes")]
-[Route("api/[controller]")]
+[Route("api/v{version:apiVersion}/voice-notes")]
 public class VoiceNotesController : BaseController
 {
     private readonly IVoiceNoteService _voiceNoteService;

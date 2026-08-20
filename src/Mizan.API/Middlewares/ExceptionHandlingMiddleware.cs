@@ -31,6 +31,12 @@ public class ExceptionHandlingMiddleware
 
     private async Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
+        if (context.Response.HasStarted)
+        {
+            _logger.LogWarning("Response has already started, cannot write error response for exception: {Message}", exception.Message);
+            return;
+        }
+
         var (statusCode, message) = exception switch
         {
             NotFoundException notFound => ((int)HttpStatusCode.NotFound, notFound.Message),

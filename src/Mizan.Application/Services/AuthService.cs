@@ -39,16 +39,15 @@ public class AuthService : IAuthService
         var existingUser = await _unitOfWork.Users.GetByEmailAsync(email, cancellationToken);
         if (existingUser == null)
         {
+            // New user: create record now so OTP is associated with an account
             var newUser = User.Create(email, request.FirstName, request.LastName);
             await _unitOfWork.Users.AddAsync(newUser, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
         }
-        else
-        {
-            existingUser.UpdateProfile(request.FirstName, request.LastName);
-            _unitOfWork.Users.Update(existingUser);
-        }
+        // H2 (Option A): If user already exists, do NOT update their profile.
+        // Only send a new OTP. This prevents an attacker from changing another
+        // user's name simply by calling /register with their email.
 
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
         return await GenerateAndSendOtpAsync(email, cancellationToken);
     }
 
@@ -101,7 +100,7 @@ public class AuthService : IAuthService
 
             foreach (var token in tokensToRevoke)
             {
-                token.Revoke("Exceeded maximum active devices");
+                token.Revoke();
                 _unitOfWork.RefreshTokens.Update(token);
             }
         }
@@ -249,7 +248,8 @@ public class AuthService : IAuthService
         await _unitOfWork.OtpCodes.InvalidatePreviousOtpsAsync(email, cancellationToken);
 
         // Generate 6-digit cryptographic random number
-        var randomCode = RandomNumberGenerator.GetInt32(100000, 999999).ToString();
+        // GetInt32 upper bound is exclusive, so 1000000 gives us 100000..999999
+        var randomCode = RandomNumberGenerator.GetInt32(100000, 1000000).ToString();
         var otp = OtpCode.Create(email, randomCode, expirySeconds: 120);
 
         await _unitOfWork.OtpCodes.AddAsync(otp, cancellationToken);

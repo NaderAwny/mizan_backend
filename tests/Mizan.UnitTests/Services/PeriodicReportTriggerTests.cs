@@ -57,6 +57,14 @@ public class PeriodicReportTriggerTests
         return new MizanDbContext(options);
     }
 
+    private class FakeHostEnvironment : Microsoft.Extensions.Hosting.IHostEnvironment
+    {
+        public string EnvironmentName { get; set; } = "Testing";
+        public string ApplicationName { get; set; } = "Mizan";
+        public string ContentRootPath { get; set; } = Path.GetTempPath();
+        public Microsoft.Extensions.FileProviders.IFileProvider ContentRootFileProvider { get; set; } = null!;
+    }
+
     private static IServiceScopeFactory CreateScopeFactory(string dbName, IEmailService emailService)
     {
         var services = new ServiceCollection();
@@ -75,10 +83,9 @@ public class PeriodicReportTriggerTests
         using var db = CreateDb(dbName);
         var uow = new UnitOfWork(db);
         var pdfGen = new FakeReportPdfGenerator();
-        var emailSvc = new FakeEmailService();
-        var scopeFactory = CreateScopeFactory(dbName, emailSvc);
+        var emailChannel = new Mizan.Infrastructure.Channels.PeriodicReportEmailChannel();
         var options = Microsoft.Extensions.Options.Options.Create(new PeriodicReportsOptions { Enabled = true, TransactionThreshold = 7 });
-        var service = new TransactionService(uow, options, pdfGen, scopeFactory, NullLogger<TransactionService>.Instance);
+        var service = new TransactionService(uow, options, pdfGen, emailChannel, new FakeHostEnvironment(), NullLogger<TransactionService>.Instance);
 
         Guid ownerUserId = Guid.NewGuid();
         var contact = Contact.Create(ownerUserId, "عميل تجريبي", null, null);
@@ -116,10 +123,9 @@ public class PeriodicReportTriggerTests
         using var db = CreateDb(dbName);
         var uow = new UnitOfWork(db);
         var pdfGen = new FakeReportPdfGenerator();
-        var emailSvc = new FakeEmailService();
-        var scopeFactory = CreateScopeFactory(dbName, emailSvc);
+        var emailChannel = new Mizan.Infrastructure.Channels.PeriodicReportEmailChannel();
         var options = Microsoft.Extensions.Options.Options.Create(new PeriodicReportsOptions { Enabled = true, TransactionThreshold = 7 });
-        var service = new TransactionService(uow, options, pdfGen, scopeFactory, NullLogger<TransactionService>.Instance);
+        var service = new TransactionService(uow, options, pdfGen, emailChannel, new FakeHostEnvironment(), NullLogger<TransactionService>.Instance);
 
         var user = User.Create("owner@test.com", "أحمد", "علي", "shop_owner");
         Guid ownerUserId = user.Id;
@@ -172,10 +178,9 @@ public class PeriodicReportTriggerTests
         using var db = CreateDb(dbName);
         var uow = new UnitOfWork(db);
         var pdfGen = new FakeReportPdfGenerator();
-        var emailSvc = new FakeEmailService();
-        var scopeFactory = CreateScopeFactory(dbName, emailSvc);
+        var emailChannel = new Mizan.Infrastructure.Channels.PeriodicReportEmailChannel();
         var options = Microsoft.Extensions.Options.Options.Create(new PeriodicReportsOptions { Enabled = true, TransactionThreshold = 7 });
-        var service = new TransactionService(uow, options, pdfGen, scopeFactory, NullLogger<TransactionService>.Instance);
+        var service = new TransactionService(uow, options, pdfGen, emailChannel, new FakeHostEnvironment(), NullLogger<TransactionService>.Instance);
 
         Guid ownerUserId = Guid.NewGuid();
         var contact = Contact.Create(ownerUserId, "عميل تجريبي", null, null);
@@ -216,10 +221,9 @@ public class PeriodicReportTriggerTests
         using var db = CreateDb(dbName);
         var uow = new UnitOfWork(db);
         var pdfGen = new FakeReportPdfGenerator();
-        var emailSvc = new FakeEmailService();
-        var scopeFactory = CreateScopeFactory(dbName, emailSvc);
+        var emailChannel = new Mizan.Infrastructure.Channels.PeriodicReportEmailChannel();
         var options = Microsoft.Extensions.Options.Options.Create(new PeriodicReportsOptions { Enabled = true, TransactionThreshold = 7 });
-        var service = new TransactionService(uow, options, pdfGen, scopeFactory, NullLogger<TransactionService>.Instance);
+        var service = new TransactionService(uow, options, pdfGen, emailChannel, new FakeHostEnvironment(), NullLogger<TransactionService>.Instance);
 
         // Create User 1 and User 2
         var user1 = User.Create("user1@mizan.app", "أحمد", "علي", "shop_owner");

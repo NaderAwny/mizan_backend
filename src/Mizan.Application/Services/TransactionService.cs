@@ -1,5 +1,3 @@
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Mizan.Application.DTOs.Reports;
@@ -20,21 +18,24 @@ public class TransactionService : ITransactionService
     private readonly IUnitOfWork _unitOfWork;
     private readonly PeriodicReportsOptions _periodicReportsOptions;
     private readonly IReportPdfGenerator _reportPdfGenerator;
-    private readonly IServiceScopeFactory _scopeFactory;
+    private readonly IPeriodicReportEmailChannel _emailChannel;
+    private readonly Microsoft.Extensions.Hosting.IHostEnvironment _environment;
     private readonly ILogger<TransactionService> _logger;
 
     public TransactionService(
         IUnitOfWork unitOfWork,
-        IOptions<PeriodicReportsOptions>? periodicReportsOptions = null,
-        IReportPdfGenerator? reportPdfGenerator = null,
-        IServiceScopeFactory? scopeFactory = null,
-        ILogger<TransactionService>? logger = null)
+        IOptions<PeriodicReportsOptions> periodicReportsOptions,
+        IReportPdfGenerator reportPdfGenerator,
+        IPeriodicReportEmailChannel emailChannel,
+        Microsoft.Extensions.Hosting.IHostEnvironment environment,
+        ILogger<TransactionService> logger)
     {
         _unitOfWork = unitOfWork;
-        _periodicReportsOptions = periodicReportsOptions?.Value ?? new PeriodicReportsOptions();
-        _reportPdfGenerator = reportPdfGenerator!;
-        _scopeFactory = scopeFactory!;
-        _logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<TransactionService>.Instance;
+        _periodicReportsOptions = periodicReportsOptions.Value;
+        _reportPdfGenerator = reportPdfGenerator;
+        _emailChannel = emailChannel;
+        _environment = environment;
+        _logger = logger;
     }
 
     public async Task<TransactionResponseDto> CreateTransactionAsync(
@@ -42,14 +43,7 @@ public class TransactionService : ITransactionService
         CreateTransactionDto dto,
         CancellationToken cancellationToken = default)
     {
-        if (shopId == Guid.Empty)
-            throw new BadRequestException("معرف المحل مطلوب");
-
-        var shop = await _unitOfWork.Shops.GetByIdAsync(shopId, cancellationToken)
-            ?? await _unitOfWork.Shops.GetByOwnerIdAsync(shopId, cancellationToken);
-
-        if (shop == null)
-            throw new NotFoundException("المحل", shopId);
+        var shop = await GetShopOrThrowAsync(shopId, cancellationToken);
 
         Contact? contact = null;
         if (dto.ContactId.HasValue)
@@ -88,15 +82,9 @@ public class TransactionService : ITransactionService
         DateTime date,
         CancellationToken cancellationToken = default)
     {
-        if (shopId == Guid.Empty)
-            throw new BadRequestException("معرف المحل مطلوب");
+        var shop = await GetShopOrThrowAsync(shopId, cancellationToken);
 
-        var shop = await _unitOfWork.Shops.GetByIdAsync(shopId, cancellationToken)
-            ?? await _unitOfWork.Shops.GetByOwnerIdAsync(shopId, cancellationToken);
-
-        var effectiveShopId = shop?.Id ?? shopId;
-
-        var transactions = await _unitOfWork.Transactions.GetByShopAndDateAsync(effectiveShopId, date, cancellationToken);
+        var transactions = await _unitOfWork.Transactions.GetByShopAndDateAsync(shop.Id, date, cancellationToken);
         var dtos = transactions.Select(t => MapToTransactionResponseDto(t)).ToList();
 
         var totalSales = transactions
@@ -123,21 +111,15 @@ public class TransactionService : ITransactionService
         int month,
         CancellationToken cancellationToken = default)
     {
-        if (shopId == Guid.Empty)
-            throw new BadRequestException("معرف المحل مطلوب");
-
         if (year < 2000 || year > 2100)
             throw new BadRequestException("السنة المحددة غير صحيحة");
 
         if (month < 1 || month > 12)
             throw new BadRequestException("الشهر المحدد غير صحيح");
 
-        var shop = await _unitOfWork.Shops.GetByIdAsync(shopId, cancellationToken)
-            ?? await _unitOfWork.Shops.GetByOwnerIdAsync(shopId, cancellationToken);
+        var shop = await GetShopOrThrowAsync(shopId, cancellationToken);
 
-        var effectiveShopId = shop?.Id ?? shopId;
-
-        var transactions = await _unitOfWork.Transactions.GetByShopAndMonthAsync(effectiveShopId, year, month, cancellationToken);
+        var transactions = await _unitOfWork.Transactions.GetByShopAndMonthAsync(shop.Id, year, month, cancellationToken);
         var dtos = transactions.Select(t => MapToTransactionResponseDto(t)).ToList();
 
         var totalSales = transactions
@@ -164,6 +146,20 @@ public class TransactionService : ITransactionService
         CancellationToken cancellationToken = default)
     {
         return await GetDailyStatisticsAsync(shopId, DateTime.UtcNow, cancellationToken);
+    }
+
+    private async Task<Shop> GetShopOrThrowAsync(Guid shopOrOwnerId, CancellationToken cancellationToken)
+    {
+        if (shopOrOwnerId == Guid.Empty)
+            throw new BadRequestException("معرف المحل مطلوب");
+
+        var shop = await _unitOfWork.Shops.GetByIdAsync(shopOrOwnerId, cancellationToken)
+            ?? await _unitOfWork.Shops.GetByOwnerIdAsync(shopOrOwnerId, cancellationToken);
+
+        if (shop == null)
+            throw new NotFoundException("المحل", shopOrOwnerId);
+
+        return shop;
     }
 
     private static TransactionResponseDto MapToTransactionResponseDto(Transaction t, string? contactName = null)
@@ -275,9 +271,13 @@ public class TransactionService : ITransactionService
         // 5. Save all entities
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return MapToResponse(transaction, contact.Name);
-    }
+        var result = MapToResponse(transaction, contact?.Name);
 
+        // C2: Trigger periodic report check after every successful transaction save
+        await TryGeneratePeriodicReportAsync(ownerUserId, cancellationToken);
+
+        return result;
+    }
     public async Task<TransactionResponse> GetByIdAsync(
         Guid ownerUserId,
         Guid transactionId,
@@ -327,32 +327,36 @@ public class TransactionService : ITransactionService
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
+    [Obsolete("Deprecated — Use VoiceNotesController (/api/voice-notes) instead")]
     public async Task<TransactionResponse> AttachVoiceNoteAsync(
         Guid ownerUserId,
         Guid transactionId,
-        IFormFile audioFile,
+        Stream audioStream,
+        string fileName,
+        string contentType,
+        long fileLength,
         CancellationToken cancellationToken = default)
     {
         var transaction = await GetOwnedTransactionOrThrowAsync(ownerUserId, transactionId, cancellationToken);
 
-        if (audioFile == null || audioFile.Length == 0)
+        if (audioStream == null || fileLength == 0)
             throw new BadRequestException("Audio file is required");
 
         // Allowed MIME types
         var allowedMimeTypes = new[] { "audio/mpeg", "audio/mp4", "audio/wav", "audio/m4a", "audio/webm", "audio/x-m4a", "audio/x-wav" };
-        var contentType = audioFile.ContentType.ToLowerInvariant();
-        if (!allowedMimeTypes.Contains(contentType))
+        var normalizedContentType = contentType.ToLowerInvariant();
+        if (!allowedMimeTypes.Contains(normalizedContentType))
             throw new BadRequestException("Invalid audio file format. Allowed formats: mp3, mp4, wav, m4a, webm");
 
         // 10MB limit
-        if (audioFile.Length > 10 * 1024 * 1024)
+        if (fileLength > 10 * 1024 * 1024)
             throw new BadRequestException("Audio file size exceeds maximum limit of 10MB");
 
         // Store under App_Data/voice-notes/{ownerUserId}/{guid}.{ext}
-        var ext = Path.GetExtension(audioFile.FileName);
+        var ext = Path.GetExtension(fileName);
         if (string.IsNullOrWhiteSpace(ext))
         {
-            ext = contentType switch
+            ext = normalizedContentType switch
             {
                 "audio/mpeg" => ".mp3",
                 "audio/wav" or "audio/x-wav" => ".wav",
@@ -361,7 +365,7 @@ public class TransactionService : ITransactionService
             };
         }
 
-        var folderPath = Path.Combine(Directory.GetCurrentDirectory(), "App_Data", "voice-notes", ownerUserId.ToString());
+        var folderPath = Path.Combine(_environment.ContentRootPath, "App_Data", "voice-notes", ownerUserId.ToString());
         Directory.CreateDirectory(folderPath);
 
         var storedFileName = $"{Guid.NewGuid()}{ext}";
@@ -369,7 +373,7 @@ public class TransactionService : ITransactionService
 
         using (var stream = new FileStream(fullPath, FileMode.Create))
         {
-            await audioFile.CopyToAsync(stream, cancellationToken);
+            await audioStream.CopyToAsync(stream, cancellationToken);
         }
 
         transaction.AttachVoiceNote(fullPath);
@@ -379,6 +383,7 @@ public class TransactionService : ITransactionService
         return MapToResponse(transaction);
     }
 
+    [Obsolete("Deprecated — Use VoiceNotesController (/api/voice-notes) instead")]
     public async Task<(FileStream Stream, string ContentType, string FileName)> GetVoiceNoteStreamAsync(
         Guid ownerUserId,
         Guid transactionId,
@@ -580,7 +585,7 @@ public class TransactionService : ITransactionService
             : Array.Empty<byte>();
 
         // 2. Save PDF file to non-web-exposed internal path
-        var folderPath = Path.Combine(Directory.GetCurrentDirectory(), "App_Data", "reports", ownerUserId.ToString());
+        var folderPath = Path.Combine(_environment.ContentRootPath, "App_Data", "reports", ownerUserId.ToString());
         Directory.CreateDirectory(folderPath);
 
         var storedFileName = $"{Guid.NewGuid()}.pdf";
@@ -621,45 +626,22 @@ public class TransactionService : ITransactionService
             return;
         }
 
-        // 4. Architectural Decision: True Fire-and-Forget Background Email Dispatch using IServiceScopeFactory
-        // We dispatch the email sending in an isolated background Task.Run to ensure POST /api/transactions
-        // returns immediately without waiting for SendGrid HTTP network latency.
-        // A new DI scope is created via IServiceScopeFactory so no disposed request-scoped instances are accessed.
-        // If email sending fails or the server shuts down, PeriodicReportEmailRetryService will automatically
-        // pick up any PeriodicReport with EmailSent == false on its next run.
-        if (_scopeFactory != null && !string.IsNullOrWhiteSpace(recipientEmail))
+        // 4. Background Email Dispatch via System.Threading.Channels (H7)
+        // We enqueue the job to an in-memory channel. PeriodicReportEmailWorker processes it in the background.
+        // If the server shuts down before processing, PeriodicReportEmailRetryService will automatically
+        // retry any report with EmailSent == false.
+        if (!string.IsNullOrWhiteSpace(recipientEmail))
         {
-            Guid reportId = report.Id;
-            _ = Task.Run(async () =>
-            {
-                try
-                {
-                    using var scope = _scopeFactory.CreateScope();
-                    var emailService = scope.ServiceProvider.GetRequiredService<IEmailService>();
-                    var backgroundUow = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+            var job = new PeriodicReportEmailJob(
+                report.Id,
+                ownerUserId,
+                recipientEmail,
+                recipientName,
+                batchNumber,
+                pdfBytes);
 
-                    bool sent = await emailService.SendPeriodicReportEmailAsync(
-                        recipientEmail,
-                        recipientName,
-                        batchNumber,
-                        pdfBytes);
-
-                    if (sent)
-                    {
-                        var savedReport = await backgroundUow.PeriodicReports.GetByIdAsync(reportId, ownerUserId);
-                        if (savedReport != null)
-                        {
-                            savedReport.MarkEmailSent();
-                            backgroundUow.PeriodicReports.Update(savedReport);
-                            await backgroundUow.SaveChangesAsync();
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Failed to send periodic report email in background task for ReportId {ReportId}", reportId);
-                }
-            });
+            await _emailChannel.QueueEmailAsync(job, cancellationToken);
+            _logger.LogInformation("Enqueued periodic report email job for ReportId {ReportId}", report.Id);
         }
     }
 }

@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Http;
 using Mizan.Application.DTOs.Transactions;
 using Mizan.Core.Enums;
 
@@ -32,8 +31,10 @@ public interface ITransactionService
 
     Task DeactivateAsync(Guid ownerUserId, Guid transactionId, CancellationToken cancellationToken = default);
 
-    Task<TransactionResponse> AttachVoiceNoteAsync(Guid ownerUserId, Guid transactionId, IFormFile audioFile, CancellationToken cancellationToken = default);
+    [Obsolete("Deprecated — Use VoiceNotesController (/api/voice-notes) instead")]
+    Task<TransactionResponse> AttachVoiceNoteAsync(Guid ownerUserId, Guid transactionId, Stream audioStream, string fileName, string contentType, long fileLength, CancellationToken cancellationToken = default);
 
+    [Obsolete("Deprecated — Use VoiceNotesController (/api/voice-notes) instead")]
     Task<(FileStream Stream, string ContentType, string FileName)> GetVoiceNoteStreamAsync(Guid ownerUserId, Guid transactionId, CancellationToken cancellationToken = default);
 
     Task<TransactionResponse> MarkInstallmentPaidAsync(Guid ownerUserId, Guid transactionId, Guid installmentId, CancellationToken cancellationToken = default);

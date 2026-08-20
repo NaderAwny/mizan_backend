@@ -7,6 +7,7 @@ using Xunit;
 
 namespace Mizan.UnitTests.Services;
 
+#pragma warning disable CS0618 // ReportPdfGenerator deprecated but still tested
 public class ReportPdfGeneratorTests
 {
     private readonly ReportPdfGenerator _generator;

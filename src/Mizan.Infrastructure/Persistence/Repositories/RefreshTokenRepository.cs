@@ -10,9 +10,10 @@ public class RefreshTokenRepository : BaseRepository<RefreshToken>, IRefreshToke
     {
     }
 
-    public async Task<RefreshToken?> GetByTokenAsync(string token, CancellationToken cancellationToken = default)
+    public async Task<RefreshToken?> GetByTokenAsync(string rawToken, CancellationToken cancellationToken = default)
     {
-        return await _dbSet.FirstOrDefaultAsync(t => t.Token == token, cancellationToken);
+        var tokenHash = RefreshToken.HashToken(rawToken);
+        return await _dbSet.FirstOrDefaultAsync(t => t.TokenHash == tokenHash, cancellationToken);
     }
 
     public async Task<IReadOnlyList<RefreshToken>> GetActiveTokensByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
@@ -31,7 +32,7 @@ public class RefreshTokenRepository : BaseRepository<RefreshToken>, IRefreshToke
 
         foreach (var token in activeTokens)
         {
-            token.Revoke("Revoked by user or system");
+            token.Revoke();
         }
     }
 }

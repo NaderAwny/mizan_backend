@@ -52,6 +52,19 @@ public class ReminderScanner : IReminderScanner
             var targetDueDate = today.AddDays(daysBeforeDue);
 
             var installments = await _unitOfWork.Installments.GetPendingByDueDateAsync(targetDueDate, cancellationToken);
+            if (installments.Count == 0)
+                continue;
+
+            // 1. Batch check existing reminder logs in a single SQL query (Fixes M5 N+1 query)
+            var pendingInstallmentIds = installments
+                .Where(i => i.Status == InstallmentStatus.Pending && i.Transaction != null && i.Transaction.IsActive)
+                .Select(i => i.Id)
+                .ToList();
+
+            var loggedInstallmentIds = await _unitOfWork.InstallmentReminderLogs
+                .GetLoggedInstallmentIdsAsync(pendingInstallmentIds, daysBeforeDue, cancellationToken);
+
+            int stageProcessedCount = 0;
 
             foreach (var installment in installments)
             {
@@ -61,19 +74,13 @@ public class ReminderScanner : IReminderScanner
                 if (installment.Transaction == null || !installment.Transaction.IsActive)
                     continue;
 
-                // 1. Check if reminder for this installment and stage has already been logged
-                bool alreadyLogged = await _unitOfWork.InstallmentReminderLogs.ExistsAsync(installment.Id, daysBeforeDue, cancellationToken);
-                if (alreadyLogged)
+                // Skip if already logged in batch
+                if (loggedInstallmentIds.Contains(installment.Id))
                     continue;
 
                 var transaction = installment.Transaction;
                 var owner = transaction.Owner;
                 var contact = transaction.Contact;
-
-                if (owner == null)
-                {
-                    owner = await _unitOfWork.Users.GetByIdAsync(transaction.OwnerUserId, cancellationToken);
-                }
 
                 if (owner == null || !owner.IsActive)
                     continue;
@@ -145,12 +152,17 @@ public class ReminderScanner : IReminderScanner
                 var reminderLog = InstallmentReminderLog.Create(installment.Id, daysBeforeDue, contactSent);
                 await _unitOfWork.InstallmentReminderLogs.AddAsync(reminderLog, cancellationToken);
 
-                // 5. Commit both Notification and Log
-                await _unitOfWork.SaveChangesAsync(cancellationToken);
                 sentCount++;
+                stageProcessedCount++;
 
                 _logger.LogInformation("🔔 Processed reminder for installment {InstallmentId} (owner: {OwnerId}, stage: {DaysBeforeDue} days)",
                     installment.Id, transaction.OwnerUserId, daysBeforeDue);
+            }
+
+            // 5. Batch commit all notifications and logs for this stage (Fixes M5 N+1 round-trips)
+            if (stageProcessedCount > 0)
+            {
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
             }
         }
 

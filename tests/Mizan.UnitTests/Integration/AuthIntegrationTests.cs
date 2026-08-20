@@ -65,7 +65,7 @@ public class AuthIntegrationTests : IClassFixture<CustomWebApplicationFactory>
         Assert.False(otpData.TryGetProperty("code", out _));
 
         // Get captured OTP from fake email service instance
-        var sentCode = CustomWebApplicationFactory.EmailServiceInstance.LastCapturedOtp;
+        var sentCode = _factory.EmailService.LastCapturedOtp;
         Assert.NotNull(sentCode);
         Assert.Equal(6, sentCode.Length);
 

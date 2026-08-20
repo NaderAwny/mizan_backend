@@ -9,7 +9,8 @@ public class OtpCode
 {
     public Guid Id { get; private set; }
     public string Email { get; private set; } = string.Empty;
-    public string Code { get; private set; } = string.Empty;
+    /// <summary>SHA-256 hash of the 6-digit OTP. The raw code is NEVER stored.</summary>
+    public string CodeHash { get; private set; } = string.Empty;
     public DateTime ExpiresAt { get; private set; }
     public int AttemptsCount { get; private set; } = 0;
     public bool IsUsed { get; private set; } = false;
@@ -18,6 +19,12 @@ public class OtpCode
     private const int MaxAttempts = 3;
 
     private OtpCode() { }
+
+    private static string HashCode(string rawCode)
+    {
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(rawCode));
+        return Convert.ToHexString(bytes).ToLowerInvariant();
+    }
 
     public static OtpCode Create(string email, string code, int expirySeconds = 120)
     {
@@ -47,7 +54,7 @@ public class OtpCode
         {
             Id = Guid.NewGuid(),
             Email = email,
-            Code = code,
+            CodeHash = HashCode(code),
             ExpiresAt = DateTime.UtcNow.AddSeconds(expirySeconds),
             AttemptsCount = 0,
             IsUsed = false,
@@ -67,10 +74,11 @@ public class OtpCode
 
         AttemptsCount++;
 
-        var expectedBytes = Encoding.UTF8.GetBytes(Code);
-        var inputBytes = Encoding.UTF8.GetBytes(trimmedInput);
+        // Hash the input before comparison — timing-safe check on equal-length hex strings
+        var inputHashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(trimmedInput));
+        var storedHashBytes = Convert.FromHexString(CodeHash);
 
-        if (expectedBytes.Length != inputBytes.Length || !CryptographicOperations.FixedTimeEquals(expectedBytes, inputBytes))
+        if (!CryptographicOperations.FixedTimeEquals(inputHashBytes, storedHashBytes))
             return false;
 
         IsUsed = true;

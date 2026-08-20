@@ -22,9 +22,10 @@ public class OtpCodeConfiguration : IEntityTypeConfiguration<OtpCode>
 
         builder.HasIndex(o => o.Email);
 
-        builder.Property(o => o.Code)
-            .HasColumnName("code")
-            .HasMaxLength(6)
+        // C5: Stored as SHA-256 hex (64 chars) — raw OTP code is never stored
+        builder.Property(o => o.CodeHash)
+            .HasColumnName("code_hash")
+            .HasMaxLength(64)
             .IsRequired();
 
         builder.Property(o => o.ExpiresAt)
