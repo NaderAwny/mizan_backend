@@ -10,11 +10,11 @@ namespace Mizan.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // C4 DATA MIGRATION: Revoke all existing plaintext refresh tokens.
+            // C4 DATA MIGRATION: Invalidate all existing plaintext refresh tokens and OTP codes.
             // Old tokens stored as plaintext cannot be re-hashed (we don't have the raw value),
-            // so they are invalidated. Users will be required to log in again.
+            // so they are cleared. Users will be required to log in again.
             migrationBuilder.Sql(
-                "UPDATE refresh_tokens SET revoked_at = GETUTCDATE() WHERE revoked_at IS NULL",
+                "DELETE FROM refresh_tokens; DELETE FROM otp_codes;",
                 suppressTransaction: false);
 
             migrationBuilder.DropIndex(
