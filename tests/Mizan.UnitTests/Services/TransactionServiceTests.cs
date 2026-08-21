@@ -137,6 +137,79 @@ public class TransactionServiceTests
     }
 
     [Fact]
+    public async Task CreateAsync_WithPurchaseAutomaticInstallments_ShouldGenerateScheduleAndSave()
+    {
+        var (service, db) = CreateService();
+        var user1 = Guid.NewGuid();
+
+        var supplier = Contact.Create(user1, "Supplier", null, null);
+        db.Set<Contact>().Add(supplier);
+        await db.SaveChangesAsync();
+
+        var request = new CreateTransactionRequest
+        {
+            ContactId = supplier.Id,
+            Type = TransactionType.Purchase,
+            Amount = 6000m,
+            TransactionDate = DateTime.UtcNow,
+            IsInstallment = true,
+            InstallmentPlanMode = InstallmentPlanMode.Automatic,
+            InstallmentCount = 3,
+            FirstInstallmentDate = DateTime.UtcNow.AddDays(10),
+            Frequency = InstallmentFrequency.Monthly
+        };
+
+        var response = await service.CreateAsync(ownerUserId: user1, request);
+
+        Assert.Equal(6000m, response.Amount);
+        Assert.Equal(TransactionType.Purchase, response.Type);
+        Assert.Equal(3, response.Installments.Count);
+        Assert.Equal(2000m, response.Installments[0].Amount);
+        Assert.Equal(2000m, response.Installments[1].Amount);
+        Assert.Equal(2000m, response.Installments[2].Amount);
+        Assert.Equal(0m, response.TotalPaid);
+        Assert.Equal(6000m, response.TotalRemaining);
+    }
+
+    [Fact]
+    public async Task CreateAsync_WithSaleCustomInstallments_ShouldGenerateScheduleAndSave()
+    {
+        var (service, db) = CreateService();
+        var user1 = Guid.NewGuid();
+
+        var contact = Contact.Create(user1, "Customer", null, null);
+        db.Set<Contact>().Add(contact);
+        await db.SaveChangesAsync();
+
+        var request = new CreateTransactionRequest
+        {
+            ContactId = contact.Id,
+            Type = TransactionType.Sale,
+            Amount = 4500m,
+            TransactionDate = DateTime.UtcNow,
+            IsInstallment = true,
+            InstallmentPlanMode = InstallmentPlanMode.Custom,
+            CustomInstallments = new List<CustomInstallmentItem>
+            {
+                new() { Amount = 1500m, DueDate = DateTime.UtcNow.AddDays(7) },
+                new() { Amount = 1500m, DueDate = DateTime.UtcNow.AddDays(14) },
+                new() { Amount = 1500m, DueDate = DateTime.UtcNow.AddDays(21) }
+            }
+        };
+
+        var response = await service.CreateAsync(ownerUserId: user1, request);
+
+        Assert.Equal(4500m, response.Amount);
+        Assert.Equal(TransactionType.Sale, response.Type);
+        Assert.Equal(3, response.Installments.Count);
+        Assert.Equal(1500m, response.Installments[0].Amount);
+        Assert.Equal(1500m, response.Installments[1].Amount);
+        Assert.Equal(1500m, response.Installments[2].Amount);
+        Assert.Equal(0m, response.TotalPaid);
+        Assert.Equal(4500m, response.TotalRemaining);
+    }
+
+    [Fact]
     public async Task GetByIdAsync_WithWrongUser_ShouldThrowNotFoundException()
     {
         var (service, db) = CreateService();

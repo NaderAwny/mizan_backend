@@ -1144,7 +1144,7 @@
           ]
         },
         {
-          "name": "4.3 — مبيعات بالتقسيط الآلي (Sale with Automatic Installments)",
+          "name": "4.3 — مبيعات بتقسيط تلقائي (Sale with Automatic Installments)",
           "event": [
             {
               "listen": "test",
@@ -1157,8 +1157,9 @@
                   "        pm.environment.set('installment_id', json.data.installments[0].id);",
                   "        console.log('✅ تم تعيين installment_id للقسط الأول:', json.data.installments[0].id);",
                   "    }",
-                  "    pm.test('تم إنشاء الأقساط التلقائية بنجاح', function() {",
+                  "    pm.test('تم إنشاء الأقساط التلقائية للمبيعات بنجاح', function() {",
                   "        pm.expect(json.data.installments.length).to.equal(3);",
+                  "        pm.expect(json.data.type).to.equal('Sale');",
                   "    });",
                   "}"
                 ]
@@ -1179,7 +1180,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"contactId\": \"{{contact_id}}\",\n  \"type\": \"Sale\",\n  \"amount\": 3000,\n  \"paymentMethod\": \"Installments\",\n  \"isInstallment\": true,\n  \"installmentPlanMode\": \"Automatic\",\n  \"installmentsCount\": 3,\n  \"firstInstallmentDate\": \"2026-09-01T00:00:00Z\",\n  \"transactionDate\": \"2026-08-19T12:00:00Z\",\n  \"noteText\": \"بيع جهاز بالتقسيط على 3 أشهر متساوية\"\n}"
+              "raw": "{\n  \"contactId\": \"{{contact_id}}\",\n  \"type\": \"Sale\",\n  \"amount\": 3000,\n  \"paymentMethod\": \"Cash\",\n  \"isInstallment\": true,\n  \"installmentPlanMode\": \"Automatic\",\n  \"installmentCount\": 3,\n  \"frequency\": \"Monthly\",\n  \"firstInstallmentDate\": \"2026-09-01T00:00:00Z\",\n  \"transactionDate\": \"2026-08-19T12:00:00Z\",\n  \"noteText\": \"بيع بضاعة بالتقسيط التلقائي على 3 أشهر متساوية\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/transactions",
@@ -1191,11 +1192,11 @@
                 "transactions"
               ]
             },
-            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nإنشاء عملية بيع بالتقسيط مع توليد أقساط متساوية آلياً شهرياً تبدأ من `firstInstallmentDate`.\n\n---\n### 📥 مدخلات خطة التقسيط الآلية:\n- `isInstallment`: `true`\n- `installmentPlanMode`: `\"Automatic\"`\n- `installmentsCount`: عدد الأقساط (مثال: 3 أقساط بقيمة 1000 لكل قسط).\n- `firstInstallmentDate`: تاريخ استحقاق القسط الأول."
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nإنشاء عملية بيع بالتقسيط مع توليد أقساط متساوية آلياً شهرياً تبدأ من `firstInstallmentDate`.\n\n---\n### 📥 مدخلات خطة التقسيط الآلية:\n- `isInstallment`: `true`\n- `installmentPlanMode`: `\"Automatic\"`\n- `installmentCount`: عدد الأقساط (مثال: 3 أقساط بقيمة 1000 لكل قسط).\n- `frequency`: تكرار القسط (`\"Weekly\"` / `\"Monthly\"` / `\"Yearly\"`).\n- `firstInstallmentDate`: تاريخ استحقاق القسط الأول."
           },
           "response": [
             {
-              "name": "201 Created — تم توليد الأقساط الآلية",
+              "name": "201 Created — تم توليد الأقساط الآلية للمبيعات",
               "status": "Created",
               "code": 201,
               "_postman_previewlanguage": "json",
@@ -1205,19 +1206,86 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"success\": true,\n  \"message\": \"تم إنشاء العملية بنجاح\",\n  \"data\": {\n    \"id\": \"f4689c23-5d6e-7f8a-9b0c-1d2e3f4a5b6c\",\n    \"contactId\": \"7b0a7cb5-8d9e-4a1b-bc3d-1e2f3a4b5c6d\",\n    \"contactName\": \"محمود حسن إبراهيم\",\n    \"type\": \"Sale\",\n    \"amount\": 3000,\n    \"paymentMethod\": \"Installments\",\n    \"transactionDate\": \"2026-08-19T12:00:00Z\",\n    \"isInstallment\": true,\n    \"installments\": [\n      {\n        \"id\": \"11111111-2222-3333-4444-555555555555\",\n        \"installmentNumber\": 1,\n        \"amount\": 1000,\n        \"dueDate\": \"2026-09-01T00:00:00Z\",\n        \"isPaid\": false,\n        \"status\": \"Pending\"\n      },\n      {\n        \"id\": \"22222222-3333-4444-5555-666666666666\",\n        \"installmentNumber\": 2,\n        \"amount\": 1000,\n        \"dueDate\": \"2026-10-01T00:00:00Z\",\n        \"isPaid\": false,\n        \"status\": \"Pending\"\n      },\n      {\n        \"id\": \"33333333-4444-5555-6666-777777777777\",\n        \"installmentNumber\": 3,\n        \"amount\": 1000,\n        \"dueDate\": \"2026-11-01T00:00:00Z\",\n        \"isPaid\": false,\n        \"status\": \"Pending\"\n      }\n    ]\n  }\n}"
+              "body": "{\n  \"success\": true,\n  \"message\": \"تم إنشاء العملية بنجاح\",\n  \"data\": {\n    \"id\": \"f4689c23-5d6e-7f8a-9b0c-1d2e3f4a5b6c\",\n    \"contactId\": \"7b0a7cb5-8d9e-4a1b-bc3d-1e2f3a4b5c6d\",\n    \"contactName\": \"محمود حسن إبراهيم\",\n    \"type\": \"Sale\",\n    \"amount\": 3000,\n    \"paymentMethod\": \"Cash\",\n    \"transactionDate\": \"2026-08-19T12:00:00Z\",\n    \"isInstallment\": true,\n    \"installments\": [\n      {\n        \"id\": \"11111111-2222-3333-4444-555555555555\",\n        \"installmentNumber\": 1,\n        \"amount\": 1000,\n        \"dueDate\": \"2026-09-01T00:00:00Z\",\n        \"isPaid\": false,\n        \"status\": \"Pending\"\n      },\n      {\n        \"id\": \"22222222-3333-4444-5555-666666666666\",\n        \"installmentNumber\": 2,\n        \"amount\": 1000,\n        \"dueDate\": \"2026-10-01T00:00:00Z\",\n        \"isPaid\": false,\n        \"status\": \"Pending\"\n      },\n      {\n        \"id\": \"33333333-4444-5555-6666-777777777777\",\n        \"installmentNumber\": 3,\n        \"amount\": 1000,\n        \"dueDate\": \"2026-11-01T00:00:00Z\",\n        \"isPaid\": false,\n        \"status\": \"Pending\"\n      }\n    ]\n  }\n}"
             }
           ]
         },
         {
-          "name": "4.4 — مشتريات بجدول أقساط مخصص (Purchase with Custom Installments)",
+          "name": "4.4 — مشتريات بتقسيط تلقائي (Purchase with Automatic Installments) — جديد",
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('تم إنشاء الأقساط المخصصة بنجاح', function() {",
+                  "if (pm.response.code === 201) {",
+                  "    var json = pm.response.json();",
+                  "    if (json.data.installments && json.data.installments.length > 0) {",
+                  "        pm.environment.set('installment_id', json.data.installments[0].id);",
+                  "        console.log('✅ تم تعيين installment_id للقسط الأول لمشتريات التقسيط:', json.data.installments[0].id);",
+                  "    }",
+                  "    pm.test('تم إنشاء مشتريات بالتقسيط التلقائي بنجاح', function() {",
+                  "        pm.expect(json.data.installments.length).to.equal(3);",
+                  "        pm.expect(json.data.type).to.equal('Purchase');",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contactId\": \"{{contact_supplier_id}}\",\n  \"type\": \"Purchase\",\n  \"amount\": 6000,\n  \"paymentMethod\": \"Cash\",\n  \"isInstallment\": true,\n  \"installmentPlanMode\": \"Automatic\",\n  \"installmentCount\": 3,\n  \"frequency\": \"Monthly\",\n  \"firstInstallmentDate\": \"2026-09-01T00:00:00Z\",\n  \"transactionDate\": \"2026-08-19T12:30:00Z\",\n  \"noteText\": \"شراء بضاعة من المورد بالتقسيط التلقائي على 3 أشهر\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/transactions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "transactions"
+              ]
+            },
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nتسجيل فاتورة مشتريات من مورد مع جدول سداد أقساط آلية متساوية يتم توليدها تلقائياً على فترات دورية (مثل شهرياً) بدءاً من تاريخ القسط الأول `firstInstallmentDate`.\n\n---\n### 📥 مدخلات خطة التقسيط الآلية للمشتريات:\n- `contactId`: معرف المورد.\n- `type`: `\"Purchase\"`.\n- `amount`: المبلغ الإجمالي (مثال: 6000).\n- `paymentMethod`: `\"Cash\"` (طريقة تسديد الأقساط نقداً).\n- `isInstallment`: `true`.\n- `installmentPlanMode`: `\"Automatic\"`.\n- `installmentCount`: عدد الأقساط (مثال: 3 أقساط بقيمة 2000 لكل قسط).\n- `frequency`: تكرار القسط (`\"Weekly\"` / `\"Monthly\"` / `\"Yearly\"`).\n- `firstInstallmentDate`: تاريخ استحقاق القسط الأول."
+          },
+          "response": [
+            {
+              "name": "201 Created — تم توليد الأقساط الآلية للمشتريات",
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"تم إنشاء العملية بنجاح\",\n  \"data\": {\n    \"id\": \"b6801e45-7f8a-9b0c-1d2e-3f4a5b6c7d8e\",\n    \"contactId\": \"8c1b8dc6-9e0f-5b2c-cd4e-2f3a4b5c6d7e\",\n    \"contactName\": \"شركة الأمل للتوريدات التجارية\",\n    \"type\": \"Purchase\",\n    \"amount\": 6000,\n    \"paymentMethod\": \"Cash\",\n    \"transactionDate\": \"2026-08-19T12:30:00Z\",\n    \"isInstallment\": true,\n    \"installments\": [\n      {\n        \"id\": \"44444444-1111-2222-3333-555555555555\",\n        \"installmentNumber\": 1,\n        \"amount\": 2000,\n        \"dueDate\": \"2026-09-01T00:00:00Z\",\n        \"isPaid\": false,\n        \"status\": \"Pending\"\n      },\n      {\n        \"id\": \"55555555-2222-3333-4444-666666666666\",\n        \"installmentNumber\": 2,\n        \"amount\": 2000,\n        \"dueDate\": \"2026-10-01T00:00:00Z\",\n        \"isPaid\": false,\n        \"status\": \"Pending\"\n      },\n      {\n        \"id\": \"66666666-3333-4444-5555-777777777777\",\n        \"installmentNumber\": 3,\n        \"amount\": 2000,\n        \"dueDate\": \"2026-11-01T00:00:00Z\",\n        \"isPaid\": false,\n        \"status\": \"Pending\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "4.5 — مشتريات بتقسيط يدوي (Purchase with Custom Installments)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('تم إنشاء الأقساط المخصصة للمشتريات بنجاح', function() {",
                   "    pm.expect(pm.response.code).to.equal(201);",
                   "});"
                 ]
@@ -1238,7 +1306,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"contactId\": \"{{contact_supplier_id}}\",\n  \"type\": \"Purchase\",\n  \"amount\": 2500,\n  \"paymentMethod\": \"Installments\",\n  \"isInstallment\": true,\n  \"installmentPlanMode\": \"Custom\",\n  \"customInstallments\": [\n    {\n      \"amount\": 1000,\n      \"dueDate\": \"2026-09-15T00:00:00Z\"\n    },\n    {\n      \"amount\": 1500,\n      \"dueDate\": \"2026-10-15T00:00:00Z\"\n    }\n  ],\n  \"transactionDate\": \"2026-08-19T13:00:00Z\",\n  \"noteText\": \"شراء بضاعة بجدول سداد مخصص\"\n}"
+              "raw": "{\n  \"contactId\": \"{{contact_supplier_id}}\",\n  \"type\": \"Purchase\",\n  \"amount\": 2500,\n  \"paymentMethod\": \"Cash\",\n  \"isInstallment\": true,\n  \"installmentPlanMode\": \"Custom\",\n  \"customInstallments\": [\n    {\n      \"amount\": 1000,\n      \"dueDate\": \"2026-09-15T00:00:00Z\"\n    },\n    {\n      \"amount\": 1500,\n      \"dueDate\": \"2026-10-15T00:00:00Z\"\n    }\n  ],\n  \"transactionDate\": \"2026-08-19T13:00:00Z\",\n  \"noteText\": \"شراء بضاعة بجدول سداد مخصص\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/transactions",
@@ -1250,11 +1318,11 @@
                 "transactions"
               ]
             },
-            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nإنشاء عملية شراء مع تحديد مبالغ وتواريخ استحقاق مخصصة لكل قسط (`Custom Installments`)."
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nإنشاء عملية شراء مع تحديد مبالغ وتواريخ استحقاق مخصصة لكل قسط يدوي (`Custom Installments`)."
           },
           "response": [
             {
-              "name": "201 Created — تم حفظ الأقساط المخصصة",
+              "name": "201 Created — تم حفظ الأقساط المخصصة للمشتريات",
               "status": "Created",
               "code": 201,
               "_postman_previewlanguage": "json",
@@ -1264,12 +1332,78 @@
                   "value": "application/json"
                 }
               ],
-              "body": "{\n  \"success\": true,\n  \"message\": \"تم إنشاء العملية بنجاح\",\n  \"data\": {\n    \"id\": \"a5790d34-6e7f-8a9b-0c1d-2e3f4a5b6c7d\",\n    \"contactId\": \"8c1b8dc6-9e0f-5b2c-cd4e-2f3a4b5c6d7e\",\n    \"type\": \"Purchase\",\n    \"amount\": 2500,\n    \"paymentMethod\": \"Installments\",\n    \"isInstallment\": true,\n    \"installments\": [\n      {\n        \"id\": \"44444444-5555-6666-7777-888888888888\",\n        \"installmentNumber\": 1,\n        \"amount\": 1000,\n        \"dueDate\": \"2026-09-15T00:00:00Z\",\n        \"isPaid\": false,\n        \"status\": \"Pending\"\n      },\n      {\n        \"id\": \"55555555-6666-7777-8888-999999999999\",\n        \"installmentNumber\": 2,\n        \"amount\": 1500,\n        \"dueDate\": \"2026-10-15T00:00:00Z\",\n        \"isPaid\": false,\n        \"status\": \"Pending\"\n      }\n    ]\n  }\n}"
+              "body": "{\n  \"success\": true,\n  \"message\": \"تم إنشاء العملية بنجاح\",\n  \"data\": {\n    \"id\": \"a5790d34-6e7f-8a9b-0c1d-2e3f4a5b6c7d\",\n    \"contactId\": \"8c1b8dc6-9e0f-5b2c-cd4e-2f3a4b5c6d7e\",\n    \"type\": \"Purchase\",\n    \"amount\": 2500,\n    \"paymentMethod\": \"Cash\",\n    \"isInstallment\": true,\n    \"installments\": [\n      {\n        \"id\": \"44444444-5555-6666-7777-888888888888\",\n        \"installmentNumber\": 1,\n        \"amount\": 1000,\n        \"dueDate\": \"2026-09-15T00:00:00Z\",\n        \"isPaid\": false,\n        \"status\": \"Pending\"\n      },\n      {\n        \"id\": \"55555555-6666-7777-8888-999999999999\",\n        \"installmentNumber\": 2,\n        \"amount\": 1500,\n        \"dueDate\": \"2026-10-15T00:00:00Z\",\n        \"isPaid\": false,\n        \"status\": \"Pending\"\n      }\n    ]\n  }\n}"
             }
           ]
         },
         {
-          "name": "4.5 — قائمة العمليات مع الفلترة والتصفح (List Transactions)",
+          "name": "4.6 — مبيعات بتقسيط يدوي (Sale with Custom Installments) — جديد",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var json = pm.response.json();",
+                  "    if (json.data.installments && json.data.installments.length > 0) {",
+                  "        pm.environment.set('installment_id', json.data.installments[0].id);",
+                  "    }",
+                  "    pm.test('تم إنشاء مبيعات بالتقسيط اليدوي المخصص بنجاح', function() {",
+                  "        pm.expect(json.data.installments.length).to.equal(3);",
+                  "        pm.expect(json.data.type).to.equal('Sale');",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"contactId\": \"{{contact_id}}\",\n  \"type\": \"Sale\",\n  \"amount\": 4500,\n  \"paymentMethod\": \"Cash\",\n  \"isInstallment\": true,\n  \"installmentPlanMode\": \"Custom\",\n  \"customInstallments\": [\n    {\n      \"amount\": 1500,\n      \"dueDate\": \"2026-09-10T00:00:00Z\"\n    },\n    {\n      \"amount\": 1500,\n      \"dueDate\": \"2026-10-10T00:00:00Z\"\n    },\n    {\n      \"amount\": 1500,\n      \"dueDate\": \"2026-11-10T00:00:00Z\"\n    }\n  ],\n  \"transactionDate\": \"2026-08-19T13:30:00Z\",\n  \"noteText\": \"مبيعات أجهزة بجدول أقساط يدوي مخصص حسب اتفاق العميل\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/transactions",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "transactions"
+              ]
+            },
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nتسجيل عملية بيع لعميل مع جدول سداد أقساط مخصص يدوي (`Custom Installments`) بمبالغ وتواريخ محددة يدوياً حسب الاتفاق مع العميل بشرط أن يساوي مجموع مبالغ الأقساط إجمالي المبلغ الكلي للعملية.\n\n---\n### 📥 مدخلات خطة التقسيط اليدوية للمبيعات:\n- `contactId`: معرف العميل.\n- `type`: `\"Sale\"`.\n- `amount`: المبلغ الإجمالي (مثال: 4500).\n- `paymentMethod`: `\"Cash\"` (طريقة تسديد الأقساط نقداً).\n- `isInstallment`: `true`.\n- `installmentPlanMode`: `\"Custom\"`.\n- `customInstallments`: مصفوفة بالأقساط المخصصة (مجموع مبالغها = 4500)."
+          },
+          "response": [
+            {
+              "name": "201 Created — تم حفظ الأقساط اليدوية للمبيعات",
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"تم إنشاء العملية بنجاح\",\n  \"data\": {\n    \"id\": \"c7912f56-8a9b-0c1d-2e3f-4a5b6c7d8e9f\",\n    \"contactId\": \"7b0a7cb5-8d9e-4a1b-bc3d-1e2f3a4b5c6d\",\n    \"contactName\": \"محمود حسن إبراهيم\",\n    \"type\": \"Sale\",\n    \"amount\": 4500,\n    \"paymentMethod\": \"Cash\",\n    \"transactionDate\": \"2026-08-19T13:30:00Z\",\n    \"isInstallment\": true,\n    \"installments\": [\n      {\n        \"id\": \"77777777-1111-2222-3333-444444444444\",\n        \"installmentNumber\": 1,\n        \"amount\": 1500,\n        \"dueDate\": \"2026-09-10T00:00:00Z\",\n        \"isPaid\": false,\n        \"status\": \"Pending\"\n      },\n      {\n        \"id\": \"88888888-2222-3333-4444-555555555555\",\n        \"installmentNumber\": 2,\n        \"amount\": 1500,\n        \"dueDate\": \"2026-10-10T00:00:00Z\",\n        \"isPaid\": false,\n        \"status\": \"Pending\"\n      },\n      {\n        \"id\": \"99999999-3333-4444-5555-666666666666\",\n        \"installmentNumber\": 3,\n        \"amount\": 1500,\n        \"dueDate\": \"2026-11-10T00:00:00Z\",\n        \"isPaid\": false,\n        \"status\": \"Pending\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "4.7 — قائمة العمليات مع الفلترة والتصفح (List Transactions)",
           "event": [
             {
               "listen": "test",
@@ -1352,7 +1486,7 @@
           ]
         },
         {
-          "name": "4.6 — تفاصيل عملية محددة وأقساطها (Get Transaction by ID)",
+          "name": "4.8 — تفاصيل عملية محددة وأقساطها (Get Transaction by ID)",
           "request": {
             "method": "GET",
             "header": [
@@ -1391,7 +1525,7 @@
           ]
         },
         {
-          "name": "4.7 — حذف عملية ناعم (Soft Delete Transaction)",
+          "name": "4.9 — حذف عملية ناعم (Soft Delete Transaction)",
           "event": [
             {
               "listen": "test",

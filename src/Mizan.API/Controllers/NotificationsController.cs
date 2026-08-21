@@ -12,10 +12,14 @@ namespace Mizan.API.Controllers;
 public class NotificationsController : BaseController
 {
     private readonly INotificationService _notificationService;
+    private readonly IReminderScanner _reminderScanner;
 
-    public NotificationsController(INotificationService notificationService)
+    public NotificationsController(
+        INotificationService notificationService,
+        IReminderScanner reminderScanner)
     {
         _notificationService = notificationService;
+        _reminderScanner = reminderScanner;
     }
 
     /// <summary>GET /api/notifications?page=1&amp;pageSize=20&amp;unreadOnly=false — قائمة الإشعارات</summary>
@@ -52,5 +56,17 @@ public class NotificationsController : BaseController
     {
         await _notificationService.MarkAllAsReadAsync(CurrentUserId, cancellationToken);
         return NoContent();
+    }
+
+    /// <summary>POST /api/notifications/run-reminders-scan — تشغيل فحص تذكيرات الأقساط يدوياً</summary>
+    [HttpPost("run-reminders-scan")]
+    public async Task<IActionResult> RunRemindersScan(CancellationToken cancellationToken)
+    {
+        var count = await _reminderScanner.ScanAndProcessRemindersAsync(null, cancellationToken);
+        return Success(new
+        {
+            remindersProcessed = count,
+            timestamp = DateTime.UtcNow
+        }, "تم تشغيل فحص تذكيرات الأقساط وإرسال الإشعارات وإيميلات التذكير بنجاح");
     }
 }

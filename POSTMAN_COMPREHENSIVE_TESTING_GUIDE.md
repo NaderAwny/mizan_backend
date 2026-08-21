@@ -213,15 +213,16 @@
 ```json
 {
   "contactId": "{{contact_id}}",
-  "type": 0,
-  "amount": 1500.00,
-  "transactionDate": "2026-08-17T10:00:00Z",
-  "noteType": 0,
+  "type": "Sale",
+  "amount": 500.00,
+  "paymentMethod": "Cash",
+  "transactionDate": "2026-08-19T10:00:00Z",
+  "noteText": "مبيعات بضاعة كاش للعميل",
   "isInstallment": false
 }
 ```
 - **Expected Status**: `201 Created`
-- **Validation**: `type = 0 (Sale)`, `isInstallment = false`, `installments = []`.
+- **Validation**: `type = "Sale"`, `isInstallment = false`, `installments = []`.
 
 ---
 
@@ -233,16 +234,16 @@
 ```json
 {
   "contactId": "{{contact_supplier_id}}",
-  "type": 1,
-  "amount": 800.00,
-  "transactionDate": "2026-08-17T11:00:00Z",
-  "noteType": 1,
-  "noteText": "شراء بضاعة ألبان كاش",
+  "type": "Purchase",
+  "amount": 1200.00,
+  "paymentMethod": "Cash",
+  "transactionDate": "2026-08-19T11:00:00Z",
+  "noteText": "شراء بضاعة نقداً من المورد",
   "isInstallment": false
 }
 ```
 - **Expected Status**: `201 Created`
-- **Validation**: `type = 1 (Purchase)`, `amount = 800.00`.
+- **Validation**: `type = "Purchase"`, `amount = 1200.00`.
 
 ---
 
@@ -254,16 +255,16 @@
 ```json
 {
   "contactId": "{{contact_id}}",
-  "type": 0,
+  "type": "Sale",
   "amount": 3000.00,
-  "transactionDate": "2026-08-17T12:00:00Z",
-  "noteType": 1,
-  "noteText": "بيع شاشة تلفزيون بالأقساط",
+  "paymentMethod": "Installments",
   "isInstallment": true,
-  "installmentPlanMode": 0,
+  "installmentPlanMode": "Automatic",
   "installmentCount": 3,
-  "firstInstallmentDate": "2026-08-24T00:00:00Z",
-  "frequency": 1
+  "frequency": "Monthly",
+  "firstInstallmentDate": "2026-09-01T00:00:00Z",
+  "transactionDate": "2026-08-19T12:00:00Z",
+  "noteText": "بيع بضاعة بالتقسيط التلقائي على 3 أشهر متساوية"
 }
 ```
 - **Expected Status**: `201 Created`
@@ -273,7 +274,7 @@
 
 ---
 
-### السيناريو 4.4: مشتريات آجل بأقساط مخصصة المواعيد والمبالغ (Purchase - Custom Installments)
+### السيناريو 4.4: مشتريات آجل بأقساط آلية متساوية (Purchase - Automatic Equal Installments) — جديد
 - **Method**: `POST`
 - **URL**: `{{base_url}}/api/transactions`
 - **Headers**: `Authorization: Bearer {{access_token}}`
@@ -281,27 +282,117 @@
 ```json
 {
   "contactId": "{{contact_supplier_id}}",
-  "type": 1,
-  "amount": 5000.00,
-  "transactionDate": "2026-08-17T13:00:00Z",
-  "noteType": 1,
-  "noteText": "توريد أجهزة كهربائية للمحل على دفعتين",
+  "type": "Purchase",
+  "amount": 6000.00,
+  "paymentMethod": "Installments",
   "isInstallment": true,
-  "installmentPlanMode": 1,
-  "customInstallments": [
-    {
-      "amount": 2000.00,
-      "dueDate": "2026-08-25T00:00:00Z"
-    },
-    {
-      "amount": 3000.00,
-      "dueDate": "2026-09-10T00:00:00Z"
-    }
-  ]
+  "installmentPlanMode": "Automatic",
+  "installmentCount": 3,
+  "frequency": "Monthly",
+  "firstInstallmentDate": "2026-09-01T00:00:00Z",
+  "transactionDate": "2026-08-19T12:30:00Z",
+  "noteText": "شراء بضاعة من المورد بالتقسيط التلقائي على 3 أشهر"
 }
 ```
 - **Expected Status**: `201 Created`
-- **Validation**: الأقساط تطابق مجموع العملية بالضبط (2000 + 3000 = 5000).
+- **Validation**:
+  - يتولد جدول أقساط يحتوي على 3 أقساط بقيمة 2,000.00 ج.م لكل قسط.
+  - `type = "Purchase"`.
+
+---
+
+### السيناريو 4.5: مشتريات آجل بأقساط مخصصة المواعيد والمبالغ (Purchase - Custom Installments)
+- **Method**: `POST`
+- **URL**: `{{base_url}}/api/transactions`
+- **Headers**: `Authorization: Bearer {{access_token}}`
+- **Body (JSON)**:
+```json
+{
+  "contactId": "{{contact_supplier_id}}",
+  "type": "Purchase",
+  "amount": 2500.00,
+  "paymentMethod": "Installments",
+  "isInstallment": true,
+  "installmentPlanMode": "Custom",
+  "customInstallments": [
+    {
+      "amount": 1000.00,
+      "dueDate": "2026-09-15T00:00:00Z"
+    },
+    {
+      "amount": 1500.00,
+      "dueDate": "2026-10-15T00:00:00Z"
+    }
+  ],
+  "transactionDate": "2026-08-19T13:00:00Z",
+  "noteText": "شراء بضاعة بجدول سداد مخصص"
+}
+```
+- **Expected Status**: `201 Created`
+- **Validation**: الأقساط تطابق مجموع العملية بالضبط (1000 + 1500 = 2500).
+
+---
+
+### السيناريو 4.6: مبيعات آجل بأقساط مخصصة المواعيد والمبالغ (Sale - Custom Installments) — جديد
+- **Method**: `POST`
+- **URL**: `{{base_url}}/api/transactions`
+- **Headers**: `Authorization: Bearer {{access_token}}`
+- **Body (JSON)**:
+```json
+{
+  "contactId": "{{contact_id}}",
+  "type": "Sale",
+  "amount": 4500.00,
+  "paymentMethod": "Installments",
+  "isInstallment": true,
+  "installmentPlanMode": "Custom",
+  "customInstallments": [
+    {
+      "amount": 1500.00,
+      "dueDate": "2026-09-10T00:00:00Z"
+    },
+    {
+      "amount": 1500.00,
+      "dueDate": "2026-10-10T00:00:00Z"
+    },
+    {
+      "amount": 1500.00,
+      "dueDate": "2026-11-10T00:00:00Z"
+    }
+  ],
+  "transactionDate": "2026-08-19T13:30:00Z",
+  "noteText": "مبيعات أجهزة بجدول أقساط يدوي مخصص حسب اتفاق العميل"
+}
+```
+- **Expected Status**: `201 Created`
+- **Validation**: `type = "Sale"`, ومجموع الأقساط = 4500.00.
+
+---
+
+### السيناريو 4.7: قائمة العمليات مع الفلترة والتصفح (List Transactions)
+- **Method**: `GET`
+- **URL**: `{{base_url}}/api/transactions?page=1&pageSize=20&contactId=&type=&dateFrom=&dateTo=`
+- **Headers**: `Authorization: Bearer {{access_token}}`
+- **Expected Status**: `200 OK`
+- **Validation**: عرض عناصر قائمة العمليات مع التقسيم لصفحات.
+
+---
+
+### السيناريو 4.8: تفاصيل عملية محددة وأقساطها (Get Transaction by ID)
+- **Method**: `GET`
+- **URL**: `{{base_url}}/api/transactions/{{transaction_id}}`
+- **Headers**: `Authorization: Bearer {{access_token}}`
+- **Expected Status**: `200 OK`
+- **Validation**: جلب تفاصيل العملية المحددة مع جدول أقساطها بالكامل.
+
+---
+
+### السيناريو 4.9: حذف عملية ناعم وإلغاء أقساطها المعلقة (Soft Delete Transaction)
+- **Method**: `DELETE`
+- **URL**: `{{base_url}}/api/transactions/{{transaction_id}}`
+- **Headers**: `Authorization: Bearer {{access_token}}`
+- **Expected Status**: `204 No Content`
+- **Validation**: إلغاء تفعيل العملية وإلغاء جميع الأقساط غير المدفوعة تلقائياً.
 
 ---
 
