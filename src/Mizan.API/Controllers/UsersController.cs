@@ -19,6 +19,7 @@ public class UsersController : BaseController
 
     [Authorize]
     [HttpGet("me")]
+    [HttpGet("profile")]
     public async Task<IActionResult> GetCurrentUser(CancellationToken cancellationToken)
     {
         var userProfile = await _userService.GetUserProfileAsync(CurrentUserId, cancellationToken);

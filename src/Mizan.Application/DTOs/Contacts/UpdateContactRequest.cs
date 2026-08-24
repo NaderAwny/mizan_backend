@@ -8,6 +8,12 @@ public class UpdateContactRequest
     [MaxLength(100, ErrorMessage = "اسم الطرف يجب ألا يتجاوز 100 حرف")]
     public string Name { get; set; } = string.Empty;
 
+    public string? ContactName
+    {
+        get => Name;
+        set { if (!string.IsNullOrWhiteSpace(value)) Name = value; }
+    }
+
     [MaxLength(20, ErrorMessage = "رقم الهاتف يجب ألا يتجاوز 20 حرفاً")]
     public string? PhoneNumber { get; set; }
 

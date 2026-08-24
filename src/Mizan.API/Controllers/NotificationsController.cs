@@ -42,16 +42,18 @@ public class NotificationsController : BaseController
         return Success(response);
     }
 
-    /// <summary>POST /api/notifications/{id}/read — تمييز إشعار كمقروء</summary>
+    /// <summary>POST/PATCH /api/notifications/{id}/read — تمييز إشعار كمقروء</summary>
     [HttpPost("{id:guid}/read")]
+    [HttpPatch("{id:guid}/read")]
     public async Task<IActionResult> MarkAsRead(Guid id, CancellationToken cancellationToken)
     {
         await _notificationService.MarkAsReadAsync(CurrentUserId, id, cancellationToken);
         return NoContent();
     }
 
-    /// <summary>POST /api/notifications/read-all — تمييز كل الإشعارات كمقروءة</summary>
+    /// <summary>POST/PATCH /api/notifications/read-all — تمييز كل الإشعارات كمقروءة</summary>
     [HttpPost("read-all")]
+    [HttpPatch("read-all")]
     public async Task<IActionResult> MarkAllAsRead(CancellationToken cancellationToken)
     {
         await _notificationService.MarkAllAsReadAsync(CurrentUserId, cancellationToken);
