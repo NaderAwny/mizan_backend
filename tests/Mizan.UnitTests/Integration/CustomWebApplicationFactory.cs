@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Mizan.Application.DTOs.Auth;
 using Mizan.Application.Interfaces;
 using Mizan.Infrastructure.Persistence;
 
@@ -12,6 +13,7 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
 {
     private readonly string _dbName = Guid.NewGuid().ToString();
     public FakeEmailService EmailService { get; } = new();
+    public FakeEmailVerificationService EmailVerificationService { get; } = new();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -49,13 +51,19 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
                 });
             }
 
-            var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(IEmailService));
-            if (descriptor != null)
-            {
-                services.Remove(descriptor);
-            }
+            // Replace IEmailService with test fake
+            var emailDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(IEmailService));
+            if (emailDescriptor != null)
+                services.Remove(emailDescriptor);
 
             services.AddSingleton<IEmailService>(EmailService);
+
+            // Replace IEmailVerificationService with test fake (avoids real DNS/SMTP in tests)
+            var verifyDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(IEmailVerificationService));
+            if (verifyDescriptor != null)
+                services.Remove(verifyDescriptor);
+
+            services.AddSingleton<IEmailVerificationService>(EmailVerificationService);
         });
     }
 
@@ -81,13 +89,21 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
         base.Dispose(disposing);
     }
 
+    // -----------------------------------------------------------------------
+    // Fakes
+    // -----------------------------------------------------------------------
+
     public class FakeEmailService : IEmailService
     {
+        public bool ShouldSucceed { get; set; } = true;
         public string? LastCapturedOtp { get; set; }
         public string? LastRecipientEmail { get; set; }
 
         public Task<bool> SendOtpEmailAsync(string toEmail, string otpCode, CancellationToken cancellationToken = default)
         {
+            if (!ShouldSucceed)
+                return Task.FromResult(false);
+
             LastCapturedOtp = otpCode;
             LastRecipientEmail = toEmail;
             return Task.FromResult(true);
@@ -129,5 +145,17 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
             LastRecipientEmail = toEmail;
             return Task.FromResult(true);
         }
+    }
+
+    public class FakeEmailVerificationService : IEmailVerificationService
+    {
+        /// <summary>
+        /// Controls the verdict returned by VerifyAsync. Default: deliverable (passes all tests).
+        /// Override per-test to simulate disposable/non-existent mailbox scenarios.
+        /// </summary>
+        public EmailVerificationResult NextResult { get; set; } = EmailVerificationResult.Valid("TestVerified");
+
+        public Task<EmailVerificationResult> VerifyAsync(string email, CancellationToken cancellationToken = default)
+            => Task.FromResult(NextResult);
     }
 }

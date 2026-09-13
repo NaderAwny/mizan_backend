@@ -164,9 +164,29 @@ public class AuthIntegrationTests : IClassFixture<CustomWebApplicationFactory>
     [Fact]
     public async Task SendOtp_WithEmail_ShouldReturnOk()
     {
+        var email = "sendotp@mizan.app";
+
+        // Must register first so user exists in database
+        var regResponse = await _client.PostAsJsonAsync("/api/auth/register", new RegisterRequest
+        {
+            FirstName = "مستخدم",
+            LastName = "مسجل",
+            Email = email
+        });
+        Assert.Equal(HttpStatusCode.OK, regResponse.StatusCode);
+
+        // Must verify OTP so account is ACTIVE/CONFIRMED!
+        var regOtp = _factory.EmailService.LastCapturedOtp!;
+        var verifyResp = await _client.PostAsJsonAsync("/api/auth/verify-otp", new VerifyOtpRequest
+        {
+            Email = email,
+            Code = regOtp
+        });
+        Assert.Equal(HttpStatusCode.OK, verifyResp.StatusCode);
+
         var sendOtpRequest = new SendOtpRequest
         {
-            Email = "sendotp@mizan.app"
+            Email = email
         };
 
         var response = await _client.PostAsJsonAsync("/api/auth/send-otp", sendOtpRequest);
@@ -176,4 +196,226 @@ public class AuthIntegrationTests : IClassFixture<CustomWebApplicationFactory>
         Assert.True(content.GetProperty("success").GetBoolean());
         Assert.True(content.GetProperty("data").GetProperty("otpSent").GetBoolean());
     }
+
+    [Fact]
+    public async Task SendOtp_WithUnregisteredEmail_ShouldReturnNotFound404()
+    {
+        var sendOtpRequest = new SendOtpRequest
+        {
+            Email = "completely.unregistered.user@mizan.app"
+        };
+
+        var response = await _client.PostAsJsonAsync("/api/auth/send-otp", sendOtpRequest);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+
+        var content = await response.Content.ReadFromJsonAsync<JsonElement>(_jsonOptions);
+        Assert.Equal(404, content.GetProperty("statusCode").GetInt32());
+        Assert.Contains("لا يوجد حساب مسجل بهذا البريد الإلكتروني", content.GetProperty("message").GetString());
+    }
+
+    [Fact]
+    public async Task SendOtp_WithUnverifiedRegisteredUser_ShouldReturnNotFound404()
+    {
+        var email = "unverified.user@mizan.app";
+
+        // Registered but never called verify-otp
+        await _client.PostAsJsonAsync("/api/auth/register", new RegisterRequest
+        {
+            FirstName = "غير",
+            LastName = "مفعل",
+            Email = email
+        });
+
+        var sendOtpRequest = new SendOtpRequest
+        {
+            Email = email
+        };
+
+        var response = await _client.PostAsJsonAsync("/api/auth/send-otp", sendOtpRequest);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+
+        var content = await response.Content.ReadFromJsonAsync<JsonElement>(_jsonOptions);
+        Assert.Equal(404, content.GetProperty("statusCode").GetInt32());
+        Assert.Contains("لا يوجد حساب مسجل بهذا البريد الإلكتروني", content.GetProperty("message").GetString());
+    }
+
+    [Fact]
+    public async Task Register_WithDisposableDomain_ShouldReturn400()
+    {
+        // Simulate the service returning "DisposableDomain"
+        _factory.EmailVerificationService.NextResult =
+            EmailVerificationResult.Invalid("DisposableDomain");
+
+        var registerRequest = new RegisterRequest
+        {
+            FirstName = "علي",
+            LastName = "تجريبي",
+            Email = "user@mailinator.com"
+        };
+
+        var response = await _client.PostAsJsonAsync("/api/auth/register", registerRequest);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        var content = await response.Content.ReadFromJsonAsync<JsonElement>(_jsonOptions);
+        Assert.Equal(400, content.GetProperty("statusCode").GetInt32());
+        Assert.Contains("البريد الإلكتروني غير قادر على استقبال الرسائل", content.GetProperty("message").GetString());
+
+        // Reset for subsequent tests
+        _factory.EmailVerificationService.NextResult = EmailVerificationResult.Valid("TestVerified");
+    }
+
+    [Fact]
+    public async Task Register_WithNonExistentDomain_ShouldReturnBadRequest400()
+    {
+        _factory.EmailVerificationService.NextResult =
+            EmailVerificationResult.Invalid("DomainNotFound");
+
+        var registerRequest = new RegisterRequest
+        {
+            FirstName = "اختبار",
+            LastName = "وهمي",
+            Email = "fake@non-existent-domain-999.com"
+        };
+
+        var response = await _client.PostAsJsonAsync("/api/auth/register", registerRequest);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        var content = await response.Content.ReadFromJsonAsync<JsonElement>(_jsonOptions);
+        Assert.Equal(400, content.GetProperty("statusCode").GetInt32());
+        Assert.Contains("البريد الإلكتروني غير قادر على استقبال الرسائل", content.GetProperty("message").GetString());
+
+        _factory.EmailVerificationService.NextResult = EmailVerificationResult.Valid("TestVerified");
+    }
+
+    [Fact]
+    public async Task Register_WithNonExistentMailbox_ShouldReturn400()
+    {
+        // Simulate SMTP probe returning "MailboxNotFound" (definitive 5xx)
+        _factory.EmailVerificationService.NextResult =
+            EmailVerificationResult.Invalid("MailboxNotFound");
+
+        var registerRequest = new RegisterRequest
+        {
+            FirstName = "أحمد",
+            LastName = "وهمي",
+            Email = "does.not.exist.xyz123@gmail.com"
+        };
+
+        var response = await _client.PostAsJsonAsync("/api/auth/register", registerRequest);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        var content = await response.Content.ReadFromJsonAsync<JsonElement>(_jsonOptions);
+        Assert.Equal(400, content.GetProperty("statusCode").GetInt32());
+        Assert.Contains("البريد الإلكتروني غير قادر على استقبال الرسائل", content.GetProperty("message").GetString());
+
+        // Reset for subsequent tests
+        _factory.EmailVerificationService.NextResult = EmailVerificationResult.Valid("TestVerified");
+    }
+
+    [Fact]
+    public async Task Register_WhenSmtpProbeTimesOut_ShouldAllowRegistration_FailOpen()
+    {
+        // Simulate an SMTP timeout (transient) — the service returns Valid with reason="SmtpTimeout"
+        // The fail-open policy means IsDeliverable=true, so registration proceeds normally.
+        _factory.EmailVerificationService.NextResult =
+            EmailVerificationResult.Valid("SmtpTimeout");
+
+        var registerRequest = new RegisterRequest
+        {
+            FirstName = "سارة",
+            LastName = "اختبار",
+            Email = "failopen.test@mizan.app"
+        };
+
+        var response = await _client.PostAsJsonAsync("/api/auth/register", registerRequest);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var content = await response.Content.ReadFromJsonAsync<JsonElement>(_jsonOptions);
+        Assert.True(content.GetProperty("success").GetBoolean());
+        Assert.True(content.GetProperty("data").GetProperty("otpSent").GetBoolean());
+
+        // Reset for subsequent tests
+        _factory.EmailVerificationService.NextResult = EmailVerificationResult.Valid("TestVerified");
+    }
+
+    [Fact]
+    public async Task Register_ResendOtp_ShouldSucceedWithoutUpdatingProfile()
+    {
+        var email = "resend.test@mizan.app";
+
+        // 1. Initial register and complete verification
+        var reg1 = await _client.PostAsJsonAsync("/api/auth/register", new RegisterRequest
+        {
+            FirstName = "الاسم الأصلي",
+            LastName = "اللقب الأصلي",
+            Email = email
+        });
+        Assert.Equal(HttpStatusCode.OK, reg1.StatusCode);
+
+        var initialOtp = _factory.EmailService.LastCapturedOtp!;
+        var initVerify = await _client.PostAsJsonAsync("/api/auth/verify-otp", new VerifyOtpRequest
+        {
+            Email = email,
+            Code = initialOtp
+        });
+        Assert.Equal(HttpStatusCode.OK, initVerify.StatusCode);
+
+        // 2. Call register again with different names (resend OTP scenario on active account)
+        var reg2 = await _client.PostAsJsonAsync("/api/auth/register", new RegisterRequest
+        {
+            FirstName = "اسم مختلف",
+            LastName = "لقب مختلف",
+            Email = email
+        });
+        Assert.Equal(HttpStatusCode.OK, reg2.StatusCode);
+
+        // Verify OTP to inspect returned user profile
+        var otp = _factory.EmailService.LastCapturedOtp;
+        Assert.NotNull(otp);
+
+        var verifyResponse = await _client.PostAsJsonAsync("/api/auth/verify-otp", new VerifyOtpRequest
+        {
+            Email = email,
+            Code = otp
+        });
+        Assert.Equal(HttpStatusCode.OK, verifyResponse.StatusCode);
+
+        var verifyContent = await verifyResponse.Content.ReadFromJsonAsync<JsonElement>(_jsonOptions);
+        var data = verifyContent.GetProperty("data");
+
+        // Profile must retain the original names
+        Assert.Equal("الاسم الأصلي", data.GetProperty("firstName").GetString());
+        Assert.Equal("اللقب الأصلي", data.GetProperty("lastName").GetString());
+    }
+
+    [Fact]
+    public async Task GenerateOtp_WhenEmailServiceFails_ShouldThrowBadRequest()
+    {
+        var email = "email.fail.test@mizan.app";
+
+        // Simulate email sending failure in FakeEmailService
+        _factory.EmailService.ShouldSucceed = false;
+
+        try
+        {
+            var registerRequest = new RegisterRequest
+            {
+                FirstName = "فشل",
+                LastName = "إرسال",
+                Email = email
+            };
+
+            var response = await _client.PostAsJsonAsync("/api/auth/register", registerRequest);
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+            var content = await response.Content.ReadFromJsonAsync<JsonElement>(_jsonOptions);
+            Assert.Equal(400, content.GetProperty("statusCode").GetInt32());
+            Assert.Contains("فشل إرسال كود التحقق", content.GetProperty("message").GetString());
+        }
+        finally
+        {
+            _factory.EmailService.ShouldSucceed = true;
+        }
+    }
 }
+

@@ -14,6 +14,7 @@ public class AuthService : IAuthService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IJwtProvider _jwtProvider;
     private readonly IEmailService _emailService;
+    private readonly IEmailVerificationService _emailVerificationService;
     private readonly IHostEnvironment _environment;
     private readonly ILogger<AuthService> _logger;
     private const int MaxActiveDevices = 5;
@@ -22,12 +23,14 @@ public class AuthService : IAuthService
         IUnitOfWork unitOfWork,
         IJwtProvider jwtProvider,
         IEmailService emailService,
+        IEmailVerificationService emailVerificationService,
         IHostEnvironment environment,
         ILogger<AuthService> logger)
     {
         _unitOfWork = unitOfWork;
         _jwtProvider = jwtProvider;
         _emailService = emailService;
+        _emailVerificationService = emailVerificationService;
         _environment = environment;
         _logger = logger;
     }
@@ -36,17 +39,41 @@ public class AuthService : IAuthService
     {
         var email = request.Email.Trim().ToLowerInvariant();
 
+        // 1. Verify email deliverability and reject fake / disposable domains
+        var verification = await _emailVerificationService.VerifyAsync(email, cancellationToken);
+        if (!verification.IsDeliverable)
+        {
+            throw new BadRequestException("البريد الإلكتروني غير قادر على استقبال الرسائل أو غير موجود، من فضلك تأكد من كتابته بشكل صحيح.");
+        }
+
         var existingUser = await _unitOfWork.Users.GetByEmailAsync(email, cancellationToken);
         if (existingUser == null)
         {
-            // New user: create record now so OTP is associated with an account
+            if (string.IsNullOrWhiteSpace(request.FirstName))
+                throw new BadRequestException("الاسم الأول مطلوب");
+
+            if (string.IsNullOrWhiteSpace(request.LastName))
+                throw new BadRequestException("الاسم الأخير مطلوب");
+
+            // New user: created as inactive (unverified) until OTP is confirmed in verify-otp
             var newUser = User.Create(email, request.FirstName, request.LastName);
+            newUser.Deactivate();
             await _unitOfWork.Users.AddAsync(newUser, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
         }
-        // H2 (Option A): If user already exists, do NOT update their profile.
-        // Only send a new OTP. This prevents an attacker from changing another
-        // user's name simply by calling /register with their email.
+        else if (!existingUser.IsActive)
+        {
+            // User previously initiated registration but never verified OTP.
+            // Allow updating profile if provided, and resend OTP.
+            if (!string.IsNullOrWhiteSpace(request.FirstName) && !string.IsNullOrWhiteSpace(request.LastName))
+            {
+                existingUser.UpdateProfile(request.FirstName, request.LastName);
+                _unitOfWork.Users.Update(existingUser);
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+            }
+        }
+        // If user is already active/verified: do NOT update their profile.
+        // Only send a new OTP. This prevents changing another user's name via register.
 
         return await GenerateAndSendOtpAsync(email, cancellationToken);
     }
@@ -57,6 +84,13 @@ public class AuthService : IAuthService
             throw new BadRequestException("البريد الإلكتروني مطلوب");
 
         var email = identifier.Trim().ToLowerInvariant();
+
+        var user = await _unitOfWork.Users.GetByEmailAsync(email, cancellationToken);
+        if (user == null || !user.IsActive)
+        {
+            throw new NotFoundException("لا يوجد حساب مسجل بهذا البريد الإلكتروني. يرجى إنشاء حساب جديد أولًا.");
+        }
+
         return await GenerateAndSendOtpAsync(email, cancellationToken);
     }
 
@@ -86,6 +120,13 @@ public class AuthService : IAuthService
         {
             user = User.Create(email, "مستخدم", "جديد");
             await _unitOfWork.Users.AddAsync(user, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            isNewUser = true;
+        }
+        else if (!user.IsActive)
+        {
+            user.Activate();
+            _unitOfWork.Users.Update(user);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             isNewUser = true;
         }
@@ -255,7 +296,11 @@ public class AuthService : IAuthService
         await _unitOfWork.OtpCodes.AddAsync(otp, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        await _emailService.SendOtpEmailAsync(email, randomCode, cancellationToken);
+        var emailSent = await _emailService.SendOtpEmailAsync(email, randomCode, cancellationToken);
+        if (!emailSent)
+        {
+            throw new BadRequestException("فشل إرسال كود التحقق إلى بريدك الإلكتروني، يرجى المحاولة مرة أخرى لاحقًا.");
+        }
 
         if (_environment.IsDevelopment())
         {

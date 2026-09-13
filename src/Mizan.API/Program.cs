@@ -129,6 +129,8 @@ builder.Services.AddScoped<SendGrid.ISendGridClient>(sp =>
     return new SendGrid.SendGridClient(emailOpts.ApiKey ?? string.Empty);
 });
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.Configure<EmailVerificationOptions>(builder.Configuration.GetSection(EmailVerificationOptions.SectionName));
+builder.Services.AddScoped<IEmailVerificationService, DnsEmailVerificationService>();
 builder.Services.Configure<Mizan.Application.DTOs.Notifications.RemindersOptions>(builder.Configuration.GetSection(Mizan.Application.DTOs.Notifications.RemindersOptions.SectionName));
 builder.Services.Configure<Mizan.Application.DTOs.Reports.PeriodicReportsOptions>(builder.Configuration.GetSection(Mizan.Application.DTOs.Reports.PeriodicReportsOptions.SectionName));
 builder.Services.AddSingleton<IUserStatusCache, Mizan.Infrastructure.Caching.UserStatusCache>();

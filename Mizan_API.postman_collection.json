@@ -53,7 +53,7 @@
                 "register"
               ]
             },
-            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nتسجيل مستخدم جديد في النظام وإنشاء حسابه، وإرسال كود OTP مؤقت مكون من 6 أرقام إلى بريده الإلكتروني لتأكيد الحساب.\n\n---\n### 📥 المدخلات المطلوبة (Request Body):\n| الحقل (Field) | النوع (Type) | إجباري؟ | الوصف والقواعد (Description & Rules) |\n|---|---|---|---|\n| `email` | String | نعم | البريد الإلكتروني (صيغة قياسية صحيحة، أقصى طول 254 حرف). |\n| `firstName` | String | نعم | الاسم الأول (أحرف عربية أو إنجليزية فقط بدون أرقام). |\n| `lastName` | String | نعم | اسم العائلة / اللقب (أحرف فقط بدون أرقام). |\n\n---\n### 💡 أمثلة وسيناريوهات الاستخدام (Use Cases):\n- **الحالة الأساسية:** تسجيل تاجر أو عميل جديد ببيانات صحيحة.\n- **في حال كان البريد مسجلاً مسبقاً:** يقوم النظام بتوليد وإرسال كود OTP لتسجيل الدخول مباشرة دون تكرار الحساب.\n\n---\n### ⚠️ تنبيهات وأخطاء شائعة (Common Errors):\n- ❌ `400 Bad Request`: بريد إلكتروني غير صالح أو اسم فارغ أو يحتوي على أرقام/رموز غير مسموحة.\n- ❌ `429 Too Many Requests`: طلبات تسجيل متتالية تتجاوز حد الـ Rate Limit.\n\n---\n### 🎯 الاستجابة المتوقعة (Expected Response):\n```json\n{\n  \"success\": true,\n  \"message\": \"تم إرسال كود التحقق بنجاح\",\n  \"data\": {\n    \"email\": \"owner@mizan.app\",\n    \"otpSent\": true,\n    \"expiresInSeconds\": 120\n  }\n}\n```"
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nتسجيل مستخدم جديد في النظام وإنشاء حسابه، والتحقق من صحة وقابلية استلام البريد الإلكتروني (فحص وجود سيرفر بريد نشط عبر سجلات MX واستبعاد الدومينات المؤقتة/الوهمية)، ثم إرسال كود OTP مؤقت مكون من 6 أرقام إلى بريده الإلكتروني لتأكيد الحساب.\n\n---\n### 📥 المدخلات المطلوبة (Request Body):\n| الحقل (Field) | النوع (Type) | إجباري؟ | الوصف والقواعد (Description & Rules) |\n|---|---|---|---|\n| `email` | String | نعم | البريد الإلكتروني (يجب أن يكون حقيقياً وله سيرفر بريد نشط MX وغير تابع لخدمات البريد المؤقت، أقصى طول 254 حرف). |\n| `firstName` | String | نعم (للمستخدم الجديد) | الاسم الأول (أحرف عربية أو إنجليزية فقط بدون أرقام). |\n| `lastName` | String | نعم (للمستخدم الجديد) | اسم العائلة / اللقب (أحرف فقط بدون أرقام). |\n\n---\n### 💡 أمثلة وسيناريوهات الاستخدام (Use Cases):\n- **الحالة الأساسية:** تسجيل تاجر أو عميل جديد ببيانات صحيحة وبريد حقيقي.\n- **في حال كان البريد مسجلاً مسبقاً (إعادة إرسال):** يقوم النظام بالتحقق من صحة البريد وتوليد وإرسال كود OTP لتسجيل الدخول مباشرة دون تكرار الحساب أو إلزام العميل بإعادة ملء الاسم.\n\n---\n### ⚠️ تنبيهات وأخطاء شائعة (Common Errors):\n- ❌ `400 Bad Request`: بريد إلكتروني وهمي/مؤقت أو غير قادر على استقبال الرسائل، أو صيغة غير صالحة، أو اسم فارغ.\n- ❌ `429 Too Many Requests`: طلبات تسجيل متتالية تتجاوز حد الـ Rate Limit.\n\n---\n### 🎯 الاستجابة المتوقعة (Expected Response):\n```json\n{\n  \"success\": true,\n  \"message\": \"تم إرسال كود التحقق بنجاح\",\n  \"data\": {\n    \"email\": \"owner@mizan.app\",\n    \"otpSent\": true,\n    \"expiresInSeconds\": 120\n  }\n}\n```"
           },
           "response": [
             {
@@ -81,6 +81,19 @@
                 }
               ],
               "body": "{\n  \"statusCode\": 400,\n  \"message\": \"صيغة البريد الإلكتروني غير صالحة\"\n}"
+            },
+            {
+              "name": "400 Bad Request — دومين وهمي أو مؤقت",
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"statusCode\": 400,\n  \"message\": \"البريد الإلكتروني غير قادر على استقبال الرسائل أو غير موجود، من فضلك تأكد من كتابته بشكل صحيح.\"\n}"
             }
           ]
         },
@@ -126,7 +139,7 @@
                 "send-otp"
               ]
             },
-            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nإرسال كود تحقق جديد (OTP) مكوّن من 6 أرقام إلى البريد الإلكتروني للمستخدم لتسجيل الدخول بدون كلمة مرور (Passwordless Login).\n\n---\n### 📥 المدخلات المطلوبة (Request Body):\n| الحقل (Field) | النوع (Type) | إجباري؟ | الوصف (Description) |\n|---|---|---|---|\n| `email` | String | نعم | البريد الإلكتروني المسجل للمستخدم. |\n\n---\n### 💡 سيناريوهات الاستخدام:\n- تسجيل دخول المستخدم بالبريد الإلكتروني فقط واستلام كود مؤقت صالح لمدة دقيقتين.\n\n---\n### 🎯 الاستجابة المتوقعة (200 OK):\n```json\n{\n  \"success\": true,\n  \"message\": \"تم إرسال كود التحقق بنجاح\",\n  \"data\": {\n    \"email\": \"owner@mizan.app\",\n    \"otpSent\": true,\n    \"expiresInSeconds\": 120\n  }\n}\n```"
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nإرسال كود تحقق جديد (OTP) مكوّن من 6 أرقام لتسجيل الدخول بدون كلمة مرور (Passwordless Login) **للمستخدمين المسجلين مسبقاً فقط**.\n\n---\n### 📥 المدخلات المطلوبة (Request Body):\n| الحقل (Field) | النوع (Type) | إجباري؟ | الوصف (Description) |\n|---|---|---|---|\n| `email` | String | نعم | البريد الإلكتروني المسجل للمستخدم في النظام. |\n\n---\n### 💡 سيناريوهات الاستخدام:\n- تسجيل دخول مستخدم مسجل مسبقاً بالبريد الإلكتروني فقط واستلام كود مؤقت صالح لمدة دقيقتين.\n- **ملاحظة هامة:** في حال لم يكن البريد مسجلاً في النظام، يتم رفض الطلب فوراً بـ `404 Not Found` دون إرسال أي كود، ويطلب من المستخدم التسجيل أولاً.\n\n---\n### ⚠️ تنبيهات وأخطاء شائعة (Common Errors):\n- ❌ `404 Not Found`: البريد الإلكتروني غير مسجل في النظام ويجب إنشاء حساب أولاً.\n- ❌ `400 Bad Request`: حقل البريد الإلكتروني فارغ أو غير صالح.\n- ❌ `429 Too Many Requests`: تجاوز حد الطلبات المسموح به.\n\n---\n### 🎯 الاستجابة المتوقعة (200 OK):\n```json\n{\n  \"success\": true,\n  \"message\": \"تم إرسال كود التحقق بنجاح\",\n  \"data\": {\n    \"email\": \"owner@mizan.app\",\n    \"otpSent\": true,\n    \"expiresInSeconds\": 120\n  }\n}\n```"
           },
           "response": [
             {
@@ -141,6 +154,19 @@
                 }
               ],
               "body": "{\n  \"success\": true,\n  \"message\": \"تم إرسال كود التحقق بنجاح\",\n  \"data\": {\n    \"email\": \"owner@mizan.app\",\n    \"otpSent\": true,\n    \"expiresInSeconds\": 120\n  }\n}"
+            },
+            {
+              "name": "404 Not Found — البريد غير مسجل",
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"statusCode\": 404,\n  \"message\": \"لا يوجد حساب مسجل بهذا البريد الإلكتروني. يرجى إنشاء حساب جديد أولًا.\"\n}"
             }
           ]
         },
@@ -2625,6 +2651,301 @@
                 }
               ],
               "body": "{\n  \"statusCode\": 400,\n  \"message\": \"حقل type يجب أن يكون نصاً وليس رقماً\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "9.6 — طلب OTP لإيميل غير مسجل (404 Not Found)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('يرفض طلب OTP لإيميل غير مسجل بـ 404', function() {",
+                  "    pm.expect(pm.response.code).to.equal(404);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.statusCode).to.equal(404);",
+                  "    pm.expect(json.message).to.include('لا يوجد حساب مسجل بهذا البريد الإلكتروني');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"unregistered.user.xyz@mizan.app\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/send-otp",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "send-otp"
+              ]
+            },
+            "description": "### 🧪 اختبار تحقق سلبي:\nالتأكد من أن إندبوينت `send-otp` يرفض طلبات تسجيل الدخول بالـ OTP لأي بريد إلكتروني غير مسجل مسبقاً بـ `404 Not Found` دون توليد أو إرسال أي كود."
+          },
+          "response": [
+            {
+              "name": "404 Not Found — البريد غير مسجل مسبقاً",
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"statusCode\": 404,\n  \"message\": \"لا يوجد حساب مسجل بهذا البريد الإلكتروني. يرجى إنشاء حساب جديد أولًا.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "9.7 — تسجيل بإيميل بدومين وهمي/غير موجود (400 Bad Request)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('يرفض التسجيل بإيميل بدومين وهمي بـ 400', function() {",
+                  "    pm.expect(pm.response.code).to.equal(400);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.statusCode).to.equal(400);",
+                  "    pm.expect(json.message).to.include('البريد الإلكتروني غير قادر على استقبال الرسائل');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@this-domain-does-not-exist-12345.com\",\n  \"firstName\": \"اختبار\",\n  \"lastName\": \"وهمي\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
+            },
+            "description": "### 🧪 اختبار تحقق سلبي:\nالتأكد من أن إندبوينت `register` يتحقق من وجود سجلات MX للدومين ويرفض الدومينات الوهمية أو التي لا تحتوي على سيرفر بريد نشط بـ `400 Bad Request` قبل إنشاء الحساب أو إرسال كود OTP."
+          },
+          "response": [
+            {
+              "name": "400 Bad Request — دومين غير موجود",
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"statusCode\": 400,\n  \"message\": \"البريد الإلكتروني غير قادر على استقبال الرسائل أو غير موجود، من فضلك تأكد من كتابته بشكل صحيح.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "9.8 — تسجيل بإيميل من دومين مؤقت معروف (400 Bad Request)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('يرفض التسجيل بإيميل مؤقت بـ 400', function() {",
+                  "    pm.expect(pm.response.code).to.equal(400);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.statusCode).to.equal(400);",
+                  "    pm.expect(json.message).to.include('البريد الإلكتروني غير قادر على استقبال الرسائل');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@tempmail.com\",\n  \"firstName\": \"اختبار\",\n  \"lastName\": \"مؤقت\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
+            },
+            "description": "### 🧪 اختبار تحقق سلبي:\nالتأكد من أن إندبوينت `register` يرفض الإيميلات المسجلة على دومينات البريد المؤقت (Disposable Email Domains مثل tempmail.com) بـ `400 Bad Request`."
+          },
+          "response": [
+            {
+              "name": "400 Bad Request — دومين بريد مؤقت مرفوض",
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"statusCode\": 400,\n  \"message\": \"البريد الإلكتروني غير قادر على استقبال الرسائل أو غير موجود، من فضلك تأكد من كتابته بشكل صحيح.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "9.9 — تسجيل بإيميل بصندوق وهمي على دومين حقيقي (400 Bad Request)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('يرفض التسجيل بصندوق بريد غير موجود عبر SMTP Probe بـ 400', function() {",
+                  "    pm.expect(pm.response.code).to.equal(400);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.statusCode).to.equal(400);",
+                  "    pm.expect(json.message).to.include('البريد الإلكتروني غير قادر على استقبال الرسائل');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"naderawny_test_not_real_999@gmail.com\",\n  \"firstName\": \"اختبار\",\n  \"lastName\": \"وهمي\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
+            },
+            "description": "### 🧪 اختبار تحقق سلبي متقدم (SMTP Probing):\nالتأكد من أن طبقة الـ SMTP Probing تفحص وجود صندوق البريد الفعلي على خادم البريد (MX) للدومينات الحقيقية (مثل Gmail) وترفض الصناديق الوهمية غير الموجودة بـ `400 Bad Request` عند تفعيل مسبار SMTP."
+          },
+          "response": [
+            {
+              "name": "400 Bad Request — صندوق البريد غير موجود على السيرفر",
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"statusCode\": 400,\n  \"message\": \"البريد الإلكتروني غير قادر على استقبال الرسائل أو غير موجود، من فضلك تأكد من كتابته بشكل صحيح.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "9.10 — طلب OTP لحساب بدأ التسجيل ولم يؤكد الكود بعد (404 Not Found)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('يرفض طلب OTP لحساب غير مكتمل/غير مؤكد بـ 404', function() {",
+                  "    pm.expect(pm.response.code).to.equal(404);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.statusCode).to.equal(404);",
+                  "    pm.expect(json.message).to.include('لا يوجد حساب مسجل بهذا البريد الإلكتروني');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"unverified.account@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/send-otp",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "send-otp"
+              ]
+            },
+            "description": "### 🧪 اختبار تحقق أمني:\nالتأكد من أن الحساب الذي تم تسجيله في `register` ولكن لم يتم تأكيد رمزه بعد عبر `verify-otp` يعتبر غير نشط (IsActive = false)، وبالتالي عند محاولة طلب كود تسجيل الدخول له عبر `send-otp` يرفض النظام الطلب بـ `404 Not Found` ويطلب إنشاء الحساب أولاً."
+          },
+          "response": [
+            {
+              "name": "404 Not Found — الحساب غير مؤكد بعد",
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"statusCode\": 404,\n  \"message\": \"لا يوجد حساب مسجل بهذا البريد الإلكتروني. يرجى إنشاء حساب جديد أولًا.\"\n}"
             }
           ]
         }

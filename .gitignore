@@ -44,3 +44,5 @@ App_Data/
 scratch/
 **/uploads/
 
+## Test Results
+**/TestResults/

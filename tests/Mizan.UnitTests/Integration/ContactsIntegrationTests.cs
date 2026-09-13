@@ -19,6 +19,7 @@ public class ContactsWebApplicationFactory : Microsoft.AspNetCore.Mvc.Testing.We
 {
     private readonly string _dbName = Guid.NewGuid().ToString();
     public readonly CustomWebApplicationFactory.FakeEmailService EmailSvc = new();
+    public readonly CustomWebApplicationFactory.FakeEmailVerificationService VerificationSvc = new();
 
     protected override void ConfigureWebHost(Microsoft.AspNetCore.Hosting.IWebHostBuilder builder)
     {
@@ -35,6 +36,11 @@ public class ContactsWebApplicationFactory : Microsoft.AspNetCore.Mvc.Testing.We
             if (descriptor != null) services.Remove(descriptor);
 
             services.AddSingleton<Mizan.Application.Interfaces.IEmailService>(EmailSvc);
+
+            var verifyDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(Mizan.Application.Interfaces.IEmailVerificationService));
+            if (verifyDescriptor != null) services.Remove(verifyDescriptor);
+
+            services.AddSingleton<Mizan.Application.Interfaces.IEmailVerificationService>(VerificationSvc);
         });
     }
 }

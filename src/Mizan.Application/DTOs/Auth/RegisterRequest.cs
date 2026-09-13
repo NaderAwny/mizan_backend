@@ -5,15 +5,13 @@ namespace Mizan.Application.DTOs.Auth;
 
 public class RegisterRequest
 {
-    [Required(ErrorMessage = "الاسم الأول مطلوب")]
     [MaxLength(50, ErrorMessage = "الاسم الأول يجب ألا يتجاوز 50 حرف")]
     [JsonPropertyName("firstName")]
-    public string FirstName { get; set; } = string.Empty;
+    public string? FirstName { get; set; }
 
-    [Required(ErrorMessage = "الاسم الأخير مطلوب")]
     [MaxLength(50, ErrorMessage = "الاسم الأخير يجب ألا يتجاوز 50 حرف")]
     [JsonPropertyName("lastName")]
-    public string LastName { get; set; } = string.Empty;
+    public string? LastName { get; set; }
 
     [Required(ErrorMessage = "البريد الإلكتروني مطلوب")]
     [EmailAddress(ErrorMessage = "صيغة البريد الإلكتروني غير صالحة")]
