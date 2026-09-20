@@ -1189,6 +1189,9 @@
                 "exec": [
                   "if (pm.response.code === 201) {",
                   "    var json = pm.response.json();",
+                  "    if (json.data && json.data.id) {",
+                  "        pm.environment.set('transaction_id', json.data.id);",
+                  "    }",
                   "    if (json.data.installments && json.data.installments.length > 0) {",
                   "        pm.environment.set('installment_id', json.data.installments[0].id);",
                   "        console.log('✅ تم تعيين installment_id للقسط الأول:', json.data.installments[0].id);",
@@ -1256,6 +1259,9 @@
                 "exec": [
                   "if (pm.response.code === 201) {",
                   "    var json = pm.response.json();",
+                  "    if (json.data && json.data.id) {",
+                  "        pm.environment.set('transaction_id', json.data.id);",
+                  "    }",
                   "    if (json.data.installments && json.data.installments.length > 0) {",
                   "        pm.environment.set('installment_id', json.data.installments[0].id);",
                   "        console.log('✅ تم تعيين installment_id للقسط الأول لمشتريات التقسيط:', json.data.installments[0].id);",
@@ -1392,6 +1398,9 @@
                 "exec": [
                   "if (pm.response.code === 201) {",
                   "    var json = pm.response.json();",
+                  "    if (json.data && json.data.id) {",
+                  "        pm.environment.set('transaction_id', json.data.id);",
+                  "    }",
                   "    if (json.data.installments && json.data.installments.length > 0) {",
                   "        pm.environment.set('installment_id', json.data.installments[0].id);",
                   "    }",

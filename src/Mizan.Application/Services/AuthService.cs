@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Mizan.Application.DTOs.Auth;
@@ -37,7 +38,7 @@ public class AuthService : IAuthService
 
     public async Task<OtpResponse> RegisterAsync(RegisterRequest request, CancellationToken cancellationToken = default)
     {
-        var email = request.Email.Trim().ToLowerInvariant();
+        var email = (request.Email ?? string.Empty).Trim().ToLowerInvariant();
 
         // 1. Verify email deliverability and reject fake / disposable domains
         var verification = await _emailVerificationService.VerifyAsync(email, cancellationToken);
@@ -58,8 +59,15 @@ public class AuthService : IAuthService
             // New user: created as inactive (unverified) until OTP is confirmed in verify-otp
             var newUser = User.Create(email, request.FirstName, request.LastName);
             newUser.Deactivate();
-            await _unitOfWork.Users.AddAsync(newUser, cancellationToken);
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            try
+            {
+                await _unitOfWork.Users.AddAsync(newUser, cancellationToken);
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+            }
+            catch (DbUpdateException ex) when (IsUniqueConstraintViolation(ex))
+            {
+                throw new BadRequestException("هذا البريد الإلكتروني مسجل بالفعل بحساب آخر. من فضلك سجّل الدخول بدلاً من إنشاء حساب جديد.");
+            }
         }
         else if (!existingUser.IsActive)
         {
@@ -72,18 +80,19 @@ public class AuthService : IAuthService
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
             }
         }
-        // If user is already active/verified: do NOT update their profile.
-        // Only send a new OTP. This prevents changing another user's name via register.
+        else
+        {
+            throw new BadRequestException("هذا البريد الإلكتروني مسجل بالفعل بحساب آخر. من فضلك سجّل الدخول بدلاً من إنشاء حساب جديد.");
+        }
 
         return await GenerateAndSendOtpAsync(email, cancellationToken);
     }
 
     public async Task<OtpResponse> SendOtpAsync(string identifier, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(identifier))
+        var email = (identifier ?? string.Empty).Trim().ToLowerInvariant();
+        if (string.IsNullOrWhiteSpace(email))
             throw new BadRequestException("البريد الإلكتروني مطلوب");
-
-        var email = identifier.Trim().ToLowerInvariant();
 
         var user = await _unitOfWork.Users.GetByEmailAsync(email, cancellationToken);
         if (user == null || !user.IsActive)
@@ -118,10 +127,29 @@ public class AuthService : IAuthService
 
         if (user == null)
         {
-            user = User.Create(email, "مستخدم", "جديد");
-            await _unitOfWork.Users.AddAsync(user, cancellationToken);
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
-            isNewUser = true;
+            var newUser = User.Create(email, "مستخدم", "جديد");
+            try
+            {
+                await _unitOfWork.Users.AddAsync(newUser, cancellationToken);
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+                user = newUser;
+                isNewUser = true;
+            }
+            catch (DbUpdateException ex) when (IsUniqueConstraintViolation(ex))
+            {
+                user = await _unitOfWork.Users.GetByEmailAsync(email, cancellationToken);
+                if (user == null)
+                {
+                    throw new BadRequestException("هذا البريد الإلكتروني مسجل بالفعل بحساب آخر. من فضلك سجّل الدخول بدلاً من إنشاء حساب جديد.");
+                }
+                if (!user.IsActive)
+                {
+                    user.Activate();
+                    _unitOfWork.Users.Update(user);
+                    await _unitOfWork.SaveChangesAsync(cancellationToken);
+                    isNewUser = true;
+                }
+            }
         }
         else if (!user.IsActive)
         {
@@ -313,5 +341,21 @@ public class AuthService : IAuthService
             ExpiresInSeconds = 120,
             Message = "تم إرسال كود التحقق بنجاح إلى بريدك الإلكتروني"
         };
+    }
+
+    private static bool IsUniqueConstraintViolation(DbUpdateException ex)
+    {
+        if (ex.InnerException is Microsoft.Data.SqlClient.SqlException sqlEx
+            && (sqlEx.Number == 2601 || sqlEx.Number == 2627))
+        {
+            return true;
+        }
+
+        var message = ex.InnerException?.Message ?? ex.Message;
+        return message.Contains("UNIQUE constraint failed", StringComparison.OrdinalIgnoreCase)
+            || message.Contains("duplicate key", StringComparison.OrdinalIgnoreCase)
+            || message.Contains("Cannot insert duplicate key", StringComparison.OrdinalIgnoreCase)
+            || message.Contains("2601")
+            || message.Contains("2627");
     }
 }
