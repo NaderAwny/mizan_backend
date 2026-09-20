@@ -187,13 +187,30 @@ public class TransactionService : ITransactionService
         CreateTransactionRequest request,
         CancellationToken cancellationToken = default)
     {
+        _logger.LogInformation(
+            "[CreateAsync] Starting. OwnerUserId={OwnerUserId}, Type={Type}, PaymentMethod={PaymentMethod}, Amount={Amount}, NoteType={NoteType}, HasNoteText={HasNoteText}",
+            ownerUserId, request.Type, request.PaymentMethod, request.Amount, request.NoteType, !string.IsNullOrWhiteSpace(request.NoteText));
+
+        // ── Guard: noteText provided but NoteType not set to Text ────────────────
+        // Without this check, noteText is silently discarded when NoteType == None,
+        // leading to data loss. Auto-promote to NoteType.Text so the text is stored.
+        if (!string.IsNullOrWhiteSpace(request.NoteText) && request.NoteType == NoteType.None)
+        {
+            _logger.LogDebug(
+                "[CreateAsync] noteText supplied but NoteType=None — auto-promoting to NoteType.Text.");
+            request.NoteType = NoteType.Text;
+        }
+
         // 1. Verify Contact belongs to caller if specified
         Contact? contact = null;
         if (request.ContactId.HasValue && request.ContactId.Value != Guid.Empty)
         {
             contact = await _unitOfWork.Contacts.GetByIdAsync(request.ContactId.Value, ownerUserId, cancellationToken);
             if (contact == null)
+            {
+                _logger.LogWarning("[CreateAsync] Contact {ContactId} not found for owner {OwnerUserId}.", request.ContactId.Value, ownerUserId);
                 throw new NotFoundException("Contact not found");
+            }
         }
 
         var partyName = !string.IsNullOrWhiteSpace(request.PartyName)
@@ -201,22 +218,43 @@ public class TransactionService : ITransactionService
             : (contact?.Name ?? string.Empty);
 
         var shop = await _unitOfWork.Shops.GetByOwnerIdAsync(ownerUserId, cancellationToken);
-        var effectiveShopId = shop?.Id ?? ownerUserId;
+        if (shop == null)
+        {
+            var user = await _unitOfWork.Users.GetByIdAsync(ownerUserId, cancellationToken);
+            var defaultShopName = !string.IsNullOrWhiteSpace(user?.FirstName)
+                ? $"محل {user.FirstName}"
+                : "المحل الافتراضي";
+
+            shop = Shop.Create(ownerUserId, defaultShopName);
+            await _unitOfWork.Shops.AddAsync(shop, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            _logger.LogInformation("[CreateAsync] Auto-created default shop {ShopId} for owner {OwnerUserId}.", shop.Id, ownerUserId);
+        }
+        var effectiveShopId = shop.Id;
 
         // 2. Create Transaction entity via factory
-        var transaction = Transaction.Create(
-            ownerUserId,
-            request.ContactId,
-            request.Type,
-            request.Amount,
-            request.TransactionDate,
-            request.NoteType,
-            request.NoteText,
-            request.IsInstallment,
-            request.InstallmentPlanMode,
-            shopId: effectiveShopId,
-            partyName: partyName,
-            paymentMethod: request.PaymentMethod);
+        Transaction transaction;
+        try
+        {
+            transaction = Transaction.Create(
+                ownerUserId,
+                request.ContactId,
+                request.Type,
+                request.Amount,
+                request.TransactionDate,
+                request.NoteType,
+                request.NoteText,
+                request.IsInstallment,
+                request.InstallmentPlanMode,
+                shopId: effectiveShopId,
+                partyName: partyName,
+                paymentMethod: request.PaymentMethod);
+        }
+        catch (DomainException ex)
+        {
+            _logger.LogWarning(ex, "[CreateAsync] Domain validation failed during Transaction.Create: {Message}", ex.Message);
+            throw; // Re-throw as DomainException → 400 via ExceptionHandlingMiddleware
+        }
 
         // 3. Generate Installments if IsInstallment is true
         List<Installment> installments = new();
@@ -269,12 +307,37 @@ public class TransactionService : ITransactionService
         }
 
         // 5. Save all entities
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "[CreateAsync] Database save failed. OwnerUserId={OwnerUserId}, TransactionId={TransactionId}, Type={Type}. StackTrace={StackTrace}",
+                ownerUserId, transaction.Id, request.Type, ex.StackTrace);
+            throw; // Propagate → 500 with full log context
+        }
+
+        _logger.LogInformation(
+            "[CreateAsync] Transaction {TransactionId} saved successfully. Type={Type}, Amount={Amount}, PaymentMethod={PaymentMethod}.",
+            transaction.Id, transaction.Type, transaction.Amount, transaction.PaymentMethod);
 
         var result = MapToResponse(transaction, contact?.Name);
 
-        // C2: Trigger periodic report check after every successful transaction save
-        await TryGeneratePeriodicReportAsync(ownerUserId, cancellationToken);
+        // C2: Trigger periodic report check after every successful transaction save.
+        // NOTE: Wrapped in try/catch so report generation failures never cause a 500 for the caller.
+        try
+        {
+            await TryGeneratePeriodicReportAsync(ownerUserId, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "[CreateAsync] TryGeneratePeriodicReportAsync failed for OwnerUserId={OwnerUserId} after saving TransactionId={TransactionId}. The transaction was saved successfully — this is a non-critical background failure.",
+                ownerUserId, transaction.Id);
+            // Do NOT re-throw: the transaction itself succeeded.
+        }
 
         return result;
     }
