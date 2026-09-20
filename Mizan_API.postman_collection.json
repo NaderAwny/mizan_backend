@@ -184,7 +184,9 @@
                   "        pm.environment.set('access_token', json.data.token);",
                   "        pm.environment.set('refresh_token', json.data.refreshToken);",
                   "        pm.environment.set('user_id', json.data.userId);",
-                  "        console.log('✅ تم حفظ access_token و refresh_token في البيئة بنجاح.');",
+                  "        var expiresInSeconds = json.data.expiresInSeconds || 604800;",
+                  "        pm.environment.set('token_expires_at', Date.now() + (expiresInSeconds * 1000));",
+                  "        console.log('✅ تم حفظ access_token و refresh_token و token_expires_at في البيئة بنجاح.');",
                   "    }",
                   "    pm.test('تسجيل الدخول ناجح وتم استلام التوكن', function() {",
                   "        pm.expect(json.success).to.be.true;",
@@ -325,6 +327,8 @@
                   "    if (json.data && json.data.token) {",
                   "        pm.environment.set('access_token', json.data.token);",
                   "        pm.environment.set('refresh_token', json.data.refreshToken);",
+                  "        var expiresInSeconds = json.data.expiresInSeconds || 604800;",
+                  "        pm.environment.set('token_expires_at', Date.now() + (expiresInSeconds * 1000));",
                   "    }",
                   "    pm.test('تم تجديد الرمز بنجاح', function() {",
                   "        pm.expect(json.success).to.be.true;",
@@ -1118,9 +1122,15 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('تم تسجيل عملية الشراء النقدي', function() {",
-                  "    pm.expect(pm.response.code).to.equal(201);",
-                  "});"
+                  "if (pm.response.code === 201) {",
+                  "    var json = pm.response.json();",
+                  "    if (json.data && json.data.id) {",
+                  "        pm.environment.set('transaction_id', json.data.id);",
+                  "    }",
+                  "    pm.test('تم تسجيل عملية الشراء النقدي', function() {",
+                  "        pm.expect(json.success).to.be.true;",
+                  "    });",
+                  "}"
                 ]
               }
             }
@@ -1311,9 +1321,19 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('تم إنشاء الأقساط المخصصة للمشتريات بنجاح', function() {",
-                  "    pm.expect(pm.response.code).to.equal(201);",
-                  "});"
+                  "if (pm.response.code === 201) {",
+                  "    var json = pm.response.json();",
+                  "    if (json.data && json.data.id) {",
+                  "        pm.environment.set('transaction_id', json.data.id);",
+                  "    }",
+                  "    if (json.data && json.data.installments && json.data.installments.length > 0) {",
+                  "        pm.environment.set('installment_id', json.data.installments[0].id);",
+                  "    }",
+                  "    pm.test('تم إنشاء الأقساط المخصصة للمشتريات بنجاح', function() {",
+                  "        pm.expect(json.data.installments.length).to.equal(2);",
+                  "        pm.expect(json.data.type).to.equal('Purchase');",
+                  "    });",
+                  "}"
                 ]
               }
             }
@@ -2950,6 +2970,51 @@
           ]
         }
       ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Auto-refresh before any non-auth request",
+          "var requestUrl = pm.request.url.toString();",
+          "var isAuthEndpoint = requestUrl.includes('/api/auth/');",
+          "",
+          "if (!isAuthEndpoint) {",
+          "    var expiresAt = parseInt(pm.environment.get('token_expires_at') || '0');",
+          "    var bufferMs = 60 * 1000;",
+          "    var now = Date.now();",
+          "",
+          "    if (expiresAt > 0 && now >= (expiresAt - bufferMs)) {",
+          "        var refreshToken = pm.environment.get('refresh_token');",
+          "        if (refreshToken) {",
+          "            var baseUrl = pm.environment.get('base_url');",
+          "            pm.sendRequest({",
+          "                url: baseUrl + '/api/auth/refresh-token',",
+          "                method: 'POST',",
+          "                header: { 'Content-Type': 'application/json' },",
+          "                body: { mode: 'raw', raw: JSON.stringify({ refreshToken: refreshToken }) }",
+          "            }, function (err, res) {",
+          "                if (!err && res.code === 200) {",
+          "                    var json = res.json();",
+          "                    if (json.data && json.data.token) {",
+          "                        pm.environment.set('access_token', json.data.token);",
+          "                        pm.environment.set('refresh_token', json.data.refreshToken);",
+          "                        var exp = json.data.expiresInSeconds || 604800;",
+          "                        pm.environment.set('token_expires_at', Date.now() + (exp * 1000));",
+          "                        console.log('[AutoRefresh] access_token renewed.');",
+          "                    }",
+          "                } else {",
+          "                    console.warn('[AutoRefresh] Failed to refresh token.');",
+          "                }",
+          "            });",
+          "        }",
+          "    }",
+          "}"
+        ]
+      }
     }
   ]
 }
