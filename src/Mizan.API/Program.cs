@@ -118,15 +118,17 @@ if (!builder.Environment.IsEnvironment("Testing"))
     if (!emailOptions.UseMockInDevelopment && string.IsNullOrWhiteSpace(emailOptions.ApiKey))
     {
         throw new InvalidOperationException(
-            "FATAL CONFIGURATION ERROR: SendGrid API Key must be configured via user-secrets (Email:ApiKey) or environment variable (Email__ApiKey) when UseMockInDevelopment is false.");
+            "FATAL CONFIGURATION ERROR: Brevo API Key must be configured via user-secrets (Email:ApiKey) or environment variable (Email__ApiKey) when UseMockInDevelopment is false.");
     }
 }
 
 builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection(EmailOptions.SectionName));
-builder.Services.AddScoped<SendGrid.ISendGridClient>(sp =>
+builder.Services.AddHttpClient("Brevo", (sp, client) =>
 {
     var emailOpts = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<EmailOptions>>().Value;
-    return new SendGrid.SendGridClient(emailOpts.ApiKey ?? string.Empty);
+    client.BaseAddress = new Uri("https://api.brevo.com");
+    client.DefaultRequestHeaders.Add("api-key", emailOpts.ApiKey ?? string.Empty);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.Configure<EmailVerificationOptions>(builder.Configuration.GetSection(EmailVerificationOptions.SectionName));

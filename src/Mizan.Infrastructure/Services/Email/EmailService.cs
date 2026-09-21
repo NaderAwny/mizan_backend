@@ -1,41 +1,93 @@
+using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Mizan.Application.Interfaces;
 using Mizan.Core.Exceptions;
-using SendGrid;
-using SendGrid.Helpers.Mail;
 
 namespace Mizan.Infrastructure.Services.Email;
 
 public class EmailService : IEmailService
 {
     private readonly EmailOptions _options;
-    private readonly ISendGridClient _sendGridClient;
+    private readonly HttpClient _httpClient;
     private readonly ILogger<EmailService> _logger;
+
+    private const string BrevoApiUrl = "https://api.brevo.com/v3/smtp/email";
 
     public EmailService(
         IOptions<EmailOptions> options,
-        ILogger<EmailService> logger,
-        ISendGridClient? sendGridClient = null)
+        IHttpClientFactory httpClientFactory,
+        ILogger<EmailService> logger)
     {
         _options = options.Value;
+        _httpClient = httpClientFactory.CreateClient("Brevo");
         _logger = logger;
-        _sendGridClient = sendGridClient ?? new SendGridClient(_options.ApiKey ?? string.Empty);
     }
 
+    // ─────────────────────────────────────────────────────────────────
+    //  Helper: Send a single email via Brevo API
+    // ─────────────────────────────────────────────────────────────────
+    private async Task<bool> SendViaBrevoAsync(
+        string toEmail,
+        string subject,
+        string htmlContent,
+        string plainTextContent,
+        byte[]? attachmentBytes = null,
+        string? attachmentName = null,
+        CancellationToken cancellationToken = default)
+    {
+        var body = new Dictionary<string, object>
+        {
+            ["sender"]  = new { name = _options.SenderName, email = _options.SenderEmail },
+            ["to"]      = new[] { new { email = toEmail.Trim() } },
+            ["subject"] = subject,
+            ["htmlContent"]  = htmlContent,
+            ["textContent"]  = plainTextContent,
+            ["replyTo"]      = new { email = _options.SenderEmail, name = _options.SenderName }
+        };
+
+        if (attachmentBytes != null && attachmentBytes.Length > 0 && !string.IsNullOrWhiteSpace(attachmentName))
+        {
+            body["attachment"] = new[]
+            {
+                new
+                {
+                    content = Convert.ToBase64String(attachmentBytes),
+                    name    = attachmentName
+                }
+            };
+        }
+
+        var json    = JsonSerializer.Serialize(body);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+        var response = await _httpClient.PostAsync(BrevoApiUrl, content, cancellationToken);
+
+        if (response.IsSuccessStatusCode)
+        {
+            return true;
+        }
+
+        var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
+        _logger.LogWarning(
+            "⚠️ Brevo returned non-success status code {StatusCode} when sending email to {Email}. Body: {Body}",
+            response.StatusCode, toEmail, responseBody);
+        return false;
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    //  OTP Email
+    // ─────────────────────────────────────────────────────────────────
     public async Task<bool> SendOtpEmailAsync(string toEmail, string otpCode, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(toEmail))
-        {
             throw new BadRequestException("البريد الإلكتروني مطلوب");
-        }
 
         if (string.IsNullOrWhiteSpace(otpCode))
-        {
             throw new BadRequestException("كود التحقق مطلوب");
-        }
 
-        // In development / mock mode: log without sending
         if (_options.UseMockInDevelopment)
         {
             _logger.LogInformation("📧 [DEV MOCK EMAIL] OTP for {Email} is: {OtpCode}", toEmail, otpCode);
@@ -44,11 +96,9 @@ public class EmailService : IEmailService
 
         try
         {
-            var from = new EmailAddress(_options.SenderEmail, _options.SenderName);
-            var to = new EmailAddress(toEmail.Trim());
             const string subject = "كود التحقق لتطبيق ميزان";
 
-            var plainTextContent = $@"مرحباً بك في تطبيق ميزان،
+            var plainText = $@"مرحباً بك في تطبيق ميزان،
 
 كود التحقق الخاص بك لتسجيل الدخول هو:
 {otpCode}
@@ -60,7 +110,7 @@ public class EmailService : IEmailService
 تطبيق ميزان — الزقازيق، الشرقية، مصر
 © {DateTime.UtcNow.Year} تطبيق ميزان. جميع الحقوق محفوظة.";
 
-            var htmlContent = $@"<!DOCTYPE html>
+            var html = $@"<!DOCTYPE html>
 <html dir=""rtl"" lang=""ar"">
 <head>
     <meta charset=""UTF-8"">
@@ -80,39 +130,27 @@ public class EmailService : IEmailService
         <div style=""font-size: 12px; color: #9ca3af; text-align: center; line-height: 1.6;"">
             <p style=""margin: 4px 0;"">هذه رسالة تلقائية من تطبيق ميزان. إذا كنت لا تتوقع هذه الرسالة، يمكنك تجاهلها بأمان.</p>
             <p style=""margin: 4px 0;"">تطبيق ميزان — الزقازيق، الشرقية، مصر</p>
-            <p style=""margin: 4px 0;"">&copy; {DateTime.UtcNow.Year} تطبيق ميزان. جميع الحقوق محفوظة.</p>
+            <p style=""margin: 4px 0;"">© {DateTime.UtcNow.Year} تطبيق ميزان. جميع الحقوق محفوظة.</p>
         </div>
     </div>
 </body>
 </html>";
 
-            var msg = MailHelper.CreateSingleEmail(from, to, subject, plainTextContent, htmlContent);
-            msg.SetReplyTo(new EmailAddress(_options.SenderEmail, _options.SenderName));
-            var response = await _sendGridClient.SendEmailAsync(msg, cancellationToken);
-
-            if (response.IsSuccessStatusCode)
-            {
-                _logger.LogInformation("✅ OTP email sent successfully via SendGrid to {Email} (StatusCode: {StatusCode})", toEmail, response.StatusCode);
-                return true;
-            }
-
-            string responseBody = string.Empty;
-            if (response.Body != null)
-            {
-                responseBody = await response.Body.ReadAsStringAsync();
-            }
-
-            _logger.LogWarning("⚠️ SendGrid returned non-success status code {StatusCode} when sending OTP to {Email}. Response body: {ResponseBody}",
-                response.StatusCode, toEmail, responseBody);
-            return false;
+            var result = await SendViaBrevoAsync(toEmail, subject, html, plainText, cancellationToken: cancellationToken);
+            if (result)
+                _logger.LogInformation("✅ OTP email sent successfully via Brevo to {Email}", toEmail);
+            return result;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "❌ Transient error sending OTP email via SendGrid to {Email}", toEmail);
+            _logger.LogError(ex, "❌ Transient error sending OTP email via Brevo to {Email}", toEmail);
             return false;
         }
     }
 
+    // ─────────────────────────────────────────────────────────────────
+    //  Installment Reminder (to shop owner)
+    // ─────────────────────────────────────────────────────────────────
     public async Task<bool> SendInstallmentReminderEmailAsync(
         string toEmail,
         string recipientName,
@@ -137,7 +175,6 @@ public class EmailService : IEmailService
             _ => $"مستحق خلال {daysUntilDue} أيام"
         };
 
-        // In development / mock mode: log without sending
         if (_options.UseMockInDevelopment)
         {
             _logger.LogInformation(
@@ -148,13 +185,11 @@ public class EmailService : IEmailService
 
         try
         {
-            var from = new EmailAddress(_options.SenderEmail, _options.SenderName);
-            var to = new EmailAddress(toEmail.Trim());
             string subject = daysUntilDue == 0
                 ? $"تذكير: قسط مستحق اليوم بقيمة {formattedAmount} — تطبيق ميزان"
                 : $"تذكير: موعد استحقاق قسط بقيمة {formattedAmount} — تطبيق ميزان";
 
-            var plainTextContent = $@"مرحباً {recipientName}،
+            var plainText = $@"مرحباً {recipientName}،
 
 نود تذكيرك بأن هناك قسطاً مسجلاً في حسابك بتطبيق ميزان:
 - الطرف: {contactName}
@@ -168,7 +203,7 @@ public class EmailService : IEmailService
 تطبيق ميزان — الزقازيق، الشرقية، مصر
 © {DateTime.UtcNow.Year} تطبيق ميزان. جميع الحقوق محفوظة.";
 
-            var htmlContent = $@"<!DOCTYPE html>
+            var html = $@"<!DOCTYPE html>
 <html dir=""rtl"" lang=""ar"">
 <head>
     <meta charset=""UTF-8"">
@@ -191,39 +226,27 @@ public class EmailService : IEmailService
         <div style=""font-size: 12px; color: #9ca3af; text-align: center; line-height: 1.6;"">
             <p style=""margin: 4px 0;"">هذه رسالة تلقائية من تطبيق ميزان. إذا كنت لا تتوقع هذه الرسالة، يمكنك تجاهلها بأمان.</p>
             <p style=""margin: 4px 0;"">تطبيق ميزان — الزقازيق، الشرقية، مصر</p>
-            <p style=""margin: 4px 0;"">&copy; {DateTime.UtcNow.Year} تطبيق ميزان. جميع الحقوق محفوظة.</p>
+            <p style=""margin: 4px 0;"">© {DateTime.UtcNow.Year} تطبيق ميزان. جميع الحقوق محفوظة.</p>
         </div>
     </div>
 </body>
 </html>";
 
-            var msg = MailHelper.CreateSingleEmail(from, to, subject, plainTextContent, htmlContent);
-            msg.SetReplyTo(new EmailAddress(_options.SenderEmail, _options.SenderName));
-            var response = await _sendGridClient.SendEmailAsync(msg, cancellationToken);
-
-            if (response.IsSuccessStatusCode)
-            {
-                _logger.LogInformation("✅ Installment reminder email sent successfully via SendGrid to {Email} (StatusCode: {StatusCode})", toEmail, response.StatusCode);
-                return true;
-            }
-
-            string responseBody = string.Empty;
-            if (response.Body != null)
-            {
-                responseBody = await response.Body.ReadAsStringAsync();
-            }
-
-            _logger.LogWarning("⚠️ SendGrid returned non-success status code {StatusCode} when sending reminder to {Email}. Response body: {ResponseBody}",
-                response.StatusCode, toEmail, responseBody);
-            return false;
+            var result = await SendViaBrevoAsync(toEmail, subject, html, plainText, cancellationToken: cancellationToken);
+            if (result)
+                _logger.LogInformation("✅ Installment reminder email sent successfully via Brevo to {Email}", toEmail);
+            return result;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "❌ Transient error sending installment reminder email via SendGrid to {Email}", toEmail);
+            _logger.LogError(ex, "❌ Transient error sending installment reminder email via Brevo to {Email}", toEmail);
             return false;
         }
     }
 
+    // ─────────────────────────────────────────────────────────────────
+    //  Installment Reminder (to contact / debtor)
+    // ─────────────────────────────────────────────────────────────────
     public async Task<bool> SendInstallmentReminderToContactEmailAsync(
         string toEmail,
         string contactName,
@@ -248,7 +271,6 @@ public class EmailService : IEmailService
             _ => $"مستحق خلال {daysUntilDue} أيام"
         };
 
-        // In development / mock mode: log without sending
         if (_options.UseMockInDevelopment)
         {
             _logger.LogInformation(
@@ -259,13 +281,11 @@ public class EmailService : IEmailService
 
         try
         {
-            var from = new EmailAddress(_options.SenderEmail, _options.SenderName);
-            var to = new EmailAddress(toEmail.Trim());
             string subject = daysUntilDue == 0
                 ? $"تذكير: موعد سداد قسط مستحق اليوم لصالح {shopOwnerName} — تطبيق ميزان"
                 : $"تذكير: موعد سداد قسط مستحق قريباً لصالح {shopOwnerName} — تطبيق ميزان";
 
-            var plainTextContent = $@"مرحباً {contactName}،
+            var plainText = $@"مرحباً {contactName}،
 
 نود تذكيرك بأن هناك قسطاً مستحقاً عليك لصالح {shopOwnerName}:
 - المبلغ المستحق: {formattedAmount} جنيه
@@ -278,7 +298,7 @@ public class EmailService : IEmailService
 تطبيق ميزان — الزقازيق، الشرقية، مصر
 © {DateTime.UtcNow.Year} تطبيق ميزان. جميع الحقوق محفوظة.";
 
-            var htmlContent = $@"<!DOCTYPE html>
+            var html = $@"<!DOCTYPE html>
 <html dir=""rtl"" lang=""ar"">
 <head>
     <meta charset=""UTF-8"">
@@ -301,39 +321,27 @@ public class EmailService : IEmailService
         <div style=""font-size: 12px; color: #9ca3af; text-align: center; line-height: 1.6;"">
             <p style=""margin: 4px 0;"">هذه رسالة تلقائية من تطبيق ميزان. إذا كنت لا تتوقع هذه الرسالة، يمكنك تجاهلها بأمان.</p>
             <p style=""margin: 4px 0;"">تطبيق ميزان — الزقازيق، الشرقية، مصر</p>
-            <p style=""margin: 4px 0;"">&copy; {DateTime.UtcNow.Year} تطبيق ميزان. جميع الحقوق محفوظة.</p>
+            <p style=""margin: 4px 0;"">© {DateTime.UtcNow.Year} تطبيق ميزان. جميع الحقوق محفوظة.</p>
         </div>
     </div>
 </body>
 </html>";
 
-            var msg = MailHelper.CreateSingleEmail(from, to, subject, plainTextContent, htmlContent);
-            msg.SetReplyTo(new EmailAddress(_options.SenderEmail, _options.SenderName));
-            var response = await _sendGridClient.SendEmailAsync(msg, cancellationToken);
-
-            if (response.IsSuccessStatusCode)
-            {
-                _logger.LogInformation("✅ Contact installment reminder email sent successfully via SendGrid to {Email} (StatusCode: {StatusCode})", toEmail, response.StatusCode);
-                return true;
-            }
-
-            string responseBody = string.Empty;
-            if (response.Body != null)
-            {
-                responseBody = await response.Body.ReadAsStringAsync();
-            }
-
-            _logger.LogWarning("⚠️ SendGrid returned non-success status code {StatusCode} when sending reminder to contact {Email}. Response body: {ResponseBody}",
-                response.StatusCode, toEmail, responseBody);
-            return false;
+            var result = await SendViaBrevoAsync(toEmail, subject, html, plainText, cancellationToken: cancellationToken);
+            if (result)
+                _logger.LogInformation("✅ Contact installment reminder email sent successfully via Brevo to {Email}", toEmail);
+            return result;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "❌ Transient error sending contact installment reminder email via SendGrid to {Email}", toEmail);
+            _logger.LogError(ex, "❌ Transient error sending contact installment reminder email via Brevo to {Email}", toEmail);
             return false;
         }
     }
 
+    // ─────────────────────────────────────────────────────────────────
+    //  Periodic Report Email (with PDF attachment)
+    // ─────────────────────────────────────────────────────────────────
     public async Task<bool> SendPeriodicReportEmailAsync(
         string toEmail,
         string recipientName,
@@ -347,7 +355,6 @@ public class EmailService : IEmailService
             return false;
         }
 
-        // In development / mock mode: log without sending
         if (_options.UseMockInDevelopment)
         {
             _logger.LogInformation(
@@ -358,11 +365,9 @@ public class EmailService : IEmailService
 
         try
         {
-            var from = new EmailAddress(_options.SenderEmail, _options.SenderName);
-            var to = new EmailAddress(toEmail.Trim());
             string subject = $"التقرير الدوري للعمليات #{batchNumber} — تطبيق ميزان";
 
-            var plainTextContent = $@"مرحباً {recipientName}،
+            var plainText = $@"مرحباً {recipientName}،
 
 يسعدنا إعلامك بأنه تم إصدار التقرير الدوري للعمليات الخاص بحسابك (الدفعة #{batchNumber}).
 
@@ -373,7 +378,7 @@ public class EmailService : IEmailService
 تطبيق ميزان — الزقازيق، الشرقية، مصر
 © {DateTime.UtcNow.Year} تطبيق ميزان. جميع الحقوق محفوظة.";
 
-            var htmlContent = $@"<!DOCTYPE html>
+            var html = $@"<!DOCTYPE html>
 <html dir=""rtl"" lang=""ar"">
 <head>
     <meta charset=""UTF-8"">
@@ -394,41 +399,24 @@ public class EmailService : IEmailService
         <div style=""font-size: 12px; color: #9ca3af; text-align: center; line-height: 1.6;"">
             <p style=""margin: 4px 0;"">هذه رسالة تلقائية من تطبيق ميزان. إذا كنت لا تتوقع هذه الرسالة، يمكنك تجاهلها بأمان.</p>
             <p style=""margin: 4px 0;"">تطبيق ميزان — الزقازيق، الشرقية، مصر</p>
-            <p style=""margin: 4px 0;"">&copy; {DateTime.UtcNow.Year} تطبيق ميزان. جميع الحقوق محفوظة.</p>
+            <p style=""margin: 4px 0;"">© {DateTime.UtcNow.Year} تطبيق ميزان. جميع الحقوق محفوظة.</p>
         </div>
     </div>
 </body>
 </html>";
 
-            var msg = MailHelper.CreateSingleEmail(from, to, subject, plainTextContent, htmlContent);
-            msg.SetReplyTo(new EmailAddress(_options.SenderEmail, _options.SenderName));
+            var result = await SendViaBrevoAsync(
+                toEmail, subject, html, plainText,
+                pdfBytes, $"mizan-report-batch-{batchNumber}.pdf",
+                cancellationToken);
 
-            if (pdfBytes != null && pdfBytes.Length > 0)
-            {
-                msg.AddAttachment($"mizan-report-batch-{batchNumber}.pdf", Convert.ToBase64String(pdfBytes), "application/pdf");
-            }
-
-            var response = await _sendGridClient.SendEmailAsync(msg, cancellationToken);
-
-            if (response.IsSuccessStatusCode)
-            {
-                _logger.LogInformation("✅ Periodic report #{BatchNumber} email sent successfully via SendGrid to {Email} (StatusCode: {StatusCode})", batchNumber, toEmail, response.StatusCode);
-                return true;
-            }
-
-            string responseBody = string.Empty;
-            if (response.Body != null)
-            {
-                responseBody = await response.Body.ReadAsStringAsync();
-            }
-
-            _logger.LogWarning("⚠️ SendGrid returned non-success status code {StatusCode} when sending periodic report to {Email}. Response body: {ResponseBody}",
-                response.StatusCode, toEmail, responseBody);
-            return false;
+            if (result)
+                _logger.LogInformation("✅ Periodic report #{BatchNumber} email sent successfully via Brevo to {Email}", batchNumber, toEmail);
+            return result;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "❌ Transient error sending periodic report email via SendGrid to {Email}", toEmail);
+            _logger.LogError(ex, "❌ Transient error sending periodic report email via Brevo to {Email}", toEmail);
             return false;
         }
     }
