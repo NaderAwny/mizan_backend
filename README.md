@@ -1,6 +1,6 @@
 # ⚖️ Mizan Backend — نظام ميزان
 
-نظام Backend متكامل لإدارة الديون والمبيعات والأقساط مصمم وفق معايير **Clean Architecture** باستخدام **.NET 9** و **SQL Server**.
+نظام Backend متكامل لإدارة الديون والمبيعات والأقساط مصمم وفق معايير **Clean Architecture** باستخدام **.NET 8** و **SQL Server**.
 
 ## 🏗️ البنية المعمارية (Architecture)
 
