@@ -198,6 +198,7 @@ public class AuthServiceTests
         public IInstallmentReminderLogRepository InstallmentReminderLogs => _inner.InstallmentReminderLogs;
         public IPeriodicReportRepository PeriodicReports => _inner.PeriodicReports;
         public IVoiceNoteRepository VoiceNotes => _inner.VoiceNotes;
+        public IDeviceTokenRepository DeviceTokens => _inner.DeviceTokens;
 
         public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
@@ -263,6 +264,7 @@ public class AuthServiceTests
         public IInstallmentReminderLogRepository InstallmentReminderLogs => _inner.InstallmentReminderLogs;
         public IPeriodicReportRepository PeriodicReports => _inner.PeriodicReports;
         public IVoiceNoteRepository VoiceNotes => _inner.VoiceNotes;
+        public IDeviceTokenRepository DeviceTokens => _inner.DeviceTokens;
 
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {

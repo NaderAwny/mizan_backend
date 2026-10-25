@@ -90,6 +90,6 @@ public class PeriodicReportService : IPeriodicReportService
         TransactionCount = report.TransactionCount,
         TotalSalesAmount = report.TotalSalesAmount,
         TotalPurchasesAmount = report.TotalPurchasesAmount,
-        GeneratedAt = report.GeneratedAt
+        GeneratedAt = DateTime.SpecifyKind(report.GeneratedAt, DateTimeKind.Utc)
     };
 }

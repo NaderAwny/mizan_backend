@@ -22,7 +22,7 @@
 
 ---
 
-## 📑 فهرس الأقسام التسعة (The 9 Core Features)
+## 📑 فهرس الأقسام (Core Features Index)
 1. [المصادقة وتسجيل الدخول (Authentication)](#1-المصادقة-وتسجيل-الدخول-authentication)
 2. [الملف الشخصي وإدارة الحساب (Users & Profile)](#2-الملف-الشخصي-وإدارة-الحساب-users--profile)
 3. [جهات الاتصال والأطراف (Contacts)](#3-جهات-الاتصال-والأطراف-contacts)
@@ -30,8 +30,9 @@
 5. [جدولة وإدارة الأقساط والسداد (Installments & Payments)](#5-جدولة-وإدارة-الأقساط-والسداد-installments--payments)
 6. [الملاحظات والتسجيلات الصوتية (Voice Notes)](#6-الملاحظات-والتسجيلات-الصوتية-voice-notes)
 7. [الإشعارات والتنبيهات (Notifications)](#7-الإشعارات-والتنبيهات-notifications)
-8. [خدمة التذكيرات التلقائية في الخلفية (Automated Background Reminders)](#8-خدمة-التذكيرات-التلقائية-في-الخلفية-automated-background-reminders)
+8. [خدمة التذكيرات التلقائية والإشعارات الفورية (Automated Reminders & Push)](#8-خدمة-التذكيرات-التلقائية-والإشعارات-الفورية-automated-reminders--push)
 9. [التقارير الدورية وملفات PDF (Periodic Reports)](#9-التقارير-الدورية-وملفات-pdf-periodic-reports)
+10. [إدارة الأجهزة وتوكنات الإشعارات (Devices & Push Tokens)](#10-إدارة-الأجهزة-وتوكنات-الإشعارات-devices--push-tokens)
 
 ---
 
@@ -55,6 +56,7 @@
 | `email` | `/register`, `/send-otp`, `/verify-otp` | `string` | نعم | بريد إلكتروني صالح (بحد أقصى 254 حرف) |
 | `code` | `/verify-otp` | `string` | نعم | كود التحقق (6 أرقام، صالح لمدة دقيقتين، بحد أقصى 3 محاولات) |
 | `refreshToken` | `/refresh-token`, `/logout` | `string` | نعم | رمز التحديث النشط |
+| `deviceToken` | `/logout` | `string` | اختياري | رمز توكن الجهاز لإلغاء تسجيله فوراً عند الخروج ومنع استقبال الإشعارات عليه |
 
 ### أمثلة متعددة (Request & Response Examples):
 
@@ -570,6 +572,8 @@ Content-Length: 102401
 - `GET /api/notifications/unread-count` — عدد الإشعارات غير المقروءة
 - `POST /api/notifications/{id:guid}/read` — تمييز إشعار كمقروء
 - `POST /api/notifications/read-all` — تمييز كل الإشعارات كمقروءة
+- `POST /api/notifications/run-reminders-scan` — تشغيل فحص تذكيرات الأقساط يدوياً للمستخدم الحالي (Owner-scoped)
+- `POST /api/notifications/run-reminders-scan-cron` — تشغيل فحص تذكيرات الأقساط **العالمي** (كل المستخدمين) للجدولة الخارجية؛ لا يتطلب JWT بل ترويسة `X-Cron-Key` تطابق قيمة `CronApiKey` في الإعدادات/متغيرات البيئة (يُردَّ 401 إذا غابت أو كانت خاطئة أو إذا لم يُكوَّن المفتاح)
 
 ### جدول الحقول (Field Definitions):
 | الحقل | المسار | النوع | إلزامي؟ | القيود والشرح |
@@ -632,28 +636,33 @@ Authorization: Bearer {token}
 
 ---
 
-## 8. خدمة التذكيرات التلقائية في الخلفية (Automated Background Reminders)
+## 8. خدمة التذكيرات التلقائية والإشعارات الفورية (Automated Reminders & Push)
 
 ### الفيتشر دي بتعمل إيه؟
-خدمة خلفية مستضافة (`ReminderCheckService`) تعمل دورياً (افتراضياً كل 60 دقيقة) لفحص الأقساط المعلقة (`Pending`) التي اقترب موعد استحقاقها (قبل 3 أيام، قبل يوم واحد، ويوم الاستحقاق نفسه 0 يوم). تقوم بإنشاء إشعار داخلي فوري وإرسال بريد إلكتروني تذكيري، مع حماية تامة ضد التكرار باستخدام قيد فريد في قاعدة البيانات على `(InstallmentId, DaysBeforeDue)`.
+نظام تذكيرات ذكي ثنائي القنوات ومحكم التوقيت وفقاً للتوقيت المحلي لمصر (`Africa/Cairo` / `EgyptTime`):
+1. **الزناد الفوري عند إنشاء العملية (Trigger Channel):** عند إنشاء أي معاملة بها أقساط مستحقة قريباً أو اليوم، يتم وضع المستخدم في طابور غير متزامن (`ReminderTriggerWorker`) لتوليد التنبيهات والإشعارات فوراً دون انتظار فحص الخلفية الدوري.
+2. **فحص الخلفية الدوري (`ReminderCheckService`):** يعمل افتراضياً كل 5 دقائق لمسح ومطابقة الأقساط المستحقة قبل 3 أيام، قبل يوم، يوم الاستحقاق (0)، وكذلك الأقساط المتأخرة (`Overdue`) حتى 7 أيام سابقة.
+3. **الفصل بين قنوات الإشعار (Two-Phase Persistence):** يتم أولاً حفظ سجلات الإشعار في التطبيق (`Notification`) وسجل التذكير (`InstallmentReminderLog`) في قاعدة البيانات **قبل** أي اتصال شبكي، مما يضمن ظهور الإشعار في التطبيق فوراً حتى لو فشل إرسال البريد أو تعطل مزود الإشعارات.
+4. **تعدد القنوات الذكي (Multi-Channel Dispatch):**
+   - **صاحب المتجر:** إشعار داخلي في التطبيق (`Notification`) + إشعار هاتف فوري عبر Firebase Push (`FCM`) + بريد إلكتروني (`Brevo`).
+   - **الطرف / العميل:** بريد إلكتروني تذكيري فقط (في حال وجود `contactEmail` صالح).
+5. **إعادة المحاولة الذكية:** في حال تعثر أي قناة يتم إعادة المحاولة فقط للقنوات المتعثرة بحد أقصى 3 محاولات وفارق زمني 5 دقائق (`RetryBackoff`).
 
 ### جدول معايير وقواعد الخدمة:
 | الإعداد / المعيار | القيمة الافتراضية | التوصيف |
 | :--- | :--- | :--- |
-| `Reminders:CheckIntervalMinutes` | `60` دقيقة | الفترة الزمنية بين كل دورة فحص للخدمة |
-| `Reminders:DaysBeforeDue` | `[3, 1]` | الأيام المسبقة للتذكير بالإضافة ليوم الاستحقاق (0) |
-| قيد عدم التكرار | `IX_installment_reminder_logs` | فهرس فريد يمنع تكرار إرسال التذكير لنفس المرحلة نهائياً |
-| مرونة الفشل | Non-blocking | في حال فشل إرسال البريد، لا يتم تسجيل log ليعاد المحاولة بالدورة التالية |
+| `Reminders:CheckIntervalMinutes` | `5` دقائق | الفترة الزمنية بين كل دورة فحص للخلفية |
+| `Reminders:DaysBeforeDue` | `[3, 1]` | الأيام المسبقة للتذكير بالإضافة للمرحلة (0) لليوم والمتأخرات |
+| `Reminders:OverdueLookbackDays` | `7` أيام | مدى البحث عن الأقساط المتأخرة التي لم يتم التذكير بها |
+| `Reminders:MaxChannelAttempts` | `3` محاولات | أقصى عدد محاولات إعادة إرسال للقناة المتعثرة |
+| `Reminders:RetryBackoffMinutes` | `5` دقائق | الفارق الزمني المطلوب قبل إعادة محاولة الإرسال |
+| `Firebase:Enabled` | `true/false` | تفعيل أو تعطيل إشعارات الـ Push |
+| قيد عدم التكرار | `IX_installment_reminder_logs` | فهرس فريد يمنع تكرار الإشعار لنفس القسط والمرحلة |
 
 ### أمثلة الإشعارات والرسائل المولدة:
 - **قبل 3 أيام:** `"تذكير: قسط مستحق على [اسم الطرف] بقيمة [المبلغ] ج.م خلال 3 أيام (تاريخ الاستحقاق: YYYY-MM-DD)"`
 - **يوم الاستحقاق (اليوم):** `"تنبيه عاجل: قسط مستحق اليوم على [اسم الطرف] بقيمة [المبلغ] ج.م"`
-
-### صندوق استكشاف المشكلات (Troubleshooting):
-| المشكلة | السبب المحتمل | المعالجة |
-| :--- | :--- | :--- |
-| عدم وصول بريد التذكير | تعطل خادم الـ SMTP أو بريد غير صالح | تقوم الخدمة بإعادة المحاولة في الدورة التالية لعدم تسجيل السجل عند الفشل. |
-| تكرار التذكيرات | محاولة تشغيل متزامن لعدة خوادم | الفهرس الفريد في قاعدة البيانات يمنع الإدراج المزدوج ويرفضه على مستوى المحرك. |
+- **قسط متأخر (Overdue):** `"قسط متأخر: قسط بقيمة [المبلغ] متأخر منذ [N] يوم للطرف [اسم الطرف] (تاريخ الاستحقاق: YYYY-MM-DD)"`
 
 ---
 
@@ -723,3 +732,91 @@ Content-Disposition: inline; filename="Mizan-Report-Batch-1.pdf"
 | الحالة | السبب | الاستجابة | الحل |
 | :--- | :--- | :--- | :--- |
 | `404 Not Found` | محاولة تحميل تقرير يخص مستخدماً آخر | `{"statusCode": 404, "message": "Report not found"}` | عزل أمني: التقارير وملفات الـ PDF معزولة تماماً لكل مستخدم. |
+
+---
+
+## 10. إدارة الأجهزة وتوكنات الإشعارات (Devices & Push Tokens)
+
+### الفيتشر دي بتعمل إيه؟
+تتيح لتطبيقات الهاتف المحمول (Android و iOS) تسجيل وتحديث وإلغاء تسجيل توكنات الإشعارات الفورية (`FCM Token`) المرتبطة بحساب المستخدم، مع ضمان عدم تجاوز 10 أجهزة للمستخدم الواحد (حذف الأقدم نشاطاً تلقائياً)، وإعادة تعيين التوكن تلقائياً في حال تسجيل دخول مستخدم آخر من نفس الهاتف.
+
+### المسارات ونقاط النهاية:
+- `POST /api/devices/register` — تسجيل أو تحديث توكن الجهاز
+- `POST /api/devices/unregister` — إلغاء تسجيل توكن الجهاز
+
+### جدول الحقول (Field Definitions):
+| الحقل | المسار | النوع | إلزامي؟ | القيود والشرح |
+| :--- | :--- | :--- | :--- | :--- |
+| `token` | `/register`, `/unregister` | `string` | نعم | رمز توكن الجهاز من Firebase (1-512 حرفاً) |
+| `platform` | `/register` | `string (Enum)` | نعم | نوع المنصة (`Android`, `iOS`, `Web`) |
+| `deviceId` | `/register` | `string` | اختياري | معرف الجهاز المادي (بحد أقصى 128 حرفاً) |
+
+### أمثلة متعددة (Request & Response Examples):
+
+#### مثال 1: تسجيل جهاز جديد أو تحديث توكنه
+```http
+POST /api/devices/register HTTP/1.1
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "token": "fcm_token_example_d87a9b8c7e6d5f",
+  "platform": "Android",
+  "deviceId": "samsung-galaxy-s24"
+}
+```
+```json
+{
+  "success": true,
+  "message": "تم تسجيل الجهاز بنجاح",
+  "data": null
+}
+```
+
+#### مثال 2: إلغاء تسجيل توكن جهاز
+```http
+POST /api/devices/unregister HTTP/1.1
+Authorization: Bearer {token}
+Content-Type: application/json
+
+{
+  "token": "fcm_token_example_d87a9b8c7e6d5f"
+}
+```
+```json
+{
+  "success": true,
+  "message": "تم إلغاء تسجيل الجهاز بنجاح",
+  "data": null
+}
+```
+
+### صندوق الأخطاء الشائعة (Common Errors):
+| الحالة | السبب | الاستجابة | الحل |
+| :--- | :--- | :--- | :--- |
+| `400 Bad Request` | رمز الجهاز فارغ أو يتجاوز 512 حرفاً | `{"statusCode": 400, "message": "رمز الجهاز مطلوب ويجب ألا يتجاوز 512 حرفاً"}` | التأكد من تمرير توكن سليم من Firebase SDK. |
+| `400 Bad Request` | قيمة غير صالحة لمنصة الجهاز (مثل رقم أو اسم غير مدعوم) | `{"statusCode": 400, "message": "The JSON value could not be converted to Mizan.Core.Enums.DevicePlatform."}` | إرسال المنصة كنص صريح: `Android` أو `iOS` أو `Web`. |
+| `401 Unauthorized` | طلب التسجيل بدون إرسال Access Token | `{"statusCode": 401, "message": "Unauthorized"}` | تسجيل الدخول وتمرير التوكن في ترويسة الطلب. |
+
+---
+
+## ⚙️ إعدادات Firebase وتكامل الإشعارات الفورية (Firebase Setup)
+
+### 1. التطوير المحلي (Local Development):
+يتم تخزين مسارات الاعتماد بأمان تام عبر `dotnet user-secrets` خارج الـ Git repository:
+```bash
+dotnet user-secrets set "Firebase:Enabled" "true" --project src/Mizan.API
+dotnet user-secrets set "Firebase:ServiceAccountPath" "C:\secrets\mizan-firebase.json" --project src/Mizan.API
+```
+- عند بدء تشغيل الـ API، يتم تسجيل سطر آمن في الـ logs يؤكد تفعيل الـ Push:
+  `Push: FCM enabled (project: <project_id>)`
+- إذا كانت بيانات الاعتماد غير متوفرة أو معطلة، يتراجع الخادم بسلاسة إلى `NoOpPushNotificationService`:
+  `Push: NoOp (<reason>)`
+
+### 2. بيئة الإنتاج السحابية (Production on runasp.net):
+تُضبط القيم كمتغيرات بيئة بالترميز المزدوج (`__`):
+- `Firebase__Enabled`: `true`
+- `Firebase__ServiceAccountJson`: محتوى ملف JSON لحساب الخدمة (يدعم تلقائياً السطور المتعددة ورموز `\n` أو `\\n` في `private_key`).
+- `Firebase__AndroidChannelId`: `mizan_reminders`
+
+

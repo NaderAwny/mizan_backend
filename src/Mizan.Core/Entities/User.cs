@@ -18,6 +18,7 @@ public class User
     // Navigation properties
     public Shop? Shop { get; private set; }
     public ICollection<RefreshToken> RefreshTokens { get; private set; } = new List<RefreshToken>();
+    public ICollection<DeviceToken> DeviceTokens { get; private set; } = new List<DeviceToken>();
 
     private User() { } // Required for EF Core
 

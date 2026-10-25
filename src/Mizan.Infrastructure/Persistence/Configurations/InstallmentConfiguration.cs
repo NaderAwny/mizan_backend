@@ -28,8 +28,12 @@ public class InstallmentConfiguration : IEntityTypeConfiguration<Installment>
             .HasPrecision(18, 2)
             .IsRequired();
 
+        // Opt-out from the global UtcDateTimeConverter: due_date is a date-only business value
+        // (a calendar day, interpreted in Cairo by EgyptTime), not a UTC instant. Identity conversion
+        // preserves DateTime.Kind exactly as stored so it serializes without a trailing "Z".
         builder.Property(i => i.DueDate)
             .HasColumnName("due_date")
+            .HasConversion(v => v, v => v)
             .IsRequired();
 
         builder.Property(i => i.Status)

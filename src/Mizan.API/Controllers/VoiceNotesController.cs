@@ -33,6 +33,12 @@ public class VoiceNotesController : BaseController
     /// </summary>
     [HttpPost]
     [Consumes("multipart/form-data")]
+    [RequestSizeLimit(52_428_800)] // 50 MB
+    [RequestFormLimits(
+        MultipartBodyLengthLimit = 52_428_800,        // 50 MB — حجم جسم الملف
+        MultipartHeadersLengthLimit = int.MaxValue,   // يمنع reset إلى 16384 (سبب الخطأ)
+        ValueLengthLimit = int.MaxValue,              // قيم الحقول النصية
+        BufferBodyLengthLimit = 52_428_800)]          // buffer أثناء القراءة
     public async Task<IActionResult> Create(
         [FromForm] CreateVoiceNoteRequest request,
         IFormFile audioFile,

@@ -47,8 +47,11 @@ public class TransactionConfiguration : IEntityTypeConfiguration<Transaction>
             .HasPrecision(18, 2)
             .IsRequired();
 
+        // Opt-out from the global UtcDateTimeConverter: transaction_date is a user-chosen business
+        // date, not a UTC instant. Identity conversion preserves DateTime.Kind as stored (no "Z").
         builder.Property(t => t.TransactionDate)
             .HasColumnName("transaction_date")
+            .HasConversion(v => v, v => v)
             .IsRequired();
 
         builder.Property(t => t.IsInstallment)

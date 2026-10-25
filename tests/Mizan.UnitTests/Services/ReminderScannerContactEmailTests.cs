@@ -7,6 +7,7 @@ using Mizan.Application.Services;
 using Mizan.Core.Entities;
 using Mizan.Core.Enums;
 using Mizan.Infrastructure.Persistence;
+using Mizan.Infrastructure.Services.Push;
 using Xunit;
 
 namespace Mizan.UnitTests.Services;
@@ -93,7 +94,8 @@ public class ReminderScannerContactEmailTests
             Enabled = true,
             DaysBeforeDue = new List<int> { 0 }
         });
-        var scanner = new ReminderScanner(uow, emailService, options, NullLogger<ReminderScanner>.Instance);
+        var pushService = new NoOpPushNotificationService(NullLogger<NoOpPushNotificationService>.Instance);
+        var scanner = new ReminderScanner(uow, emailService, pushService, options, NullLogger<ReminderScanner>.Instance);
         return (scanner, db, emailService);
     }
 

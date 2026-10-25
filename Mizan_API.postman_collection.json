@@ -408,7 +408,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
+              "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\",\n  \"deviceToken\": \"fcm_device_token_optional\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/auth/logout",
@@ -421,7 +421,7 @@
                 "logout"
               ]
             },
-            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nتسجيل خروج المستخدم وإلغاء صلاحية الـ Refresh Token في قاعدة البيانات لمنع إعادة استخدامه."
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nتسجيل خروج المستخدم وإلغاء صلاحية الـ Refresh Token في قاعدة البيانات لمنع إعادة استخدامه، مع إمكانية تمرير deviceToken اختياري لإلغاء تسجيل توكن الإشعارات لهذا الجهاز فوراً."
           },
           "response": [
             {
@@ -1630,7 +1630,7 @@
     },
     {
       "name": "📅 5. الأقساط — استعراض وتسديد (Installments & Payments)",
-      "description": "تسجيل سداد الأقساط المستحقة وتحديث حالة القسط إلى مدفوع (Paid).",
+      "description": "استعراض لوحة متابعة الأقساط والديون الشاملة، والتايم لاين، وسداد الأقساط المستحقة وتحديث حالتها.",
       "item": [
         {
           "name": "5.1 — تسجيل سداد قسط (Mark Installment Paid)",
@@ -1684,6 +1684,184 @@
                 }
               ],
               "body": "{\n  \"success\": true,\n  \"message\": \"تم سداد القسط بنجاح\",\n  \"data\": {\n    \"id\": \"11111111-2222-3333-4444-555555555555\",\n    \"installmentNumber\": 1,\n    \"amount\": 1000,\n    \"dueDate\": \"2026-09-01T00:00:00Z\",\n    \"isPaid\": true,\n    \"paidAt\": \"2026-08-19T14:00:00Z\",\n    \"status\": \"Paid\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "5.2 — لوحة متابعة الأقساط والديون الشاملة (Installments & Debts Dashboard)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"الحالة 200 OK — استرجاع لوحة متابعة الأقساط بنجاح\", function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.true;",
+                  "    pm.expect(json.data).to.have.property(\"totalOverdueAmount\");",
+                  "    pm.expect(json.data).to.have.property(\"totalDueTodayAmount\");",
+                  "    pm.expect(json.data).to.have.property(\"totalUpcomingAmount\");",
+                  "    pm.expect(json.data).to.have.property(\"totalPaidAmount\");",
+                  "    pm.expect(json.data).to.have.property(\"totalDebtsCount\");",
+                  "    pm.expect(json.data).to.have.property(\"plans\");",
+                  "    pm.expect(Array.isArray(json.data.plans)).to.be.true;",
+                  "});",
+                  "",
+                  "pm.test(\"التحقق من صحة بنية الخطة (Plan Structure)\", function () {",
+                  "    var json = pm.response.json();",
+                  "    if (json.data.plans && json.data.plans.length > 0) {",
+                  "        var plan = json.data.plans[0];",
+                  "        pm.expect(plan).to.have.property(\"transactionId\");",
+                  "        pm.expect(plan).to.have.property(\"contactName\");",
+                  "        pm.expect(plan).to.have.property(\"totalAmount\");",
+                  "        pm.expect(plan).to.have.property(\"remainingAmount\");",
+                  "        pm.expect(plan).to.have.property(\"status\");",
+                  "        pm.expect(plan).to.have.property(\"installments\");",
+                  "        pm.expect(Array.isArray(plan.installments)).to.be.true;",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/installments/dashboard",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "installments",
+                "dashboard"
+              ]
+            },
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nخدمة لوحة متابعة الأقساط والديون الشاملة (Read-only)، تقوم بحساب حالة وإجماليات الأقساط لحظياً في الوقت الفعلي مقارنةً بتاريخ اليوم UTC دون الاعتماد على خلفية أو Cron Job.\n\n---\n### 📊 الإجماليات المالية المجمعة (Aggregates):\n1. `totalOverdueAmount`: إجمالي المبالغ المتأخرة غير المسددة التي تجاوز موعد استحقاقها اليوم.\n2. `totalDueTodayAmount`: إجمالي الأقساط غير المسددة المستحقة اليوم حصراً.\n3. `totalUpcomingAmount`: إجمالي الأقساط القادمة غير المسددة التي موعدها بعد اليوم.\n4. `totalPaidAmount`: إجمالي المبالغ المسددة فعلياً للأقساط.\n5. `totalDebtsCount`: عدد الخطط النشطة غير المكتملة.\n\n---\n### 🔄 ترتيب الخطط (Ordering):\nيتم ترتيب الخطط تصاعدياً حسب أسوأ حالة:\n1. خطط تحتوي أقساط متأخرة (`IsOverdue = true`) في المقدمة.\n2. تليها الخطط التي تستحق أقساطها اليوم (`IsDueToday = true`).\n3. تليها باقي الخطط مرتبة حسب تاريخ أقرب قسط قادم (`NextDueDate ASC`).\n\n---\n### 🎯 الاستجابة المتوقعة (200 OK):\n```json\n{\n  \"success\": true,\n  \"message\": \"تم استرجاع لوحة متابعة الأقساط بنجاح\",\n  \"data\": {\n    \"totalOverdueAmount\": 1500.00,\n    \"totalDueTodayAmount\": 500.00,\n    \"totalUpcomingAmount\": 4000.00,\n    \"totalPaidAmount\": 2000.00,\n    \"totalDebtsCount\": 3,\n    \"plans\": [\n      {\n        \"transactionId\": \"11111111-2222-3333-4444-555555555555\",\n        \"contactId\": \"22222222-3333-4444-5555-666666666666\",\n        \"contactName\": \"أحمد محمد\",\n        \"phoneNumber\": \"01012345678\",\n        \"totalAmount\": 3000.00,\n        \"remainingAmount\": 2000.00,\n        \"totalInstallmentsCount\": 3,\n        \"paidInstallmentsCount\": 1,\n        \"nextDueDate\": \"2026-09-01T00:00:00Z\",\n        \"status\": \"Overdue\",\n        \"isOverdue\": true,\n        \"isDueToday\": false,\n        \"daysOverdue\": 26,\n        \"installments\": [\n          {\n            \"installmentId\": \"33333333-4444-5555-6666-777777777777\",\n            \"amount\": 1000.00,\n            \"dueDate\": \"2026-08-01T00:00:00Z\",\n            \"isPaid\": true,\n            \"paidAt\": \"2026-08-01T14:30:00Z\",\n            \"status\": \"Paid\",\n            \"daysOverdue\": 0\n          }\n        ]\n      }\n    ]\n  }\n}\n```"
+          },
+          "response": [
+            {
+              "name": "200 OK — استرجاع اللوحة بنجاح",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"تم استرجاع لوحة متابعة الأقساط بنجاح\",\n  \"data\": {\n    \"totalOverdueAmount\": 1500.00,\n    \"totalDueTodayAmount\": 500.00,\n    \"totalUpcomingAmount\": 4000.00,\n    \"totalPaidAmount\": 2000.00,\n    \"totalDebtsCount\": 3,\n    \"plans\": [\n      {\n        \"transactionId\": \"11111111-2222-3333-4444-555555555555\",\n        \"contactId\": \"22222222-3333-4444-5555-666666666666\",\n        \"contactName\": \"أحمد محمد\",\n        \"phoneNumber\": \"01012345678\",\n        \"totalAmount\": 3000.00,\n        \"remainingAmount\": 2000.00,\n        \"totalInstallmentsCount\": 3,\n        \"paidInstallmentsCount\": 1,\n        \"nextDueDate\": \"2026-09-01T00:00:00Z\",\n        \"status\": \"Overdue\",\n        \"isOverdue\": true,\n        \"isDueToday\": false,\n        \"daysOverdue\": 26,\n        \"installments\": [\n          {\n            \"installmentId\": \"33333333-4444-5555-6666-777777777777\",\n            \"amount\": 1000.00,\n            \"dueDate\": \"2026-08-01T00:00:00Z\",\n            \"isPaid\": true,\n            \"paidAt\": \"2026-08-01T14:30:00Z\",\n            \"status\": \"Paid\",\n            \"daysOverdue\": 0\n          }\n        ]\n      }\n    ]\n  }\n}"
+            },
+            {
+              "name": "401 Unauthorized — التوكن مفقود أو منتهي",
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"statusCode\": 401,\n  \"message\": \"غير مصرح بالوصول. يرجى تسجيل الدخول أولاً.\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "5.3 — سجل التايم لاين والفلترة للأقساط (Installments History & Timeline)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"الحالة 200 OK — استرجاع سجل الأقساط بالصفحات\", function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.true;",
+                  "    pm.expect(json.data).to.have.property(\"items\");",
+                  "    pm.expect(json.data).to.have.property(\"page\");",
+                  "    pm.expect(json.data).to.have.property(\"pageSize\");",
+                  "    pm.expect(json.data).to.have.property(\"totalCount\");",
+                  "    pm.expect(json.data).to.have.property(\"totalPages\");",
+                  "    pm.expect(Array.isArray(json.data.items)).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/installments/history?status=all&page=1&pageSize=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "installments",
+                "history"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "all",
+                  "description": "فلترة الحالة: all (الكل) | overdue (المتأخرة) | duetoday (تستحق اليوم) | upcoming (القادمة) | paid (المدفوعة)"
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "رقم الصفحة المطلوبة (يبدأ من 1)"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20",
+                  "description": "عدد العناصر في الصفحة (الحد الأدنى 1 والحد الأقصى 50)"
+                }
+              ]
+            },
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nاستعراض التايم لاين لسجل الأقساط الفردية الخاص بالمحل بالصفحات (Pagination)، مع إمكانية التصفية بحالة القسط (الكل، المتأخرة، المستحقة اليوم، القادمة، المدفوعة).\n\n---\n### 🔍 معايير التصفية (Query Parameters):\n| المعامل | النوع | القيمة الافتراضية | القيم المتاحة |\n|---|---|---|---|\n| `status` | string | `all` | `all`, `overdue`, `duetoday`, `upcoming`, `paid` |\n| `page` | int | `1` | رقم صحيح >= 1 |\n| `pageSize` | int | `20` | رقم صحيح بين 1 و 50 |\n\n---\n### 🎯 الاستجابة المتوقعة (200 OK):\n```json\n{\n  \"success\": true,\n  \"message\": \"تم استرجاع سجل الأقساط بنجاح\",\n  \"data\": {\n    \"items\": [\n      {\n        \"installmentId\": \"33333333-4444-5555-6666-777777777777\",\n        \"transactionId\": \"11111111-2222-3333-4444-555555555555\",\n        \"contactId\": \"22222222-3333-4444-5555-666666666666\",\n        \"contactName\": \"أحمد محمد\",\n        \"phoneNumber\": \"01012345678\",\n        \"amount\": 1000.00,\n        \"dueDate\": \"2026-09-01T00:00:00Z\",\n        \"isPaid\": false,\n        \"paidAt\": null,\n        \"status\": \"Overdue\",\n        \"daysOverdue\": 26\n      }\n    ],\n    \"page\": 1,\n    \"pageSize\": 20,\n    \"totalCount\": 15,\n    \"totalPages\": 1,\n    \"hasPreviousPage\": false,\n    \"hasNextPage\": false\n  }\n}\n```"
+          },
+          "response": [
+            {
+              "name": "200 OK — استرجاع سجل الأقساط بنجاح",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"تم استرجاع سجل الأقساط بنجاح\",\n  \"data\": {\n    \"items\": [\n      {\n        \"installmentId\": \"33333333-4444-5555-6666-777777777777\",\n        \"transactionId\": \"11111111-2222-3333-4444-555555555555\",\n        \"contactId\": \"22222222-3333-4444-5555-666666666666\",\n        \"contactName\": \"أحمد محمد\",\n        \"phoneNumber\": \"01012345678\",\n        \"amount\": 1000.00,\n        \"dueDate\": \"2026-09-01T00:00:00Z\",\n        \"isPaid\": false,\n        \"paidAt\": null,\n        \"status\": \"Overdue\",\n        \"daysOverdue\": 26\n      }\n    ],\n    \"page\": 1,\n    \"pageSize\": 20,\n    \"totalCount\": 15,\n    \"totalPages\": 1,\n    \"hasPreviousPage\": false,\n    \"hasNextPage\": false\n  }\n}"
+            },
+            {
+              "name": "400 Bad Request — قيمة pageSize غير مقبولة",
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"statusCode\": 400,\n  \"message\": \"حجم الصفحة يجب أن يكون بين 1 و 50\"\n}"
             }
           ]
         }
@@ -2085,7 +2263,7 @@
                 "run-reminders-scan"
               ]
             },
-            "description": "### 📌 ما وظيفة هذه الـ Endpoint (Feature 3)؟\nتشغيل فوري يدوي لماسح التذكيرات الثنائية (Reminder Scanner):\n1. يفحص الأقساط المستحقة قبل موعدها بـ 3 أيام، بيوم، وفي نفس اليوم.\n2. ينشئ إشعاراً في التطبيق لصاحب المتجر.\n3. يرسل إيميل تذكير مباشر للعميل إذا كان مسجلاً لديه `contactEmail`."
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint (Feature 3)؟\nتشغيل فوري يدوي لماسح التذكيرات الثنائية خاص بحساب المستخدم الحالي فقط (Owner-scoped):\n1. يفحص أقساط المستخدم الحالي المستحقة قبل موعدها بـ 3 أيام، بيوم، وفي نفس اليوم وكذلك الأقساط المتأخرة ضمن نافذة الاسترجاع.\n2. ينشئ إشعاراً فورياً في التطبيق ويرسل Push Notification لصاحب المتجر.\n3. يرسل إيميل تذكير لصاحب المتجر وللعميل إذا كان مسجلاً لديه contactEmail."
           },
           "response": [
             {
@@ -2100,6 +2278,169 @@
                 }
               ],
               "body": "{\n  \"success\": true,\n  \"message\": \"تم تشغيل فحص تذكيرات الأقساط وإرسال الإشعارات وإيميلات التذكير بنجاح\",\n  \"data\": {\n    \"remindersProcessed\": 3,\n    \"timestamp\": \"2026-08-19T10:00:00Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "7.5 — تشغيل فحص التذكيرات العالمي بالجدولة الخارجية (Run Global Reminders Scan - Cron)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('تم تشغيل الفحص العالمي بنجاح', function() {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.data.remindersProcessed).to.be.a('number');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Cron-Key",
+                "value": "{{cron_key}}",
+                "description": "مفتاح الجدولة السرّي — يجب أن يطابق قيمة CronApiKey في إعدادات/متغيرات البيئة على السيرفر. عيّن قيمة المتغير cron_key في بيئة Postman ولا تكتب المفتاح الحقيقي داخل المجموعة."
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/notifications/run-reminders-scan-cron",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "notifications",
+                "run-reminders-scan-cron"
+              ]
+            },
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nتشغيل فحص تذكيرات الأقساط **العالمي** (لكل المستخدمين) مخصصاً لخدمة الجدولة الخارجية (Cron Scheduler):\n1. يفحص أقساط جميع المستخدمين المستحقة قبل موعدها بـ 3 أيام، بيوم، وفي نفس اليوم، إضافةً إلى الأقساط المتأخرة ضمن نافذة الاسترجاع.\n2. ينشئ إشعاراً فورياً في التطبيق ويرسل Push Notification لصاحب المتجر.\n3. يرسل إيميل تذكير لصاحب المتجر وللعميل إذا كان مسجلاً لديه contactEmail.\n\n---\n### 🔑 المصادقة (بدون JWT):\nهذا الطلب مخصّص للجدولة الخارجية ولا يستخدم توكن الوصول (JWT)، بل يُتحقق من ترويسة `X-Cron-Key` ومقارنتها بقيمة `CronApiKey` في إعدادات/متغيرات البيئة على السيرفر عبر مقارنة ثابتة الزمن (Fixed-Time Comparison). تُضبط قيمة المتغير `cron_key` في بيئة Postman ولا تُكتب أبداً داخل المجموعة.\n\n---\n### ⚠️ تنبيهات وأخطاء شائعة (Common Errors):\n- ❌ `401 Unauthorized`: غياب ترويسة `X-Cron-Key`، أو عدم تطابق قيمتها مع `CronApiKey`، أو عدم تكوين مفتاح الجدولة في الإعدادات أصلاً.\n\n---\n### 🎯 الاستجابة المتوقعة (200 OK):\n```json\n{\n  \"success\": true,\n  \"message\": \"تم تشغيل فحص تذكيرات الأقساط وإرسال الإشعارات وإيميلات التذكير بنجاح\",\n  \"data\": {\n    \"remindersProcessed\": 12,\n    \"timestamp\": \"2026-08-19T10:00:00Z\"\n  }\n}\n```"
+          },
+          "response": [
+            {
+              "name": "200 OK — تم تشغيل الفحص العالمي",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"تم تشغيل فحص تذكيرات الأقساط وإرسال الإشعارات وإيميلات التذكير بنجاح\",\n  \"data\": {\n    \"remindersProcessed\": 12,\n    \"timestamp\": \"2026-08-19T10:00:00Z\"\n  }\n}"
+            },
+            {
+              "name": "401 Unauthorized — مفتاح الجدولة مفقود أو غير صحيح",
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"غير مصرح\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "7.6 — اختبار Push Notification (Debug Push Variants)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('تم إرسال رسائل الفحص التجريبية بنجاح', function() {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.true;",
+                  "    pm.expect(json.data.results).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Cron-Key",
+                "value": "{{cron_key}}",
+                "description": "مفتاح الجدولة السرّي — يجب أن يطابق قيمة CronApiKey في متغيرات البيئة على السيرفر."
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{user_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/notifications/debug-push-variants",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "notifications",
+                "debug-push-variants"
+              ]
+            },
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nإرسال 7 رسائل Push Notification تجريبية (A..G) بفاصل ثانية لمستخدم محدد بالـ userId، لاختبار ظهور الإشعارات على الجهاز.\n\n---\n### 🔑 المتغيرات المطلوبة في Postman Environment:\n- `base_url` → `https://mizanv2.runasp.net`\n- `cron_key` → المفتاح السري من إعدادات السيرفر\n- `debug_user_id` → الـ GUID الخاص بالمستخدم المستهدف\n\n---\n### ⚠️ تنبيهات:\n- ❌ `401 Unauthorized`: مفتاح X-Cron-Key غير صحيح أو مفقود.\n- ❌ `400 Bad Request`: الـ userId فارغ أو غير صالح.\n\n---\n### 🎯 الاستجابة المتوقعة (200 OK):\n```json\n{\n  \"success\": true,\n  \"message\": \"تم إرسال رسائل الفحص التجريبية بنجاح\",\n  \"data\": {\n    \"userId\": \"...\",\n    \"results\": [...],\n    \"timestamp\": \"2026-10-25T...\"\n  }\n}\n```"
+          },
+          "response": [
+            {
+              "name": "200 OK — تم إرسال رسائل الفحص التجريبية",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"تم إرسال رسائل الفحص التجريبية بنجاح\",\n  \"data\": {\n    \"userId\": \"00000000-0000-0000-0000-000000000000\",\n    \"results\": [\"A: sent\", \"B: sent\", \"C: sent\", \"D: sent\", \"E: sent\", \"F: sent\", \"G: sent\"],\n    \"timestamp\": \"2026-10-25T18:00:00Z\"\n  }\n}"
+            },
+            {
+              "name": "401 Unauthorized — مفتاح الجدولة مفقود أو غير صحيح",
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"غير مصرح\"\n}"
+            },
+            {
+              "name": "400 Bad Request — userId مفقود أو غير صالح",
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"message\": \"معرّف المستخدم (userId) مطلوب\"\n}"
             }
           ]
         }
@@ -2975,6 +3316,136 @@
                 }
               ],
               "body": "{\n  \"statusCode\": 404,\n  \"message\": \"لا يوجد حساب مسجل بهذا البريد الإلكتروني. يرجى إنشاء حساب جديد أولًا.\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "📱 10. إدارة الأجهزة وتوكنات الإشعارات (Devices & Push Tokens)",
+      "description": "تسجيل وإلغاء تسجيل توكنات الأجهزة (FCM Device Tokens) لتلقي الإشعارات الفورية (Push Notifications).",
+      "item": [
+        {
+          "name": "10.1 — تسجيل جهاز جديد أو تحديثه (Register Device Token)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('تم تسجيل الجهاز بنجاح', function() {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"fcm_device_token_sample_abc123\",\n  \"platform\": \"Android\",\n  \"deviceId\": \"samsung-galaxy-s24\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/devices/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "devices",
+                "register"
+              ]
+            },
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nتسجيل توكن الجهاز (FCM Token) للمستخدم الحالي لإرسال إشعارات الأقساط والتنبيهات الفورية (Push Notifications). تدعم الإضافة وإعادة التعيين والتحديث الدوري (Touch) مع حد أقصى 10 أجهزة لكل مستخدم."
+          },
+          "response": [
+            {
+              "name": "200 OK — تم تسجيل الجهاز بنجاح",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"تم تسجيل الجهاز بنجاح\",\n  \"data\": null\n}"
+            }
+          ]
+        },
+        {
+          "name": "10.2 — إلغاء تسجيل جهاز (Unregister Device Token)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('تم إلغاء تسجيل الجهاز بنجاح', function() {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.success).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"fcm_device_token_sample_abc123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/devices/unregister",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "devices",
+                "unregister"
+              ]
+            },
+            "description": "### 📌 ما وظيفة هذه الـ Endpoint؟\nإلغاء تسجيل توكن جهاز للمستخدم الحالي (مثلاً عند تسجيل الخروج أو إيقاف الإشعارات)."
+          },
+          "response": [
+            {
+              "name": "200 OK — تم إلغاء تسجيل الجهاز",
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"تم إلغاء تسجيل الجهاز بنجاح\",\n  \"data\": null\n}"
             }
           ]
         }

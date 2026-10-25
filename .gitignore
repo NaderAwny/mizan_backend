@@ -3,6 +3,9 @@
 [Oo]bj/
 [Ll]og/
 [Ll]ogs/
+[Pp]ublish/
+publish/
+*.zip
 
 ## Visual Studio / Rider / VS Code
 .vs/
@@ -34,9 +37,18 @@ packages/
 
 ## Environment & Secrets
 appsettings.Development.json
+appsettings.Production.json
+appsettings.*.json
 *.secrets.json
 .env
 .env.*
+firebase-service-account*.json
+mizan-firebase*.json
+mizanapp-*.json
+mizanapp-37e1c-5db42d0af4cb.json
+*firebase*.json
+*.credential.json
+*.credentials.json
 
 ## User Uploads & Temporary Storage
 App_Data/

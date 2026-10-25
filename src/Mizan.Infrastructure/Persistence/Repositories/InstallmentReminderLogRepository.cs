@@ -35,6 +35,21 @@ public class InstallmentReminderLogRepository : IInstallmentReminderLogRepositor
         return logged.ToHashSet();
     }
 
+    public async Task<Dictionary<Guid, InstallmentReminderLog>> GetByInstallmentIdsAsync(
+        IReadOnlyList<Guid> ids,
+        int daysBeforeDue,
+        CancellationToken cancellationToken = default)
+    {
+        if (ids.Count == 0)
+            return new Dictionary<Guid, InstallmentReminderLog>();
+
+        var logs = await _dbSet
+            .Where(l => ids.Contains(l.InstallmentId) && l.DaysBeforeDue == daysBeforeDue)
+            .ToListAsync(cancellationToken);
+
+        return logs.ToDictionary(l => l.InstallmentId);
+    }
+
     public async Task AddAsync(InstallmentReminderLog log, CancellationToken cancellationToken = default)
     {
         await _dbSet.AddAsync(log, cancellationToken);

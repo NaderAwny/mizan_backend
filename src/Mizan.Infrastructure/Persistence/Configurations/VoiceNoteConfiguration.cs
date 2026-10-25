@@ -41,8 +41,11 @@ public class VoiceNoteConfiguration : IEntityTypeConfiguration<VoiceNote>
             .HasColumnType("decimal(18,2)")
             .IsRequired();
 
+        // Opt-out from the global UtcDateTimeConverter: operation_date is a user-chosen business
+        // date, not a UTC instant. Identity conversion preserves DateTime.Kind as stored (no "Z").
         builder.Property(v => v.OperationDate)
             .HasColumnName("operation_date")
+            .HasConversion(d => d, d => d)
             .IsRequired();
 
         builder.Property(v => v.AudioPath)

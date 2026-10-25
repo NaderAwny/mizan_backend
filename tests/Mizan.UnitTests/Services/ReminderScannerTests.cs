@@ -7,6 +7,7 @@ using Mizan.Application.Services;
 using Mizan.Core.Entities;
 using Mizan.Core.Enums;
 using Mizan.Infrastructure.Persistence;
+using Mizan.Infrastructure.Services.Push;
 using Xunit;
 
 namespace Mizan.UnitTests.Services;
@@ -89,9 +90,12 @@ public class ReminderScannerTests
             CheckIntervalMinutes = 60
         });
 
+        var pushService = new NoOpPushNotificationService(NullLogger<NoOpPushNotificationService>.Instance);
+
         var scanner = new ReminderScanner(
             uow,
             emailService,
+            pushService,
             remOptions,
             NullLogger<ReminderScanner>.Instance);
 
@@ -234,8 +238,8 @@ public class ReminderScannerTests
         db.Set<Installment>().Add(installment);
         await db.SaveChangesAsync();
 
-        // Add pre-existing log for this installment at stage 3
-        var existingLog = InstallmentReminderLog.Create(installment.Id, 3);
+        // Add pre-existing completed log for this installment at stage 3
+        var existingLog = InstallmentReminderLog.Create(installment.Id, 3, contactEmailSent: true, ownerEmailSent: true, pushSent: true);
         db.Set<InstallmentReminderLog>().Add(existingLog);
         await db.SaveChangesAsync();
 
@@ -269,12 +273,12 @@ public class ReminderScannerTests
     }
 
     [Fact]
-    public async Task ScanAndProcessRemindersAsync_WhenEmailFails_LogIsNotSavedSoItRetriesLater()
+    public async Task ScanAndProcessRemindersAsync_WhenOwnerEmailFails_NotificationAndLogAreStillCreated_AndEmailIsRetried()
     {
         var (scanner, db, emailService) = CreateScanner();
         var (user, contact, tx) = await SeedBaseDataAsync(db);
 
-        // Make email fail
+        // Make email fail on first scan
         emailService.ShouldSucceed = false;
 
         var today = new DateTime(2026, 8, 16, 0, 0, 0, DateTimeKind.Utc);
@@ -284,14 +288,30 @@ public class ReminderScannerTests
 
         int processed = await scanner.ScanAndProcessRemindersAsync(today);
 
-        Assert.Equal(0, processed);
+        // In new architecture, notification and log are created in Phase 1
+        Assert.Equal(1, processed);
 
-        // No reminder log should be saved
-        bool logExists = await db.Set<InstallmentReminderLog>().AnyAsync(l => l.InstallmentId == installment.Id);
-        Assert.False(logExists);
+        var log = await db.Set<InstallmentReminderLog>().FirstOrDefaultAsync(l => l.InstallmentId == installment.Id);
+        Assert.NotNull(log);
+        Assert.False(log.OwnerEmailSent);
+        Assert.Equal(1, log.Attempts);
 
-        // No notification should be saved
-        bool notificationExists = await db.Set<Notification>().AnyAsync(n => n.InstallmentId == installment.Id);
-        Assert.False(notificationExists);
+        var notification = await db.Set<Notification>().FirstOrDefaultAsync(n => n.InstallmentId == installment.Id);
+        Assert.NotNull(notification);
+        Assert.Equal(user.Id, notification.OwnerUserId);
+
+        // Now fix email service and advance time past retry backoff (e.g. +10 minutes)
+        emailService.ShouldSucceed = true;
+        // Set LastAttemptAt to 10 minutes ago
+        log.RecordAttempt(DateTime.UtcNow.AddMinutes(-10));
+        await db.SaveChangesAsync();
+
+        int retryProcessed = await scanner.ScanAndProcessRemindersAsync(today);
+        // Returns 0 new reminders, but email is retried
+        Assert.Equal(0, retryProcessed);
+
+        await db.Entry(log).ReloadAsync();
+        Assert.True(log.OwnerEmailSent);
+        Assert.Equal(3, log.Attempts); // 1 from first scan + 1 from manual set + 1 from second scan = 3
     }
 }

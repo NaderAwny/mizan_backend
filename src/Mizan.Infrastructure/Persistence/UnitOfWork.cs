@@ -20,6 +20,7 @@ public class UnitOfWork : IUnitOfWork
     private IInstallmentReminderLogRepository? _installmentReminderLogs;
     private IPeriodicReportRepository? _periodicReports;
     private IVoiceNoteRepository? _voiceNotes;
+    private IDeviceTokenRepository? _deviceTokens;
 
     public UnitOfWork(MizanDbContext context)
     {
@@ -37,6 +38,7 @@ public class UnitOfWork : IUnitOfWork
     public IInstallmentReminderLogRepository InstallmentReminderLogs => _installmentReminderLogs ??= new InstallmentReminderLogRepository(_context);
     public IPeriodicReportRepository PeriodicReports => _periodicReports ??= new PeriodicReportRepository(_context);
     public IVoiceNoteRepository VoiceNotes => _voiceNotes ??= new VoiceNoteRepository(_context);
+    public IDeviceTokenRepository DeviceTokens => _deviceTokens ??= new DeviceTokenRepository(_context);
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {

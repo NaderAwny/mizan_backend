@@ -95,12 +95,14 @@ public class PeriodicReportEmailRetryServiceTests
                 optionsMonitor,
                 NullLogger<PeriodicReportEmailRetryService>.Instance);
 
-            using var cts = new CancellationTokenSource();
-            cts.CancelAfter(400);
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
 
             // Act
             await service.StartAsync(cts.Token);
-            await Task.Delay(100);
+            for (int i = 0; i < 30 && emailService.SendCount == 0; i++)
+            {
+                await Task.Delay(50);
+            }
             await service.StopAsync(CancellationToken.None);
 
             // Assert

@@ -62,6 +62,9 @@ public class TransactionsController : BaseController
 
     /// <summary>POST /api/transactions/{id}/voice-note — إرفاق ملاحظة صوتية</summary>
     [HttpPost("{id:guid}/voice-note")]
+    [Consumes("multipart/form-data")]
+    [RequestSizeLimit(52_428_800)] // 50 MB
+    [RequestFormLimits(MultipartBodyLengthLimit = 52_428_800)]
     public async Task<IActionResult> AttachVoiceNote(Guid id, IFormFile file, CancellationToken cancellationToken)
     {
         if (file == null || file.Length == 0)

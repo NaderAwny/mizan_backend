@@ -158,8 +158,8 @@ public class ContactService : IContactService
         IsVip = contact.IsVip,
         ContactEmail = contact.ContactEmail,
         IsActive = contact.IsActive,
-        CreatedAt = contact.CreatedAt,
-        UpdatedAt = contact.UpdatedAt
+        CreatedAt = DateTime.SpecifyKind(contact.CreatedAt, DateTimeKind.Utc),
+        UpdatedAt = DateTime.SpecifyKind(contact.UpdatedAt, DateTimeKind.Utc)
     };
 
     private static TransactionResponse MapTransactionToResponse(Transaction t)
@@ -174,7 +174,7 @@ public class ContactService : IContactService
             Amount = i.Amount,
             DueDate = i.DueDate,
             Status = i.Status,
-            PaidAt = i.PaidAt
+            PaidAt = i.PaidAt.HasValue ? DateTime.SpecifyKind(i.PaidAt.Value, DateTimeKind.Utc) : null
         }).ToList();
 
         if (t.IsInstallment)
@@ -213,8 +213,8 @@ public class ContactService : IContactService
             TotalPaid = totalPaid,
             TotalRemaining = totalRemaining,
             IsActive = t.IsActive,
-            CreatedAt = t.CreatedAt,
-            UpdatedAt = t.UpdatedAt
+            CreatedAt = DateTime.SpecifyKind(t.CreatedAt, DateTimeKind.Utc),
+            UpdatedAt = DateTime.SpecifyKind(t.UpdatedAt, DateTimeKind.Utc)
         };
     }
 }

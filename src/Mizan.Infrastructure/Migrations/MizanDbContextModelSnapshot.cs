@@ -17,7 +17,7 @@ namespace Mizan.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.2")
+                .HasAnnotation("ProductVersion", "9.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -81,6 +81,53 @@ namespace Mizan.Infrastructure.Migrations
                     b.ToTable("contacts", (string)null);
                 });
 
+            modelBuilder.Entity("Mizan.Core.Entities.DeviceToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("DeviceId")
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)")
+                        .HasColumnName("device_id");
+
+                    b.Property<DateTime>("LastSeenAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("last_seen_at");
+
+                    b.Property<int>("Platform")
+                        .HasColumnType("int")
+                        .HasColumnName("platform");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)")
+                        .HasColumnName("token");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Token")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("device_tokens", (string)null);
+                });
+
             modelBuilder.Entity("Mizan.Core.Entities.Installment", b =>
                 {
                     b.Property<Guid>("Id")
@@ -136,6 +183,12 @@ namespace Mizan.Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("id");
 
+                    b.Property<int>("Attempts")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0)
+                        .HasColumnName("attempts");
+
                     b.Property<bool>("ContactEmailSent")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
@@ -149,6 +202,22 @@ namespace Mizan.Infrastructure.Migrations
                     b.Property<Guid>("InstallmentId")
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("installment_id");
+
+                    b.Property<DateTime?>("LastAttemptAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("last_attempt_at");
+
+                    b.Property<bool>("OwnerEmailSent")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false)
+                        .HasColumnName("owner_email_sent");
+
+                    b.Property<bool>("PushSent")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false)
+                        .HasColumnName("push_sent");
 
                     b.Property<DateTime>("SentAt")
                         .HasColumnType("datetime2")
@@ -637,6 +706,17 @@ namespace Mizan.Infrastructure.Migrations
                     b.Navigation("Owner");
                 });
 
+            modelBuilder.Entity("Mizan.Core.Entities.DeviceToken", b =>
+                {
+                    b.HasOne("Mizan.Core.Entities.User", "User")
+                        .WithMany("DeviceTokens")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Mizan.Core.Entities.Installment", b =>
                 {
                     b.HasOne("Mizan.Core.Entities.Transaction", "Transaction")
@@ -793,6 +873,8 @@ namespace Mizan.Infrastructure.Migrations
 
             modelBuilder.Entity("Mizan.Core.Entities.User", b =>
                 {
+                    b.Navigation("DeviceTokens");
+
                     b.Navigation("RefreshTokens");
 
                     b.Navigation("Shop");

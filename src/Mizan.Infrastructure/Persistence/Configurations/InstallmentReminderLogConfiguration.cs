@@ -28,6 +28,25 @@ public class InstallmentReminderLogConfiguration : IEntityTypeConfiguration<Inst
             .HasDefaultValue(false)
             .IsRequired();
 
+        builder.Property(l => l.OwnerEmailSent)
+            .HasColumnName("owner_email_sent")
+            .HasDefaultValue(false)
+            .IsRequired();
+
+        builder.Property(l => l.PushSent)
+            .HasColumnName("push_sent")
+            .HasDefaultValue(false)
+            .IsRequired();
+
+        builder.Property(l => l.Attempts)
+            .HasColumnName("attempts")
+            .HasDefaultValue(0)
+            .IsRequired();
+
+        builder.Property(l => l.LastAttemptAt)
+            .HasColumnName("last_attempt_at")
+            .IsRequired(false);
+
         builder.Property(l => l.SentAt)
             .HasColumnName("sent_at")
             .IsRequired();

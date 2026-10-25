@@ -11,10 +11,12 @@ namespace Mizan.API.Controllers;
 public class AuthController : BaseController
 {
     private readonly IAuthService _authService;
+    private readonly IDeviceTokenService _deviceTokenService;
 
-    public AuthController(IAuthService authService)
+    public AuthController(IAuthService authService, IDeviceTokenService deviceTokenService)
     {
         _authService = authService;
+        _deviceTokenService = deviceTokenService;
     }
 
     [EnableRateLimiting("AuthPolicy")]
@@ -64,6 +66,10 @@ public class AuthController : BaseController
     public async Task<IActionResult> Logout([FromBody] LogoutRequest request, CancellationToken cancellationToken)
     {
         await _authService.RevokeTokenAsync(request.RefreshToken, cancellationToken);
+        if (!string.IsNullOrWhiteSpace(request.DeviceToken))
+        {
+            await _deviceTokenService.UnregisterAsync(CurrentUserId, request.DeviceToken, cancellationToken);
+        }
         return Success(null, "تم تسجيل الخروج بنجاح");
     }
 }

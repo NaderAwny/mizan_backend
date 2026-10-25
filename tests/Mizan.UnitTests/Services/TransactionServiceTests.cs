@@ -39,11 +39,13 @@ public class TransactionServiceTests
         var db = CreateDb();
         var uow = new UnitOfWork(db);
         var options = Microsoft.Extensions.Options.Options.Create(new Mizan.Application.DTOs.Reports.PeriodicReportsOptions());
+        var remOptions = Microsoft.Extensions.Options.Options.Create(new Mizan.Application.DTOs.Notifications.RemindersOptions());
         var pdfGen = new FakeReportPdfGenerator();
         var emailChannel = new Mizan.Infrastructure.Channels.PeriodicReportEmailChannel();
+        var remChannel = new Mizan.Infrastructure.Channels.ReminderTriggerChannel();
         var env = new FakeHostEnvironment();
         var logger = Microsoft.Extensions.Logging.Abstractions.NullLogger<TransactionService>.Instance;
-        var service = new TransactionService(uow, options, pdfGen, emailChannel, env, logger);
+        var service = new TransactionService(uow, options, remOptions, pdfGen, emailChannel, remChannel, env, logger);
         return (service, db);
     }
 

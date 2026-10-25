@@ -339,7 +339,7 @@ public class AuthIntegrationTests : IClassFixture<CustomWebApplicationFactory>
     }
 
     [Fact]
-    public async Task Register_ResendOtp_ShouldSucceedWithoutUpdatingProfile()
+    public async Task Register_ExistingActiveUser_ShouldReturnBadRequest400()
     {
         var email = "resend.test@mizan.app";
 
@@ -360,32 +360,14 @@ public class AuthIntegrationTests : IClassFixture<CustomWebApplicationFactory>
         });
         Assert.Equal(HttpStatusCode.OK, initVerify.StatusCode);
 
-        // 2. Call register again with different names (resend OTP scenario on active account)
+        // 2. Call register again with different names (scenario on active account) -> BadRequest
         var reg2 = await _client.PostAsJsonAsync("/api/auth/register", new RegisterRequest
         {
             FirstName = "اسم مختلف",
             LastName = "لقب مختلف",
             Email = email
         });
-        Assert.Equal(HttpStatusCode.OK, reg2.StatusCode);
-
-        // Verify OTP to inspect returned user profile
-        var otp = _factory.EmailService.LastCapturedOtp;
-        Assert.NotNull(otp);
-
-        var verifyResponse = await _client.PostAsJsonAsync("/api/auth/verify-otp", new VerifyOtpRequest
-        {
-            Email = email,
-            Code = otp
-        });
-        Assert.Equal(HttpStatusCode.OK, verifyResponse.StatusCode);
-
-        var verifyContent = await verifyResponse.Content.ReadFromJsonAsync<JsonElement>(_jsonOptions);
-        var data = verifyContent.GetProperty("data");
-
-        // Profile must retain the original names
-        Assert.Equal("الاسم الأصلي", data.GetProperty("firstName").GetString());
-        Assert.Equal("اللقب الأصلي", data.GetProperty("lastName").GetString());
+        Assert.Equal(HttpStatusCode.BadRequest, reg2.StatusCode);
     }
 
     [Fact]

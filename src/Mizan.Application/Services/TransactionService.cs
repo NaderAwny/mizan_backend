@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Mizan.Application.DTOs.Notifications;
 using Mizan.Application.DTOs.Reports;
 using Mizan.Application.DTOs.Transactions;
 using Mizan.Application.Interfaces;
@@ -7,6 +8,7 @@ using Mizan.Core.Entities;
 using Mizan.Core.Enums;
 using Mizan.Core.Exceptions;
 using Mizan.Core.Interfaces;
+using Mizan.Core.Time;
 
 namespace Mizan.Application.Services;
 
@@ -17,23 +19,29 @@ public class TransactionService : ITransactionService
 
     private readonly IUnitOfWork _unitOfWork;
     private readonly PeriodicReportsOptions _periodicReportsOptions;
+    private readonly RemindersOptions _remindersOptions;
     private readonly IReportPdfGenerator _reportPdfGenerator;
     private readonly IPeriodicReportEmailChannel _emailChannel;
+    private readonly IReminderTriggerChannel _reminderTrigger;
     private readonly Microsoft.Extensions.Hosting.IHostEnvironment _environment;
     private readonly ILogger<TransactionService> _logger;
 
     public TransactionService(
         IUnitOfWork unitOfWork,
         IOptions<PeriodicReportsOptions> periodicReportsOptions,
+        IOptions<RemindersOptions> remindersOptions,
         IReportPdfGenerator reportPdfGenerator,
         IPeriodicReportEmailChannel emailChannel,
+        IReminderTriggerChannel reminderTrigger,
         Microsoft.Extensions.Hosting.IHostEnvironment environment,
         ILogger<TransactionService> logger)
     {
         _unitOfWork = unitOfWork;
         _periodicReportsOptions = periodicReportsOptions.Value;
+        _remindersOptions = remindersOptions.Value;
         _reportPdfGenerator = reportPdfGenerator;
         _emailChannel = emailChannel;
+        _reminderTrigger = reminderTrigger;
         _environment = environment;
         _logger = logger;
     }
@@ -178,7 +186,7 @@ public class TransactionService : ITransactionService
             Amount = t.Amount,
             PaymentMethod = t.PaymentMethod,
             OperationDate = t.TransactionDate,
-            CreatedAt = t.CreatedAt
+            CreatedAt = DateTime.SpecifyKind(t.CreatedAt, DateTimeKind.Utc)
         };
     }
 
@@ -337,6 +345,34 @@ public class TransactionService : ITransactionService
                 "[CreateAsync] TryGeneratePeriodicReportAsync failed for OwnerUserId={OwnerUserId} after saving TransactionId={TransactionId}. The transaction was saved successfully — this is a non-critical background failure.",
                 ownerUserId, transaction.Id);
             // Do NOT re-throw: the transaction itself succeeded.
+        }
+
+        // Trigger reminder scan if any installment is due within the reminder window
+        try
+        {
+            if (installments.Count > 0)
+            {
+                var maxStage = (_remindersOptions.DaysBeforeDue ?? new List<int>())
+                    .Concat(new[] { 0 })
+                    .DefaultIfEmpty(0)
+                    .Max();
+
+                var minDueDateLocal = installments
+                    .Select(i => EgyptTime.ToLocalDate(i.DueDate))
+                    .Min();
+
+                if (minDueDateLocal <= EgyptTime.TodayLocal().AddDays(maxStage))
+                {
+                    _reminderTrigger.TryQueue(ownerUserId);
+                    _logger.LogInformation("[CreateAsync] Queued owner {OwnerUserId} for reminder scan.", ownerUserId);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "[CreateAsync] Failed to enqueue reminder trigger for OwnerUserId={OwnerUserId}. Non-critical background failure.",
+                ownerUserId);
         }
 
         return result;
@@ -541,10 +577,10 @@ public class TransactionService : ITransactionService
                 InstallmentNumber = i.InstallmentNumber,
                 Amount = i.Amount,
                 DueDate = i.DueDate,
-                Status = (i.Status == InstallmentStatus.Pending && i.DueDate.Date < DateTime.UtcNow.Date)
+                Status = (i.Status == InstallmentStatus.Pending && EgyptTime.ToLocalDate(i.DueDate) < EgyptTime.TodayLocal())
                     ? InstallmentStatus.Overdue
                     : i.Status,
-                PaidAt = i.PaidAt
+                PaidAt = i.PaidAt.HasValue ? DateTime.SpecifyKind(i.PaidAt.Value, DateTimeKind.Utc) : null
             })
             .ToList();
 
@@ -587,8 +623,8 @@ public class TransactionService : ITransactionService
             TotalPaid = totalPaid,
             TotalRemaining = totalRemaining,
             IsActive = transaction.IsActive,
-            CreatedAt = transaction.CreatedAt,
-            UpdatedAt = transaction.UpdatedAt
+            CreatedAt = DateTime.SpecifyKind(transaction.CreatedAt, DateTimeKind.Utc),
+            UpdatedAt = DateTime.SpecifyKind(transaction.UpdatedAt, DateTimeKind.Utc)
         };
     }
 

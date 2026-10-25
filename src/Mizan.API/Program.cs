@@ -1,6 +1,7 @@
 using System.Text;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -15,6 +16,7 @@ using Mizan.Infrastructure.Persistence;
 using Mizan.Infrastructure.Persistence.Repositories;
 using Mizan.Infrastructure.Services.Auth;
 using Mizan.Infrastructure.Services.Email;
+using Mizan.Infrastructure.Services.Push;
 
 using Asp.Versioning;
 using Serilog;
@@ -27,6 +29,20 @@ builder.Host.UseSerilog((context, services, configuration) => configuration
     .ReadFrom.Services(services)
     .Enrich.FromLogContext()
     .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] [{CorrelationId}] {Message:lj}{NewLine}{Exception}"));
+
+// Configure Form options & request limits for multipart file uploads (voice notes, attachments)
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.ValueLengthLimit = int.MaxValue;
+    options.MultipartBodyLengthLimit = 52_428_800; // 50 MB
+    options.MultipartHeadersLengthLimit = int.MaxValue;
+    options.BufferBodyLengthLimit = 52_428_800; // 50 MB
+});
+
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = 52_428_800; // 50 MB
+});
 
 // 1. Controller & Validation Response Configuration
 builder.Services.AddControllers()
@@ -94,6 +110,7 @@ builder.Services.AddScoped<IInstallmentRepository, InstallmentRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<IInstallmentReminderLogRepository, InstallmentReminderLogRepository>();
 builder.Services.AddScoped<IPeriodicReportRepository, PeriodicReportRepository>();
+builder.Services.AddScoped<IDeviceTokenRepository, DeviceTokenRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 // 5. Dependency Injection - Application Services & Email Configuration
@@ -102,8 +119,10 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IContactService, ContactService>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IDeviceTokenService, DeviceTokenService>();
 builder.Services.AddScoped<IPeriodicReportService, PeriodicReportService>();
 builder.Services.AddScoped<IVoiceNoteService, VoiceNoteService>();
+builder.Services.AddScoped<IInstallmentDashboardService, InstallmentDashboardService>();
 builder.Services.AddScoped<IFileStorageService, Mizan.Infrastructure.Storage.LocalFileStorageService>();
 #pragma warning disable CS0618 // ReportPdfGenerator marked obsolete but still registered for backward compat
         builder.Services.AddScoped<IReportPdfGenerator, Mizan.Infrastructure.Services.Reports.ReportPdfGenerator>();
@@ -135,21 +154,68 @@ builder.Services.Configure<EmailVerificationOptions>(builder.Configuration.GetSe
 builder.Services.AddScoped<IEmailVerificationService, DnsEmailVerificationService>();
 builder.Services.Configure<Mizan.Application.DTOs.Notifications.RemindersOptions>(builder.Configuration.GetSection(Mizan.Application.DTOs.Notifications.RemindersOptions.SectionName));
 builder.Services.Configure<Mizan.Application.DTOs.Reports.PeriodicReportsOptions>(builder.Configuration.GetSection(Mizan.Application.DTOs.Reports.PeriodicReportsOptions.SectionName));
+builder.Services.Configure<FirebaseOptions>(builder.Configuration.GetSection(FirebaseOptions.SectionName));
+var firebaseOptions = builder.Configuration.GetSection(FirebaseOptions.SectionName).Get<FirebaseOptions>() ?? new FirebaseOptions();
+
+bool useFcmService = false;
+string? activeProjectId = null;
+string? pushNoOpReason = null;
+
+if (!builder.Environment.IsEnvironment("Testing") && firebaseOptions.Enabled)
+{
+    if (FirebaseCredentialHelper.TryInitializeFirebase(firebaseOptions, null, out activeProjectId, out pushNoOpReason))
+    {
+        useFcmService = true;
+        builder.Services.AddScoped<IPushNotificationService, FcmPushNotificationService>();
+    }
+    else
+    {
+        useFcmService = false;
+        builder.Services.AddScoped<IPushNotificationService, NoOpPushNotificationService>();
+    }
+}
+else
+{
+    pushNoOpReason = builder.Environment.IsEnvironment("Testing")
+        ? "Testing environment"
+        : "Firebase disabled in configuration";
+    builder.Services.AddScoped<IPushNotificationService, NoOpPushNotificationService>();
+}
+
 builder.Services.AddSingleton<IUserStatusCache, Mizan.Infrastructure.Caching.UserStatusCache>();
 builder.Services.AddSingleton<IPeriodicReportEmailChannel, Mizan.Infrastructure.Channels.PeriodicReportEmailChannel>();
+builder.Services.AddSingleton<IReminderTriggerChannel, Mizan.Infrastructure.Channels.ReminderTriggerChannel>();
 builder.Services.AddHostedService<Mizan.Infrastructure.BackgroundServices.PeriodicReportEmailWorker>();
+builder.Services.AddHostedService<Mizan.Infrastructure.BackgroundServices.ReminderTriggerWorker>();
 builder.Services.AddHostedService<Mizan.Infrastructure.BackgroundServices.ReminderCheckService>();
 builder.Services.AddHostedService<Mizan.Infrastructure.BackgroundServices.PeriodicReportEmailRetryService>();
 
 // 6. JWT Authentication & Strict Key Validation
 var jwtOptions = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? new JwtOptions();
-const string compromisedLeakedKey = "MizanSecretSuperKeyForJwtSigning_MustBeAtLeast32BytesLong_2026!";
+
+// Explicit environment variable override — takes highest priority.
+// MonsterASP sets environment variables using double-underscore notation (Jwt__SecretKey).
+// builder.Configuration already handles this automatically via the standard ASP.NET Core
+// environment variable configuration provider (prefix-less), but we read it explicitly
+// as a safety net in case the hosting panel injects it outside the standard provider chain.
+var envSecretKey = Environment.GetEnvironmentVariable("Jwt__SecretKey");
+if (!string.IsNullOrWhiteSpace(envSecretKey))
+{
+    jwtOptions.SecretKey = envSecretKey;
+}
+
+// Keys that must never be used in production (leaked / default keys from source control)
+var rejectedKeys = new HashSet<string>(StringComparer.Ordinal)
+{
+    "MizanSecretSuperKeyForJwtSigning_MustBeAtLeast32BytesLong_2026!",
+    "Mizan2026SuperSecretKeyForJwtTokenGeneration!@#"
+};
 
 if (!builder.Environment.IsEnvironment("Testing"))
 {
     if (string.IsNullOrWhiteSpace(jwtOptions.SecretKey) ||
         Encoding.UTF8.GetByteCount(jwtOptions.SecretKey) < 32 ||
-        jwtOptions.SecretKey == compromisedLeakedKey)
+        rejectedKeys.Contains(jwtOptions.SecretKey))
     {
         throw new InvalidOperationException(
             "FATAL SECURITY ERROR: A secure JWT secret key (minimum 32 bytes) must be configured via user-secrets or environment variables. " +
@@ -303,6 +369,15 @@ if (!app.Environment.IsEnvironment("Testing"))
         var dbContext = scope.ServiceProvider.GetRequiredService<MizanDbContext>();
         dbContext.Database.Migrate();
     }
+}
+
+if (useFcmService)
+{
+    app.Logger.LogInformation("Push: FCM enabled ({ProjectId})", activeProjectId ?? "default");
+}
+else
+{
+    app.Logger.LogInformation("Push: NoOp ({Reason})", pushNoOpReason ?? "disabled");
 }
 
 // 10. Middleware Pipeline

@@ -13,6 +13,7 @@ public interface IUnitOfWork : IDisposable
     IInstallmentReminderLogRepository InstallmentReminderLogs { get; }
     IPeriodicReportRepository PeriodicReports { get; }
     IVoiceNoteRepository VoiceNotes { get; }
+    IDeviceTokenRepository DeviceTokens { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     Task BeginTransactionAsync(CancellationToken cancellationToken = default);

@@ -77,6 +77,6 @@ public class NotificationService : INotificationService
         InstallmentId = notification.InstallmentId,
         PeriodicReportId = notification.PeriodicReportId,
         IsRead = notification.IsRead,
-        CreatedAt = notification.CreatedAt
+        CreatedAt = DateTime.SpecifyKind(notification.CreatedAt, DateTimeKind.Utc)
     };
 }

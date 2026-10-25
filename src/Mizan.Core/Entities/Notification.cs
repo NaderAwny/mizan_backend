@@ -47,6 +47,13 @@ public class Notification
             string dayText = daysUntilDue == 1 ? "يوم واحد" : daysUntilDue == 2 ? "يومين" : $"{daysUntilDue} أيام";
             message = $"قسط بقيمة {formattedAmount} مستحق خلال {dayText} للطرف {contactName} (تاريخ الاستحقاق: {dueDate:yyyy-MM-dd})";
         }
+        else if (daysUntilDue < 0)
+        {
+            int n = Math.Abs(daysUntilDue);
+            title = "قسط متأخر";
+            string dayText = n == 1 ? "يوم واحد" : n == 2 ? "يومين" : $"{n} أيام";
+            message = $"قسط بقيمة {formattedAmount} متأخر منذ {dayText} للطرف {contactName} (تاريخ الاستحقاق: {dueDate:yyyy-MM-dd})";
+        }
         else
         {
             title = "تذكير بقسط مستحق اليوم";

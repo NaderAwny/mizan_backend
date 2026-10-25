@@ -75,6 +75,17 @@ public class PeriodicReportTriggerTests
         return provider.GetRequiredService<IServiceScopeFactory>();
     }
 
+    private static TransactionService CreateTransactionService(
+        IUnitOfWork uow,
+        IReportPdfGenerator pdfGen,
+        IPeriodicReportEmailChannel emailChannel,
+        IOptions<PeriodicReportsOptions> options)
+    {
+        var remChannel = new Mizan.Infrastructure.Channels.ReminderTriggerChannel();
+        var remOptions = Microsoft.Extensions.Options.Options.Create(new Mizan.Application.DTOs.Notifications.RemindersOptions());
+        return new TransactionService(uow, options, remOptions, pdfGen, emailChannel, remChannel, new FakeHostEnvironment(), NullLogger<TransactionService>.Instance);
+    }
+
     [Fact]
     public async Task CreateAsync_When6thTransactionCreated_ShouldNotTriggerPeriodicReport()
     {
@@ -85,7 +96,7 @@ public class PeriodicReportTriggerTests
         var pdfGen = new FakeReportPdfGenerator();
         var emailChannel = new Mizan.Infrastructure.Channels.PeriodicReportEmailChannel();
         var options = Microsoft.Extensions.Options.Options.Create(new PeriodicReportsOptions { Enabled = true, TransactionThreshold = 7 });
-        var service = new TransactionService(uow, options, pdfGen, emailChannel, new FakeHostEnvironment(), NullLogger<TransactionService>.Instance);
+        var service = CreateTransactionService(uow, pdfGen, emailChannel, options);
 
         Guid ownerUserId = Guid.NewGuid();
         var contact = Contact.Create(ownerUserId, "عميل تجريبي", null, null);
@@ -125,7 +136,7 @@ public class PeriodicReportTriggerTests
         var pdfGen = new FakeReportPdfGenerator();
         var emailChannel = new Mizan.Infrastructure.Channels.PeriodicReportEmailChannel();
         var options = Microsoft.Extensions.Options.Options.Create(new PeriodicReportsOptions { Enabled = true, TransactionThreshold = 7 });
-        var service = new TransactionService(uow, options, pdfGen, emailChannel, new FakeHostEnvironment(), NullLogger<TransactionService>.Instance);
+        var service = CreateTransactionService(uow, pdfGen, emailChannel, options);
 
         var user = User.Create("owner@test.com", "أحمد", "علي", "shop_owner");
         Guid ownerUserId = user.Id;
@@ -180,7 +191,7 @@ public class PeriodicReportTriggerTests
         var pdfGen = new FakeReportPdfGenerator();
         var emailChannel = new Mizan.Infrastructure.Channels.PeriodicReportEmailChannel();
         var options = Microsoft.Extensions.Options.Options.Create(new PeriodicReportsOptions { Enabled = true, TransactionThreshold = 7 });
-        var service = new TransactionService(uow, options, pdfGen, emailChannel, new FakeHostEnvironment(), NullLogger<TransactionService>.Instance);
+        var service = CreateTransactionService(uow, pdfGen, emailChannel, options);
 
         Guid ownerUserId = Guid.NewGuid();
         var contact = Contact.Create(ownerUserId, "عميل تجريبي", null, null);
@@ -223,7 +234,7 @@ public class PeriodicReportTriggerTests
         var pdfGen = new FakeReportPdfGenerator();
         var emailChannel = new Mizan.Infrastructure.Channels.PeriodicReportEmailChannel();
         var options = Microsoft.Extensions.Options.Options.Create(new PeriodicReportsOptions { Enabled = true, TransactionThreshold = 7 });
-        var service = new TransactionService(uow, options, pdfGen, emailChannel, new FakeHostEnvironment(), NullLogger<TransactionService>.Instance);
+        var service = CreateTransactionService(uow, pdfGen, emailChannel, options);
 
         // Create User 1 and User 2
         var user1 = User.Create("user1@mizan.app", "أحمد", "علي", "shop_owner");

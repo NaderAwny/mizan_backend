@@ -156,7 +156,7 @@ public class VoiceNoteService : IVoiceNoteService
             ContactName   = contactName,
             ContactId     = v.ContactId,
             Notes         = v.Notes,
-            CreatedAt     = v.CreatedAt
+            CreatedAt     = DateTime.SpecifyKind(v.CreatedAt, DateTimeKind.Utc)
         };
     }
 }

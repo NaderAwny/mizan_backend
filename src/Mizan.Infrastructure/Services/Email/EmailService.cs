@@ -169,6 +169,7 @@ public class EmailService : IEmailService
         string formattedAmount = amount.ToString("N2");
         string dueText = daysUntilDue switch
         {
+            < 0 => Math.Abs(daysUntilDue) == 1 ? "متأخر منذ يوم واحد" : Math.Abs(daysUntilDue) == 2 ? "متأخر منذ يومين" : $"متأخر منذ {Math.Abs(daysUntilDue)} أيام",
             0 => "مستحق اليوم",
             1 => "مستحق غداً (خلال يوم واحد)",
             2 => "مستحق خلال يومين",
@@ -185,9 +186,11 @@ public class EmailService : IEmailService
 
         try
         {
-            string subject = daysUntilDue == 0
-                ? $"تذكير: قسط مستحق اليوم بقيمة {formattedAmount} — تطبيق ميزان"
-                : $"تذكير: موعد استحقاق قسط بقيمة {formattedAmount} — تطبيق ميزان";
+            string subject = daysUntilDue < 0
+                ? $"تنبيه: قسط متأخر بقيمة {formattedAmount} — تطبيق ميزان"
+                : daysUntilDue == 0
+                    ? $"تذكير: قسط مستحق اليوم بقيمة {formattedAmount} — تطبيق ميزان"
+                    : $"تذكير: موعد استحقاق قسط بقيمة {formattedAmount} — تطبيق ميزان";
 
             var plainText = $@"مرحباً {recipientName}،
 
@@ -265,6 +268,7 @@ public class EmailService : IEmailService
         string formattedAmount = amount.ToString("N2");
         string dueText = daysUntilDue switch
         {
+            < 0 => Math.Abs(daysUntilDue) == 1 ? "متأخر منذ يوم واحد" : Math.Abs(daysUntilDue) == 2 ? "متأخر منذ يومين" : $"متأخر منذ {Math.Abs(daysUntilDue)} أيام",
             0 => "مستحق اليوم",
             1 => "مستحق غداً (خلال يوم واحد)",
             2 => "مستحق خلال يومين",
@@ -281,9 +285,11 @@ public class EmailService : IEmailService
 
         try
         {
-            string subject = daysUntilDue == 0
-                ? $"تذكير: موعد سداد قسط مستحق اليوم لصالح {shopOwnerName} — تطبيق ميزان"
-                : $"تذكير: موعد سداد قسط مستحق قريباً لصالح {shopOwnerName} — تطبيق ميزان";
+            string subject = daysUntilDue < 0
+                ? $"تنبيه: موعد سداد قسط متأخر لصالح {shopOwnerName} — تطبيق ميزان"
+                : daysUntilDue == 0
+                    ? $"تذكير: موعد سداد قسط مستحق اليوم لصالح {shopOwnerName} — تطبيق ميزان"
+                    : $"تذكير: موعد سداد قسط مستحق قريباً لصالح {shopOwnerName} — تطبيق ميزان";
 
             var plainText = $@"مرحباً {contactName}،
 

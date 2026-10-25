@@ -28,13 +28,13 @@ public class UserService : IUserService
             Email = user.Email,
             UserType = user.UserType,
             IsActive = user.IsActive,
-            CreatedAt = user.CreatedAt,
+            CreatedAt = DateTime.SpecifyKind(user.CreatedAt, DateTimeKind.Utc),
             Shop = user.Shop != null ? new ShopDto
             {
                 Id = user.Shop.Id,
                 ShopName = user.Shop.ShopName,
                 Address = user.Shop.Address,
-                CreatedAt = user.Shop.CreatedAt
+                CreatedAt = DateTime.SpecifyKind(user.Shop.CreatedAt, DateTimeKind.Utc)
             } : null
         };
     }
