@@ -90,9 +90,7 @@ public class FcmPushNotificationService : IPushNotificationService
                     Notification = new AndroidNotification
                     {
                         Sound = "default",
-                        ChannelId = !string.IsNullOrWhiteSpace(_options.AndroidChannelId) ? _options.AndroidChannelId : "mizan_reminders",
-                        EventTimestamp = DateTime.UtcNow,
-                        Tag = message.Tag
+                        ChannelId = !string.IsNullOrWhiteSpace(_options.AndroidChannelId) ? _options.AndroidChannelId : "mizan_reminders"
                     }
                 },
                 Apns = new ApnsConfig
@@ -267,8 +265,7 @@ public class FcmPushNotificationService : IPushNotificationService
                     {
                         ChannelId = channelId,
                         Sound = "default",
-                        Tag = "debug-e",
-                        EventTimestamp = DateTime.UtcNow
+                        Tag = "debug-e"
                     }
                 }
             }),
@@ -287,8 +284,7 @@ public class FcmPushNotificationService : IPushNotificationService
                     {
                         ChannelId = channelId,
                         Sound = "default",
-                        Tag = "debug-e",
-                        EventTimestamp = DateTime.UtcNow
+                        Tag = "debug-e"
                     }
                 },
                 Data = new Dictionary<string, string>
