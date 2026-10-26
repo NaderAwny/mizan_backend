@@ -75,23 +75,20 @@ public class FcmPushNotificationService : IPushNotificationService
         try
         {
 #pragma warning disable CS0618
+            var dataPayload = message.Data != null
+                ? new Dictionary<string, string>(message.Data)
+                : new Dictionary<string, string>();
+
+            dataPayload["title"] = message.Title ?? string.Empty;
+            dataPayload["body"] = message.Body ?? string.Empty;
+
             var fcmMessages = tokens.Select(t => new Message
             {
                 Token = t.Token,
-                Notification = new FirebaseAdmin.Messaging.Notification
-                {
-                    Title = message.Title,
-                    Body = message.Body
-                },
-                Data = message.Data != null ? new Dictionary<string, string>(message.Data) : null,
+                Data = dataPayload,
                 Android = new AndroidConfig
                 {
-                    Priority = Priority.High,
-                    Notification = new AndroidNotification
-                    {
-                        Sound = "default",
-                        ChannelId = !string.IsNullOrWhiteSpace(_options.AndroidChannelId) ? _options.AndroidChannelId : "mizan_reminders"
-                    }
+                    Priority = Priority.High
                 },
                 Apns = new ApnsConfig
                 {
